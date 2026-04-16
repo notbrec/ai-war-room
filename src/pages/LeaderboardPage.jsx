@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { MODELS, ORG_CONFIG, LICENSE_CONFIG, RELEASE, AUTO_REFRESH_MS, fetchOpenRouterMeta } from '../models-data.js';
+import { MODELS, ORG_CONFIG, LICENSE_CONFIG, RELEASE, AUTO_REFRESH_MS, fetchLeaderboard, fetchOpenRouterMeta } from '../models-data.js';
 import { useDark, useMobile } from '../hooks/useTheme.js';
 
 const SF = "-apple-system,'SF Pro Display','SF Pro Text',BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif";
@@ -100,16 +100,26 @@ export default function LeaderboardPage() {
   const loadData = useCallback(async () => {
     setLoading(true);
     try {
-      const meta = await fetchOpenRouterMeta();
-      const enriched = MODELS.map(m => {
-        const key = Object.keys(meta).find(k => k.toLowerCase().includes(m.slug.toLowerCase().replace(/-/g, '')));
+      // Fetch live leaderboard + live pricing in parallel
+      const [liveModels, meta] = await Promise.all([
+        fetchLeaderboard(),
+        fetchOpenRouterMeta(),
+      ]);
+
+      // Merge OpenRouter live pricing on top of arena.ai data
+      const enriched = liveModels.map(m => {
+        const key = Object.keys(meta).find(k =>
+          k.toLowerCase().includes(m.slug.toLowerCase().replace(/-/g, ''))
+        );
         if (!key) return m;
         const live = meta[key];
         return { ...m, priceIn: live.priceIn ?? m.priceIn, priceOut: live.priceOut ?? m.priceOut };
       });
+
       setModels(enriched);
       setLastUpdated(new Date());
-    } catch {
+    } catch (err) {
+      console.warn('Leaderboard fetch failed, using fallback:', err.message);
       setModels(MODELS);
       setLastUpdated(new Date());
     } finally {
