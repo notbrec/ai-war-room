@@ -118,7 +118,9 @@ export async function fetchOpenRouterMeta() {
 
 // ── Fallback: real arena.ai snapshot (top 60, April 2026) ─────────────────
 // [slug, org, elo, votes, license, priceIn, priceOut, contextTokens]
+// Models marked NEW are manually added before arena.ai picks them up
 const RAW_FALLBACK = [
+  ['claude-opus-4-7',                        'Anthropic', 1515, 0,      'Proprietary',  5,     25,    1000000 ], // NEW — estimated ELO
   ['claude-opus-4-6-thinking',               'Anthropic', 1502, 17219,  'Proprietary',  5,     25,    1000000 ],
   ['claude-opus-4-6',                        'Anthropic', 1496, 18377,  'Proprietary',  5,     25,    1000000 ],
   ['muse-spark',                             'Meta',      1495, 4182,   'Proprietary',  null,  null,  null    ],
