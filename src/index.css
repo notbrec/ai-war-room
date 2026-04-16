@@ -1,0 +1,142 @@
+/* ─── Theme tokens ─────────────────────────────────────────────────────── */
+:root {
+  --bg:          #F2F2F7;
+  --bg2:         #E5E5EA;
+  --card:        #FFFFFF;
+  --card2:       #F2F2F7;
+  --text:        #000000;
+  --text2:       #3C3C43;
+  --muted:       rgba(60,60,67,0.55);
+  --muted2:      rgba(60,60,67,0.38);
+  --sep:         rgba(60,60,67,0.12);
+  --sep2:        rgba(60,60,67,0.06);
+  --nav:         rgba(242,242,247,0.82);
+  --search:      rgba(116,116,128,0.12);
+  --hover:       rgba(0,0,0,0.025);
+  --pill:        rgba(116,116,128,0.10);
+  --pill-text:   rgba(60,60,67,0.80);
+  --shadow:      0 1px 0 rgba(60,60,67,0.10);
+}
+
+html.dark {
+  --bg:          #111113;
+  --bg2:         #1C1C1E;
+  --card:        #1C1C1E;
+  --card2:       #2C2C2E;
+  --text:        #FFFFFF;
+  --text2:       #EBEBF5;
+  --muted:       rgba(235,235,245,0.55);
+  --muted2:      rgba(235,235,245,0.30);
+  --sep:         rgba(84,84,88,0.36);
+  --sep2:        rgba(84,84,88,0.18);
+  --nav:         rgba(17,17,19,0.90);
+  --search:      rgba(118,118,128,0.22);
+  --hover:       rgba(255,255,255,0.05);
+  --pill:        rgba(118,118,128,0.20);
+  --pill-text:   rgba(235,235,245,0.65);
+  --shadow:      0 1px 0 rgba(0,0,0,0.50), 0 4px 16px rgba(0,0,0,0.18);
+}
+
+/* ─── Reset ────────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html {
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+  color-scheme: light dark;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  overscroll-behavior: none;
+  scrollbar-gutter: stable;
+  transition: background 0.25s ease, color 0.25s ease;
+}
+
+input, button, select, textarea { font-family: inherit; }
+
+/* ─── Page enter animation ─────────────────────────────────────────────── */
+@keyframes pageEnter {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0);   }
+}
+.page-enter {
+  animation: pageEnter 0.20s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+
+/* ─── Smooth theme transitions ─────────────────────────────────────────── */
+/* Only on specific properties, not everything — avoids killing page animations */
+body, body * {
+  transition:
+    background-color 0.22s ease,
+    border-color     0.22s ease,
+    color            0.22s ease;
+}
+
+/* Exclude elements that should not transition (animations, transforms) */
+button, input, a, .page-enter {
+  transition:
+    background-color 0.15s ease,
+    border-color     0.15s ease,
+    color            0.15s ease,
+    opacity          0.15s ease,
+    transform        0.18s ease,
+    box-shadow       0.18s ease;
+}
+
+/* ─── Cyberpunk background ─────────────────────────────────────────────── */
+.cyber-bg {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.cyber-grid {
+  position: absolute;
+  inset: -80px;
+  background-image:
+    linear-gradient(rgba(0, 180, 255, 0.028) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 180, 255, 0.028) 1px, transparent 1px);
+  background-size: 64px 64px;
+  animation: cyberGridMove 28s linear infinite;
+}
+
+@keyframes cyberGridMove {
+  from { transform: translate(0, 0); }
+  to   { transform: translate(64px, 64px); }
+}
+
+.cyber-scan {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 220px;
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    rgba(0, 180, 255, 0.035) 45%,
+    rgba(0, 220, 255, 0.06)  50%,
+    rgba(0, 180, 255, 0.035) 55%,
+    transparent 100%
+  );
+  animation: cyberScanMove 14s linear infinite;
+  top: -220px;
+}
+
+.cyber-scan--delayed {
+  animation-delay: -7s;
+}
+
+@keyframes cyberScanMove {
+  from { top: -220px; }
+  to   { top: 100vh;  }
+}
+
+/* ─── Scrollbar ─────────────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 0; background: transparent; }
+
+/* ─── Selection ─────────────────────────────────────────────────────────── */
+::selection { background: rgba(0, 122, 255, 0.18); }

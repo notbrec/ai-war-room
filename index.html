@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="description" content="AI WAR ROOM — 60 models ranked by ELO arena score. aiwarroom.app" />
+    <title>AI WAR ROOM</title>
+
+    <!-- ─ Blocking theme script: runs before first paint, no flash ─ -->
+    <script>
+      (function () {
+        try {
+          var stored = localStorage.getItem('aiwar-theme');
+          var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+          var isDark = stored ? stored === 'dark' : prefersDark;
+          if (isDark) document.documentElement.classList.add('dark');
+          document.querySelector('meta[name=theme-color]') ||
+            document.head.insertAdjacentHTML('beforeend',
+              '<meta name="theme-color" content="' + (isDark ? '#111113' : '#F2F2F7') + '">');
+        } catch (e) {}
+      })();
+    </script>
+
+    <style>
+      /* Match body bg before CSS loads to prevent FOUC */
+      html        { background: #F2F2F7; }
+      html.dark   { background: #111113; }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>
