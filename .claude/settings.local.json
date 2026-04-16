@@ -7,7 +7,8 @@
       "WebFetch(domain:www.whois.com)",
       "WebFetch(domain:lmarena.ai)",
       "WebFetch(domain:arena.ai)",
-      "WebFetch(domain:raw.githubusercontent.com)"
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebFetch(domain:openrouter.ai)"
     ]
   }
 }
