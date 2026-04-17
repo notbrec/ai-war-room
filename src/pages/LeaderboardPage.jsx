@@ -148,7 +148,7 @@ export default function LeaderboardPage() {
   const clearFilters = () => { setFilterOpen(false); setFilterThinking(false); setFilterOrg(''); setQuery(''); };
 
   // ── Column widths for desktop table ──
-  const COL = { rank: 52, icon: 44, name: 'auto', badges: 120, elo: 88, votes: 72, price: 96, ctx: 64, arrow: 28 };
+  const COL = { rank: 52, icon: 44, name: 'auto', badges: 120, elo: 88, votes: 72, price: 96, ctx: 64 };
 
   return (
     <div className="page-enter" style={{ background: 'var(--bg)', fontFamily: SF, minHeight: '100vh' }}>
@@ -272,7 +272,7 @@ export default function LeaderboardPage() {
           {!mobile && (
             <div style={{
               display: 'grid',
-              gridTemplateColumns: `4px ${COL.rank}px ${COL.icon}px 1fr ${COL.badges}px ${COL.elo}px ${COL.votes}px ${COL.price}px ${COL.ctx}px ${COL.arrow}px`,
+              gridTemplateColumns: `4px ${COL.rank}px ${COL.icon}px 1fr ${COL.badges}px ${COL.elo}px ${COL.votes}px ${COL.price}px ${COL.ctx}px`,
               alignItems: 'center',
               borderBottom: '1px solid var(--sep)',
               padding: '0',
@@ -348,7 +348,6 @@ export default function LeaderboardPage() {
                         <div style={{ fontSize: 17, fontWeight: 700, color: tierColor, letterSpacing: '-0.025em', fontVariantNumeric: 'tabular-nums' }}>{model.elo}</div>
                         <div style={{ fontSize: 9, color: 'var(--muted2)' }}>±{model.ci ?? '—'}</div>
                       </div>
-                      <svg width="5" height="9" viewBox="0 0 5 9" fill="none"><path d="M1 1l3 3.5L1 8" stroke="var(--sep)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
                     </div>
                   </div>
                   {i < filtered.length - 1 && <div style={{ height: '0.5px', background: 'var(--sep)', marginLeft: 54 }} />}
@@ -361,7 +360,7 @@ export default function LeaderboardPage() {
               <div key={model.slug}>
                 <div style={{
                   display: 'grid',
-                  gridTemplateColumns: `4px ${COL.rank}px ${COL.icon}px 1fr ${COL.badges}px ${COL.elo}px ${COL.votes}px ${COL.price}px ${COL.ctx}px ${COL.arrow}px`,
+                  gridTemplateColumns: `4px ${COL.rank}px ${COL.icon}px 1fr ${COL.badges}px ${COL.elo}px ${COL.votes}px ${COL.price}px ${COL.ctx}px`,
                   alignItems: 'center',
                   cursor: 'pointer',
                   transition: 'background 0.1s',
@@ -454,11 +453,6 @@ export default function LeaderboardPage() {
                   </div>
 
                   {/* Chevron */}
-                  <div style={{ padding: '10px 10px 10px 4px', display: 'flex', justifyContent: 'center' }}>
-                    <svg width="5" height="9" viewBox="0 0 5 9" fill="none">
-                      <path d="M1 1l3 3.5L1 8" stroke="var(--sep)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
-                  </div>
                 </div>
                 {i < filtered.length - 1 && <div style={{ height: '0.5px', background: 'var(--sep)', marginLeft: 68 }} />}
               </div>
