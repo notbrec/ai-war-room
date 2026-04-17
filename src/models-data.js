@@ -94,7 +94,9 @@ function cleanName(raw, org) {
 
 /** Transform arena.ai model object → our app model shape */
 export function normaliseModel(m, rank) {
-  const isOpen = ['MIT', 'Apache 2.0', 'Open Source'].includes(m.license);
+  const lic = (m.license ?? '').trim();
+  const isOpen = /^(MIT|Apache[\s-]?2\.0|Open Source|Modified MIT|Jamba Open|Nvidia Open|NVIDIA Open Model|Apache-2\.0)$/i.test(lic)
+    || /^Llama[\s-]?[34]/i.test(lic);
   const cleaned = cleanName(m.name, m.org);
   const name   = cleaned ? formatName(cleaned) : formatName(m.slug ?? '');
   return {

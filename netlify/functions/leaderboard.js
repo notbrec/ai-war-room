@@ -4,7 +4,7 @@
 
 import { getStore } from '@netlify/blobs';
 
-const CACHE_KEY = 'leaderboard-v2';
+const CACHE_KEY = 'leaderboard-v4'; // bumped to force re-fetch after parser fix
 const CACHE_TTL = 6 * 60 * 60 * 1000; // 6 hours
 
 // Strip HTML tags and clean text
@@ -62,6 +62,42 @@ function parseNextData(html) {
   } catch { return null; }
 }
 
+// ── Parse combined "OrgName? model-slug OrgName · License" cell ───────────
+// Arena.ai puts name + org + license all in one <td>
+function parseNameCell(cell) {
+  let text = cell.trim();
+  let license = 'Proprietary';
+  let org = 'Unknown';
+
+  // Extract license after last " · "
+  const dotIdx = text.lastIndexOf(' · ');
+  if (dotIdx >= 0) {
+    license = text.slice(dotIdx + 3).trim() || 'Proprietary';
+    text = text.slice(0, dotIdx).trim();
+  }
+
+  // text is now "OrgName? model-slug OrgName" or "model-slug OrgName"
+  // Walk backwards through words: collect capitalized/numeric words as org
+  const words = text.split(/\s+/);
+  const orgWords = [];
+  let cutAt = words.length;
+  for (let i = words.length - 1; i >= 0; i--) {
+    const w = words[i];
+    if (/^[A-Z0-9]/.test(w)) { orgWords.unshift(w); cutAt = i; }
+    else break;
+  }
+  if (orgWords.length > 0) {
+    org = orgWords.join(' ');
+    text = words.slice(0, cutAt).join(' ').trim();
+    // Remove duplicate org prefix at start (case-insensitive)
+    if (text.toLowerCase().startsWith(org.toLowerCase() + ' ')) {
+      text = text.slice(org.length + 1).trim();
+    }
+  }
+
+  return { name: text || cell.trim(), org, license };
+}
+
 // ── Strategy 2: HTML table row parsing ────────────────────────────────────
 function parseHTMLTable(html) {
   const models = [];
@@ -79,7 +115,7 @@ function parseHTMLTable(html) {
     const rank = parseInt(cells[0]);
     if (isNaN(rank) || rank < 1 || rank > 500) continue;
 
-    // Find ELO cell — 4-digit number 1200–1700 (optionally followed by ±CI)
+    // Find ELO cell — 4-digit number 1200–1700 (optionally followed by ±CI Preliminary)
     let eloIdx = -1, elo = null, ci = null;
     for (let i = 1; i < cells.length; i++) {
       const m = cells[i].match(/^(1[2-7]\d{2})(?:[±\+\s]+(\d+))?/);
@@ -87,21 +123,25 @@ function parseHTMLTable(html) {
     }
     if (!elo || eloIdx < 0) continue;
 
-    // Model name and org: cells just before elo
-    // Could be: [rank][rankRange][name][org][license][elo]
-    // or:       [rank][rankRange][name+org combined][elo]
+    // Model name, org, license — all in the cell just before the ELO cell
+    // Arena.ai current format: cells[eloIdx-1] = "OrgName? model-slug OrgName · License"
     let name = '', org = 'Unknown', license = 'Proprietary';
 
     if (eloIdx >= 4) {
-      // Likely: [rank, rankRange, name, org, license, elo, ...]
-      name    = cells[2] || '';
-      org     = cells[3] || 'Unknown';
-      license = cells[4] || 'Proprietary';
-    } else if (eloIdx >= 3) {
-      name    = cells[2] || '';
-      org     = cells[3] || 'Unknown';
+      // Legacy format: separate cells for name / org / license
+      const p = parseNameCell(cells[2] || '');
+      // If cells[3] looks like org text (not ELO), use separate cells
+      if (!/^\d{4}/.test(cells[3] || '')) {
+        name    = p.name || cells[2] || '';
+        org     = cells[3] || p.org;
+        license = cells[4] || p.license;
+      } else {
+        ({ name, org, license } = p);
+      }
     } else {
-      name    = cells[1] || '';
+      // Current arena.ai format: combined cell at eloIdx-1
+      const cellIdx = eloIdx - 1;
+      ({ name, org, license } = parseNameCell(cells[cellIdx] || ''));
     }
 
     // Votes: first integer > 50 after eloIdx
@@ -129,7 +169,8 @@ function parseHTMLTable(html) {
       }
     }
 
-    models.push({ rank, slug: name.toLowerCase().replace(/\s+/g,'-'), name, org, license, elo, ci, votes, priceIn, priceOut, context });
+    const slug = name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9.-]/g, '');
+    models.push({ rank, slug, name, org, license, elo, ci, votes, priceIn, priceOut, context });
   }
 
   return models.length > 5 ? models : null;
