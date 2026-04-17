@@ -285,8 +285,7 @@ export default function LeaderboardPage() {
               <div style={{ padding: '9px 0', fontSize: 10, fontWeight: 700, color: 'var(--muted2)', textTransform: 'uppercase', letterSpacing: '0.07em', textAlign: 'right' }}>ELO</div>
               <div style={{ padding: '9px 0 9px 12px', fontSize: 10, fontWeight: 700, color: 'var(--muted2)', textTransform: 'uppercase', letterSpacing: '0.07em', textAlign: 'right' }}>Votes</div>
               <div style={{ padding: '9px 0 9px 12px', fontSize: 10, fontWeight: 700, color: 'var(--muted2)', textTransform: 'uppercase', letterSpacing: '0.07em', textAlign: 'right' }}>Price/M</div>
-              <div style={{ padding: '9px 0 9px 8px', fontSize: 10, fontWeight: 700, color: 'var(--muted2)', textTransform: 'uppercase', letterSpacing: '0.07em', textAlign: 'right' }}>Ctx</div>
-              <div />
+              <div style={{ padding: '9px 14px 9px 8px', fontSize: 10, fontWeight: 700, color: 'var(--muted2)', textTransform: 'uppercase', letterSpacing: '0.07em', textAlign: 'right' }}>Ctx</div>
             </div>
           )}
 
@@ -448,7 +447,7 @@ export default function LeaderboardPage() {
                   </div>
 
                   {/* Context */}
-                  <div style={{ padding: '10px 0 10px 8px', textAlign: 'right' }}>
+                  <div style={{ padding: '10px 14px 10px 8px', textAlign: 'right' }}>
                     <div style={{ fontSize: 12, fontWeight: 500, color: 'var(--muted)', fontVariantNumeric: 'tabular-nums' }}>{model.context ?? '—'}</div>
                   </div>
 
