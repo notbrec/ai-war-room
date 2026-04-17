@@ -66,10 +66,37 @@ function initials(name) {
     .split(/\s+/).slice(0, 2).map(w => w[0]?.toUpperCase() ?? '').join('');
 }
 
+const LICENSE_NAMES = ['Proprietary', 'MIT', 'Apache 2.0', 'Apache', 'Open Source', 'Modified MIT', 'CC BY', 'Llama'];
+
+/** Cleans raw name strings that HTML parser may produce, e.g.
+ *  "Anthropic claude-opus-4-7-thinking Anthropic · Proprietary"
+ *  → "Claude Opus 4 7 Thinking"  */
+function cleanName(raw, org) {
+  let s = (raw ?? '').trim();
+  // Strip licence suffixes like "· Proprietary" or "Proprietary" at end
+  for (const lic of LICENSE_NAMES) {
+    s = s.replace(new RegExp(`\\s*[·•]?\\s*${lic}\\s*$`, 'i'), '');
+  }
+  // Strip known org name from start/end
+  if (org && org !== 'Unknown') {
+    const e = org.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    s = s.replace(new RegExp(`^${e}\\s+`, 'i'), '');
+    s = s.replace(new RegExp(`\\s+${e}\\s*$`, 'i'), '');
+  }
+  // Strip any remaining org names from ORG_CONFIG
+  for (const o of Object.keys(ORG_CONFIG)) {
+    const e = o.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    s = s.replace(new RegExp(`^${e}\\s+`, 'i'), '');
+    s = s.replace(new RegExp(`\\s+${e}\\s*$`, 'i'), '');
+  }
+  return s.trim();
+}
+
 /** Transform arena.ai model object → our app model shape */
 export function normaliseModel(m, rank) {
   const isOpen = ['MIT', 'Apache 2.0', 'Open Source'].includes(m.license);
-  const name   = m.name ?? formatName(m.slug ?? '');
+  const cleaned = cleanName(m.name, m.org);
+  const name   = cleaned ? formatName(cleaned) : formatName(m.slug ?? '');
   return {
     rank:        rank ?? m.rank ?? 1,
     slug:        m.slug ?? String(rank),
