@@ -81,18 +81,19 @@ function PodiumCard({ model, medal, onNavigate, dark }) {
   );
 }
 
-export default function HomePage({ onNavigate }) {
+export default function HomePage({ onNavigate, liveModels }) {
   const dark       = useDark();
   const mobile     = useMobile();
-  const top3       = MODELS.slice(0, 3);
-  const totalVotes = MODELS.reduce((s, m) => s + m.votes, 0);
-  const orgs       = new Set(MODELS.map(m => m.org)).size;
-  const openCount  = MODELS.filter(m => m.isOpen).length;
+  const data       = liveModels ?? MODELS;
+  const top3       = data.slice(0, 3);
+  const totalVotes = data.reduce((s, m) => s + m.votes, 0);
+  const orgs       = new Set(data.map(m => m.org)).size;
+  const openCount  = data.filter(m => m.isOpen).length;
 
-  const bestValue  = [...MODELS].filter(m => m.priceIn != null && m.elo >= 1350)
+  const bestValue  = [...data].filter(m => m.priceIn != null && m.elo >= 1350)
     .sort((a, b) => a.priceIn - b.priceIn)[0];
-  const mostVoted  = [...MODELS].sort((a, b) => b.votes - a.votes)[0];
-  const bestOpen   = [...MODELS].filter(m => m.isOpen)[0];
+  const mostVoted  = [...data].sort((a, b) => b.votes - a.votes)[0];
+  const bestOpen   = [...data].filter(m => m.isOpen)[0];
 
   return (
     <div className="page-enter" style={{ background: 'var(--bg)', fontFamily: SF, minHeight: '100vh' }}>
@@ -119,7 +120,7 @@ export default function HomePage({ onNavigate }) {
             </h1>
 
             <p style={{ fontSize: mobile ? 16 : 18, lineHeight: 1.55, color: 'var(--muted)', letterSpacing: '-0.02em', maxWidth: 500, margin: '0 0 28px' }}>
-              {MODELS.length} models ranked by ELO — earned from real arena battles, not benchmarks. Updated live from OpenRouter.
+              {data.length} models ranked by ELO — earned from real arena battles, not benchmarks. Updated live from OpenRouter.
             </p>
 
             <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
@@ -141,7 +142,7 @@ export default function HomePage({ onNavigate }) {
 
             <div style={{ display: 'flex', gap: mobile ? 20 : 32, marginTop: 36, flexWrap: 'wrap' }}>
               {[
-                { v: MODELS.length,                         l: 'Models'      },
+                { v: data.length,                         l: 'Models'      },
                 { v: orgs,                                  l: 'Labs'        },
                 { v: `${(totalVotes/1000).toFixed(0)}K`,   l: 'Votes cast'  },
                 { v: openCount,                             l: 'Open weight' },
@@ -238,7 +239,7 @@ export default function HomePage({ onNavigate }) {
           }}>
             <div>
               <div style={{ fontSize: 20, fontWeight: 700, color: dark ? 'var(--text)' : 'var(--bg)', letterSpacing: '-0.03em', lineHeight: 1.2 }}>
-                See all {MODELS.length} models.
+                See all {data.length} models.
               </div>
               <div style={{ fontSize: 13, color: 'var(--muted)', marginTop: 4, letterSpacing: '-0.01em' }}>
                 Sort by ELO, votes, price, or context window.

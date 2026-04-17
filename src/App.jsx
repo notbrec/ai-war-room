@@ -5,6 +5,7 @@ import CyberBackground        from './components/CyberBackground.jsx';
 import HomePage               from './pages/HomePage.jsx';
 import LeaderboardPage        from './pages/LeaderboardPage.jsx';
 import MethodologyPage        from './pages/MethodologyPage.jsx';
+import { MODELS, fetchLeaderboard } from './models-data.js';
 
 const HASH_MAP = { '#leaderboard': 'leaderboard', '#methodology': 'methodology' };
 
@@ -13,8 +14,15 @@ function pageFromHash() {
 }
 
 export default function App() {
-  const { dark, toggle } = useTheme();
-  const [page, setPage]  = useState(pageFromHash);
+  const { dark, toggle }       = useTheme();
+  const [page, setPage]        = useState(pageFromHash);
+  const [liveModels, setLiveModels] = useState(MODELS);
+
+  useEffect(() => {
+    fetchLeaderboard()
+      .then(models => { if (models?.length > 0) setLiveModels(models); })
+      .catch(() => {});
+  }, []);
 
   const navigate = (target) => {
     if (target === page) return;
@@ -30,7 +38,7 @@ export default function App() {
   }, []);
 
   const pages = {
-    home:        <HomePage        onNavigate={navigate} />,
+    home:        <HomePage        onNavigate={navigate} liveModels={liveModels} />,
     leaderboard: <LeaderboardPage onNavigate={navigate} />,
     methodology: <MethodologyPage onNavigate={navigate} />,
   };

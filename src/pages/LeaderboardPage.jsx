@@ -168,7 +168,7 @@ export default function LeaderboardPage() {
               </span>
             </div>
             <span style={{ color: 'var(--sep)', fontSize: 13 }}>·</span>
-            <span style={{ fontSize: 12, color: 'var(--muted)' }}>Source: arena.ai</span>
+            <span style={{ fontSize: 12, color: 'var(--muted)' }}>Source: AI War Room</span>
             <button onClick={loadData} disabled={loading} style={{
               height: 22, paddingInline: 9, borderRadius: 980,
               background: 'rgba(0,122,255,0.10)', color: '#007AFF',
