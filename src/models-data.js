@@ -3,10 +3,106 @@
 // Fallback: real arena.ai snapshot (auto-shown while live data loads)
 // Pricing:  live from OpenRouter API (auto-refreshed every 30 min)
 
+import DESCRIPTIONS from './model-descriptions.json';
+
 export const OPENROUTER_MODELS_URL = 'https://openrouter.ai/api/v1/models';
 export const LEADERBOARD_URL       = '/api/leaderboard';
 export const AUTO_REFRESH_MS       = 30 * 60 * 1000; // 30 min
 export const RELEASE               = 'AI-WAR-LIVE';
+
+// Normalize a model name into a lookup key (alphanumerics only, lowercase)
+function descKey(s) {
+  return (s ?? '').toLowerCase().replace(/[^a-z0-9]+/g, '');
+}
+
+// Known org/lab tokens commonly appended to live arena.ai names
+const ORG_TOKENS = [
+  'xai','anthropic','openai','google','meta','mistral','deepseek','alibaba',
+  'zai','moonshot','minimax','xiaomi','microsoft','amazon','baidu','bytedance',
+  'meituan','tencent','perplexity','cohere','nvidia','reka','databricks',
+  'inflection','stability','qwen','hunyuan','ernie','doubao','skywork',
+];
+
+// Build an auxiliary index: JSON keys also indexed with leading org prefix stripped
+// (PDF keys often contain company prefix like "tencenthunyuan…", live names don't)
+const DESC_INDEX_NO_PREFIX = {};
+for (const key of Object.keys(DESCRIPTIONS)) {
+  for (const t of ORG_TOKENS) {
+    if (key.startsWith(t) && key.length > t.length + 3) {
+      const stripped = key.slice(t.length);
+      if (!DESC_INDEX_NO_PREFIX[stripped]) DESC_INDEX_NO_PREFIX[stripped] = DESCRIPTIONS[key];
+    }
+  }
+  // Also index "stepfun" → "step", "bytedance" → raw model name etc.
+  const extraPrefixes = ['stepfun','c4ai'];
+  for (const t of extraPrefixes) {
+    if (key.includes(t)) {
+      const stripped = key.replace(t, '');
+      if (!DESC_INDEX_NO_PREFIX[stripped]) DESC_INDEX_NO_PREFIX[stripped] = DESCRIPTIONS[key];
+    }
+  }
+}
+
+// Strip noise: trailing org tokens, long date digits, short date suffixes.
+// Returns an array of progressively more-stripped variants to try.
+function variants(raw) {
+  const out = new Set();
+  let k = descKey(raw);
+  out.add(k);
+
+  // Strip trailing org token repeatedly
+  for (let i = 0; i < 3; i++) {
+    const before = k;
+    for (const t of ORG_TOKENS) {
+      if (k.endsWith(t)) { k = k.slice(0, -t.length); break; }
+    }
+    if (k === before) break;
+    out.add(k);
+  }
+
+  // Strip trailing 4-8 digit date-like sequences (e.g. 20251101, 0709, 0309)
+  let k2 = k.replace(/\d{6,8}$/, '');
+  if (k2 !== k) out.add(k2);
+  k2 = k2.replace(/\d{4}$/, '');
+  if (k2 !== k) out.add(k2);
+
+  // Remove date digits embedded before "thinking" / "reasoning" tails
+  // e.g. claudeopus4520251101thinking32k → claudeopus45thinking32k
+  const embedded = k.replace(/(\d{6,8})(thinking|reasoning|chat|instruct|preview|mini|high|fast)/g, '$2');
+  if (embedded !== k) out.add(embedded);
+
+  // Also strip 4-digit embedded date-like groups before thinking/reasoning
+  const embedded2 = k.replace(/(\d{4})(thinking|reasoning)/g, '$2');
+  if (embedded2 !== k) out.add(embedded2);
+
+  // Combine: strip org THEN embedded date
+  for (const v of [...out]) {
+    const stripped = v.replace(/(\d{6,8})(thinking|reasoning|chat|instruct|preview|mini|high|fast)/g, '$2');
+    if (stripped !== v) out.add(stripped);
+  }
+
+  return [...out].filter(Boolean);
+}
+
+/** Look up a description for a model by its display name */
+export function getDescription(name) {
+  const tries = variants(name);
+  for (const v of tries) {
+    if (DESCRIPTIONS[v]) return DESCRIPTIONS[v];
+    if (DESC_INDEX_NO_PREFIX[v]) return DESC_INDEX_NO_PREFIX[v];
+  }
+  // Last-ditch: find any JSON key that contains our shortest stripped variant
+  // (guards against extra tail like "-32k" that isn't in PDF key, or company prefix)
+  const shortest = tries.sort((a, b) => a.length - b.length)[0];
+  if (shortest && shortest.length >= 6) {
+    for (const key of Object.keys(DESCRIPTIONS)) {
+      if (key === shortest || key.endsWith(shortest) || key.startsWith(shortest) || shortest.startsWith(key)) {
+        if (Math.abs(key.length - shortest.length) <= 10) return DESCRIPTIONS[key];
+      }
+    }
+  }
+  return null;
+}
 
 export const ORG_CONFIG = {
   'Anthropic':    { color: '#CC785C', bg: '#FBF0EC', bgDark: '#3A2218' },

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { MODELS, ORG_CONFIG, LICENSE_CONFIG, RELEASE, AUTO_REFRESH_MS, fetchLeaderboard, fetchOpenRouterMeta } from '../models-data.js';
+import { MODELS, ORG_CONFIG, LICENSE_CONFIG, RELEASE, AUTO_REFRESH_MS, fetchLeaderboard, fetchOpenRouterMeta, getDescription } from '../models-data.js';
 import { useDark, useMobile } from '../hooks/useTheme.js';
 
 const SF = "-apple-system,'SF Pro Display','SF Pro Text',BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif";
@@ -95,6 +95,7 @@ export default function LeaderboardPage() {
   const [lastUpdated, setLastUpdated]     = useState(new Date());
   const [loading, setLoading]             = useState(false);
   const [, setTick]                       = useState(0);
+  const [expandedSlug, setExpandedSlug]   = useState(null);
   const intervalRef                       = useRef(null);
 
   const loadData = useCallback(async () => {
@@ -148,7 +149,7 @@ export default function LeaderboardPage() {
   const clearFilters = () => { setFilterOpen(false); setFilterThinking(false); setFilterOrg(''); setQuery(''); };
 
   // ── Column widths for desktop table ──
-  const COL = { rank: 52, icon: 44, name: 'auto', badges: 120, elo: 88, votes: 72, price: 96, ctx: 64 };
+  const COL = { rank: 52, icon: 44, name: 'auto', badges: 120, elo: 88, votes: 72, price: 96, ctx: 64, chev: 26 };
 
   return (
     <div className="page-enter" style={{ background: 'var(--bg)', fontFamily: SF, minHeight: '100vh' }}>
@@ -272,7 +273,7 @@ export default function LeaderboardPage() {
           {!mobile && (
             <div style={{
               display: 'grid',
-              gridTemplateColumns: `4px ${COL.rank}px ${COL.icon}px 1fr ${COL.badges}px ${COL.elo}px ${COL.votes}px ${COL.price}px ${COL.ctx}px`,
+              gridTemplateColumns: `4px ${COL.rank}px ${COL.icon}px 1fr ${COL.badges}px ${COL.elo}px ${COL.votes}px ${COL.price}px ${COL.ctx}px ${COL.chev}px`,
               alignItems: 'center',
               borderBottom: '1px solid var(--sep)',
               padding: '0',
@@ -286,6 +287,7 @@ export default function LeaderboardPage() {
               <div style={{ padding: '9px 0 9px 12px', fontSize: 10, fontWeight: 700, color: 'var(--muted2)', textTransform: 'uppercase', letterSpacing: '0.07em', textAlign: 'right' }}>Votes</div>
               <div style={{ padding: '9px 0 9px 12px', fontSize: 10, fontWeight: 700, color: 'var(--muted2)', textTransform: 'uppercase', letterSpacing: '0.07em', textAlign: 'right' }}>Price/M</div>
               <div style={{ padding: '9px 14px 9px 8px', fontSize: 10, fontWeight: 700, color: 'var(--muted2)', textTransform: 'uppercase', letterSpacing: '0.07em', textAlign: 'right' }}>Ctx</div>
+              <div />
             </div>
           )}
 
@@ -300,17 +302,21 @@ export default function LeaderboardPage() {
             const iconBg   = dark ? (org.bgDark ?? '#2C2C2E') : org.bg;
             const tierColor = eloColor(model.elo);
             const isTop    = model.displayRank <= 3;
+            const expanded = expandedSlug === model.slug;
+            const toggleExpand = () => setExpandedSlug(expanded ? null : model.slug);
+            const description  = getDescription(model.name);
 
             if (mobile) {
               // ── Mobile row ──────────────────────────────────────
               return (
                 <div key={model.slug}>
-                  <div style={{
+                  <div onClick={toggleExpand} style={{
                     display: 'grid', gridTemplateColumns: '4px 40px 1fr auto',
-                    alignItems: 'center',
+                    alignItems: 'center', cursor: 'pointer',
+                    background: expanded ? 'var(--hover)' : 'transparent',
                   }}
-                    onMouseEnter={e => e.currentTarget.style.background = 'var(--hover)'}
-                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                    onMouseEnter={e => { if (!expanded) e.currentTarget.style.background = 'var(--hover)'; }}
+                    onMouseLeave={e => { if (!expanded) e.currentTarget.style.background = 'transparent'; }}
                   >
                     <div style={{ alignSelf: 'stretch', background: tierColor, opacity: 0.5 }} />
                     <div style={{ padding: '10px 0 10px 10px' }}>
@@ -342,13 +348,29 @@ export default function LeaderboardPage() {
                         <span style={{ fontSize: 11, color: 'var(--muted)', flexShrink: 0 }}>{model.votesLabel}v</span>
                       </div>
                     </div>
-                    <div style={{ padding: '10px 10px 10px 6px', display: 'flex', alignItems: 'center', gap: 3, flexShrink: 0 }}>
+                    <div style={{ padding: '10px 10px 10px 6px', display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
                       <div style={{ textAlign: 'right' }}>
                         <div style={{ fontSize: 17, fontWeight: 700, color: tierColor, letterSpacing: '-0.025em', fontVariantNumeric: 'tabular-nums' }}>{model.elo}</div>
                         <div style={{ fontSize: 9, color: 'var(--muted2)' }}>±{model.ci ?? '—'}</div>
                       </div>
+                      <svg width="10" height="6" viewBox="0 0 10 6" fill="none" style={{ transform: expanded ? 'rotate(180deg)' : 'none', transition: 'transform 0.18s' }}>
+                        <path d="M1 1l4 4 4-4" stroke="var(--muted2)" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
                     </div>
                   </div>
+                  {expanded && (
+                    <div style={{ padding: '14px 16px 18px 54px', background: dark ? 'rgba(255,255,255,0.025)' : 'rgba(0,0,0,0.025)', borderTop: '0.5px solid var(--sep)' }}>
+                      <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--muted2)', textTransform: 'uppercase', letterSpacing: '0.09em', marginBottom: 8 }}>About</div>
+                      <p style={{ fontSize: 13, lineHeight: 1.6, color: 'var(--text)', letterSpacing: '-0.01em', margin: '0 0 10px' }}>
+                        {description ?? `${model.name} — ${model.org} model. ELO ${model.elo} from ${model.votesLabel} arena battles. No description available yet.`}
+                      </p>
+                      <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
+                        <span style={{ fontSize: 10, fontWeight: 600, color: tierColor, background: `${tierColor}18`, borderRadius: 6, padding: '3px 7px', letterSpacing: '-0.01em' }}>Tier {eloTier(model.elo)}</span>
+                        <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--pill-text)', background: 'var(--pill)', borderRadius: 6, padding: '3px 7px', letterSpacing: '-0.01em' }}>{model.context ?? '—'} ctx</span>
+                        {model.priceIn != null && <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--pill-text)', background: 'var(--pill)', borderRadius: 6, padding: '3px 7px', letterSpacing: '-0.01em' }}>{fmtPrice(model.priceIn)}/M in</span>}
+                      </div>
+                    </div>
+                  )}
                   {i < filtered.length - 1 && <div style={{ height: '0.5px', background: 'var(--sep)', marginLeft: 54 }} />}
                 </div>
               );
@@ -357,15 +379,16 @@ export default function LeaderboardPage() {
             // ── Desktop row ──────────────────────────────────────────
             return (
               <div key={model.slug}>
-                <div style={{
+                <div onClick={toggleExpand} style={{
                   display: 'grid',
-                  gridTemplateColumns: `4px ${COL.rank}px ${COL.icon}px 1fr ${COL.badges}px ${COL.elo}px ${COL.votes}px ${COL.price}px ${COL.ctx}px`,
+                  gridTemplateColumns: `4px ${COL.rank}px ${COL.icon}px 1fr ${COL.badges}px ${COL.elo}px ${COL.votes}px ${COL.price}px ${COL.ctx}px ${COL.chev}px`,
                   alignItems: 'center',
                   cursor: 'pointer',
                   transition: 'background 0.1s',
+                  background: expanded ? 'var(--hover)' : 'transparent',
                 }}
-                  onMouseEnter={e => e.currentTarget.style.background = 'var(--hover)'}
-                  onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                  onMouseEnter={e => { if (!expanded) e.currentTarget.style.background = 'var(--hover)'; }}
+                  onMouseLeave={e => { if (!expanded) e.currentTarget.style.background = 'transparent'; }}
                 >
                   {/* Tier stripe */}
                   <div style={{ alignSelf: 'stretch', background: tierColor, opacity: 0.5 }} />
@@ -447,12 +470,33 @@ export default function LeaderboardPage() {
                   </div>
 
                   {/* Context */}
-                  <div style={{ padding: '10px 14px 10px 8px', textAlign: 'right' }}>
+                  <div style={{ padding: '10px 8px 10px 8px', textAlign: 'right' }}>
                     <div style={{ fontSize: 12, fontWeight: 500, color: 'var(--muted)', fontVariantNumeric: 'tabular-nums' }}>{model.context ?? '—'}</div>
                   </div>
 
                   {/* Chevron */}
+                  <div style={{ padding: '10px 10px 10px 0', display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
+                    <svg width="10" height="6" viewBox="0 0 10 6" fill="none" style={{ transform: expanded ? 'rotate(180deg)' : 'none', transition: 'transform 0.18s', opacity: 0.5 }}>
+                      <path d="M1 1l4 4 4-4" stroke="var(--muted2)" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </div>
                 </div>
+                {expanded && (
+                  <div style={{ padding: '16px 28px 20px 72px', background: dark ? 'rgba(255,255,255,0.025)' : 'rgba(0,0,0,0.025)', borderTop: '0.5px solid var(--sep)' }}>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--muted2)', textTransform: 'uppercase', letterSpacing: '0.09em', marginBottom: 8 }}>About</div>
+                    <p style={{ fontSize: 13, lineHeight: 1.6, color: 'var(--text)', letterSpacing: '-0.01em', margin: '0 0 12px', maxWidth: 820 }}>
+                      {description ?? `${model.name} — ${model.org} model. ELO ${model.elo} from ${model.votesLabel} arena battles. No description available yet.`}
+                    </p>
+                    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                      <span style={{ fontSize: 10, fontWeight: 600, color: tierColor, background: `${tierColor}18`, borderRadius: 6, padding: '3px 8px', letterSpacing: '-0.01em' }}>Tier {eloTier(model.elo)} · {model.elo}</span>
+                      <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--pill-text)', background: 'var(--pill)', borderRadius: 6, padding: '3px 8px', letterSpacing: '-0.01em' }}>{model.context ?? '—'} context</span>
+                      <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--pill-text)', background: 'var(--pill)', borderRadius: 6, padding: '3px 8px', letterSpacing: '-0.01em' }}>{model.votesLabel} votes</span>
+                      {model.priceIn != null && <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--pill-text)', background: 'var(--pill)', borderRadius: 6, padding: '3px 8px', letterSpacing: '-0.01em' }}>{fmtPrice(model.priceIn)} / {fmtPrice(model.priceOut)} per M</span>}
+                      {model.isThinking && <span style={{ fontSize: 10, fontWeight: 600, color: '#5856D6', background: 'rgba(88,86,214,0.12)', borderRadius: 6, padding: '3px 8px', letterSpacing: '-0.01em' }}>🧠 Thinking</span>}
+                      {model.isOpen && <span style={{ fontSize: 10, fontWeight: 600, color: '#34C759', background: 'rgba(52,199,89,0.12)', borderRadius: 6, padding: '3px 8px', letterSpacing: '-0.01em' }}>🔓 Open weight</span>}
+                    </div>
+                  </div>
+                )}
                 {i < filtered.length - 1 && <div style={{ height: '0.5px', background: 'var(--sep)', marginLeft: 68 }} />}
               </div>
             );

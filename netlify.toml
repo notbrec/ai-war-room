@@ -6,6 +6,8 @@
 [build.environment]
   NODE_VERSION = "20"
 
-[[edge_functions]]
-  path = "/api/leaderboard"
-  function = "leaderboard"
+[dev]
+  command    = "npm run dev"
+  targetPort = 5173
+  port       = 8888
+  framework  = "vite"
