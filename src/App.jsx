@@ -39,8 +39,8 @@ export default function App() {
 
   const pages = {
     home:        <HomePage        onNavigate={navigate} liveModels={liveModels} />,
-    leaderboard: <LeaderboardPage onNavigate={navigate} />,
-    methodology: <MethodologyPage onNavigate={navigate} />,
+    leaderboard: <LeaderboardPage onNavigate={navigate} liveModels={liveModels} />,
+    methodology: <MethodologyPage onNavigate={navigate} liveModels={liveModels} />,
   };
 
   return (

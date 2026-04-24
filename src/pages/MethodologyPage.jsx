@@ -17,10 +17,11 @@ const ELO_TIERS = [
   { range: '< 1300',   label: 'C-Tier', color: '#FF3B30', desc: 'Developing. Useful for simpler or cost-sensitive tasks.'    },
 ];
 
-export default function MethodologyPage() {
-  const orgs      = new Set(MODELS.map(m => m.org)).size;
-  const maxElo    = Math.max(...MODELS.map(m => m.elo));
-  const totalVotes = MODELS.reduce((s, m) => s + m.votes, 0);
+export default function MethodologyPage({ liveModels }) {
+  const data       = liveModels ?? MODELS;
+  const orgs       = new Set(data.map(m => m.org)).size;
+  const maxElo     = Math.max(...data.map(m => m.elo));
+  const totalVotes = data.reduce((s, m) => s + m.votes, 0);
 
   return (
     <div className="page-enter" style={{ background: 'var(--bg)', fontFamily: SF, minHeight: '100vh' }}>
@@ -40,9 +41,9 @@ export default function MethodologyPage() {
         {/* ── Stat chips ─────────────────────────────────────────────── */}
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 44 }}>
           {[
-            { v: MODELS.length,                          l: 'Models ranked'   },
+            { v: data.length,                            l: 'Models ranked'   },
             { v: orgs,                                   l: 'Organizations'   },
-            { v: `${(totalVotes / 1000).toFixed(0)}K`,  l: 'Arena votes'     },
+            { v: totalVotes >= 1_000_000 ? `${(totalVotes/1_000_000).toFixed(1)}M` : `${(totalVotes/1000).toFixed(0)}K`, l: 'Arena votes' },
             { v: maxElo,                                 l: 'Highest ELO'     },
             { v: RELEASE,                                l: 'Current release' },
           ].map(s => (
@@ -105,7 +106,7 @@ export default function MethodologyPage() {
               { label: 'Source',    value: 'OpenRouter API',    note: 'Live model pricing fetched every 30 minutes.' },
               { label: 'Unit',      value: '$ per 1M tokens',   note: 'Input price / output price shown separately.' },
               { label: 'Refresh',   value: 'Every 30 minutes',  note: 'Pricing updates silently in the background.' },
-              { label: 'Coverage',  value: `${MODELS.filter(m => m.priceIn != null).length}/${MODELS.length} models`, note: 'Some models have no public pricing.' },
+              { label: 'Coverage',  value: `${data.filter(m => m.priceIn != null).length}/${data.length} models`, note: 'Some models have no public pricing.' },
             ].map((row, i, arr) => (
               <div key={row.label}>
                 <div style={{ display: 'grid', gridTemplateColumns: '100px 1fr', gap: 12, padding: '13px 16px', alignItems: 'flex-start' }}>
