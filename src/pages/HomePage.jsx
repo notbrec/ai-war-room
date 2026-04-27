@@ -84,16 +84,18 @@ function PodiumCard({ model, medal, onNavigate, dark }) {
 export default function HomePage({ onNavigate, liveModels }) {
   const dark       = useDark();
   const mobile     = useMobile();
+  const isLoaded   = !!liveModels;
   const data       = liveModels ?? MODELS;
-  const top3       = data.slice(0, 3);
+  const top3       = isLoaded ? data.slice(0, 3) : [];
   const totalVotes = data.reduce((s, m) => s + m.votes, 0);
   const orgs       = new Set(data.map(m => m.org)).size;
   const openCount  = data.filter(m => m.isOpen).length;
+  const SKEL       = '—';
 
-  const bestValue  = [...data].filter(m => m.priceIn != null && m.elo >= 1350)
-    .sort((a, b) => a.priceIn - b.priceIn)[0];
-  const mostVoted  = [...data].sort((a, b) => b.votes - a.votes)[0];
-  const bestOpen   = [...data].filter(m => m.isOpen)[0];
+  const bestValue  = isLoaded ? [...data].filter(m => m.priceIn != null && m.elo >= 1350)
+    .sort((a, b) => a.priceIn - b.priceIn)[0] : null;
+  const mostVoted  = isLoaded ? [...data].sort((a, b) => b.votes - a.votes)[0] : null;
+  const bestOpen   = isLoaded ? [...data].filter(m => m.isOpen)[0] : null;
 
   return (
     <div className="page-enter" style={{ background: 'var(--bg)', fontFamily: SF, minHeight: '100vh' }}>
@@ -120,7 +122,7 @@ export default function HomePage({ onNavigate, liveModels }) {
             </h1>
 
             <p style={{ fontSize: mobile ? 16 : 18, lineHeight: 1.55, color: 'var(--muted)', letterSpacing: '-0.02em', maxWidth: 500, margin: '0 0 28px' }}>
-              {data.length} models ranked by ELO — earned from real arena battles, not benchmarks. Updated live from OpenRouter.
+              {isLoaded ? `${data.length} models` : 'Hundreds of models'} ranked by ELO — earned from real arena battles, not benchmarks. Updated live from OpenRouter.
             </p>
 
             <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
@@ -142,13 +144,13 @@ export default function HomePage({ onNavigate, liveModels }) {
 
             <div style={{ display: 'flex', gap: mobile ? 20 : 32, marginTop: 36, flexWrap: 'wrap' }}>
               {[
-                { v: data.length,                         l: 'Models'      },
-                { v: orgs,                                  l: 'Labs'        },
-                { v: `${(totalVotes/1000).toFixed(0)}K`,   l: 'Votes cast'  },
-                { v: openCount,                             l: 'Open weight' },
+                { v: isLoaded ? data.length                                                                              : SKEL, l: 'Models'      },
+                { v: isLoaded ? orgs                                                                                     : SKEL, l: 'Labs'        },
+                { v: isLoaded ? (totalVotes >= 1_000_000 ? `${(totalVotes/1_000_000).toFixed(1)}M` : `${(totalVotes/1000).toFixed(0)}K`) : SKEL, l: 'Votes cast' },
+                { v: isLoaded ? openCount                                                                                : SKEL, l: 'Open weight' },
               ].map(s => (
                 <div key={s.l}>
-                  <div style={{ fontSize: mobile ? 22 : 28, fontWeight: 700, letterSpacing: '-0.04em', color: 'var(--text)', fontVariantNumeric: 'tabular-nums' }}>{s.v}</div>
+                  <div style={{ fontSize: mobile ? 22 : 28, fontWeight: 700, letterSpacing: '-0.04em', color: isLoaded ? 'var(--text)' : 'var(--muted2)', fontVariantNumeric: 'tabular-nums', transition: 'color 0.25s' }}>{s.v}</div>
                   <div style={{ fontSize: 12, color: 'var(--muted)', letterSpacing: '-0.01em', marginTop: 1 }}>{s.l}</div>
                 </div>
               ))}
@@ -169,7 +171,18 @@ export default function HomePage({ onNavigate, liveModels }) {
             Top 3 — ELO Leaderboard
           </p>
           <div style={{ display: 'flex', flexDirection: mobile ? 'column' : 'row', gap: 8 }}>
-            {top3.map((m, i) => <PodiumCard key={m.slug} model={m} medal={MEDALS[i]} onNavigate={onNavigate} dark={dark} />)}
+            {isLoaded
+              ? top3.map((m, i) => <PodiumCard key={m.slug} model={m} medal={MEDALS[i]} onNavigate={onNavigate} dark={dark} />)
+              : MEDALS.map((medal, i) => (
+                  <div key={i} style={{
+                    background: 'var(--card)', borderRadius: 18, border: `1px solid ${medal.border}`,
+                    padding: '18px 16px', flex: 1, minHeight: 168,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}>
+                    <span style={{ fontSize: 13, color: 'var(--muted2)', letterSpacing: '-0.01em' }}>Loading…</span>
+                  </div>
+                ))
+            }
           </div>
         </section>
 
@@ -239,7 +252,7 @@ export default function HomePage({ onNavigate, liveModels }) {
           }}>
             <div>
               <div style={{ fontSize: 20, fontWeight: 700, color: dark ? 'var(--text)' : 'var(--bg)', letterSpacing: '-0.03em', lineHeight: 1.2 }}>
-                See all {data.length} models.
+                {isLoaded ? `See all ${data.length} models.` : 'See the full leaderboard.'}
               </div>
               <div style={{ fontSize: 13, color: 'var(--muted)', marginTop: 4, letterSpacing: '-0.01em' }}>
                 Sort by ELO, votes, price, or context window.

@@ -83,10 +83,10 @@ function StatCard({ label, value, color }) {
   );
 }
 
-export default function LeaderboardPage() {
+export default function LeaderboardPage({ liveModels }) {
   const dark   = useDark();
   const mobile = useMobile();
-  const [models, setModels]               = useState(MODELS);
+  const [models, setModels]               = useState(() => liveModels ?? []);
   const [sort, setSort]                   = useState('elo');
   const [query, setQuery]                 = useState('');
   const [filterOpen, setFilterOpen]       = useState(false);
@@ -101,8 +101,8 @@ export default function LeaderboardPage() {
   const loadData = useCallback(async () => {
     setLoading(true);
     try {
-      const [liveModels, meta] = await Promise.all([fetchLeaderboard(), fetchOpenRouterMeta()]);
-      const enriched = liveModels.map(m => {
+      const [fetched, meta] = await Promise.all([fetchLeaderboard(), fetchOpenRouterMeta()]);
+      const enriched = fetched.map(m => {
         const key = Object.keys(meta).find(k => k.toLowerCase().includes(m.slug.toLowerCase().replace(/-/g, '')));
         if (!key) return m;
         const live = meta[key];
@@ -111,18 +111,24 @@ export default function LeaderboardPage() {
       setModels(enriched);
       setLastUpdated(new Date());
     } catch {
-      setModels(MODELS);
+      setModels(prev => prev.length > 0 ? prev : (liveModels ?? MODELS));
       setLastUpdated(new Date());
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [liveModels]);
 
   useEffect(() => {
     loadData();
     intervalRef.current = setInterval(loadData, AUTO_REFRESH_MS);
     return () => clearInterval(intervalRef.current);
   }, [loadData]);
+
+  // Sync with liveModels passed from App (fills the table instantly once
+  // App.jsx's fetch resolves, even before our own enriched loadData finishes)
+  useEffect(() => {
+    if (liveModels?.length > 0 && models.length === 0) setModels(liveModels);
+  }, [liveModels, models.length]);
 
   useEffect(() => {
     const t = setInterval(() => setTick(n => n + 1), 60_000);
@@ -181,10 +187,10 @@ export default function LeaderboardPage() {
 
         {/* ── Stats row ────────────────────────────────────────────── */}
         <div style={{ display: 'flex', gap: 10, marginBottom: 20, flexWrap: mobile ? 'wrap' : 'nowrap' }}>
-          <StatCard label="Models" value={models.length} />
-          <StatCard label="Total votes" value={totalVotes >= 1_000_000 ? `${(totalVotes/1_000_000).toFixed(1)}M` : `${(totalVotes/1000).toFixed(0)}K`} />
-          <StatCard label="Top ELO" value={topElo} color="#34C759" />
-          <StatCard label="Open weight" value={openCount} color="#007AFF" />
+          <StatCard label="Models" value={models.length > 0 ? models.length : '—'} />
+          <StatCard label="Total votes" value={models.length > 0 ? (totalVotes >= 1_000_000 ? `${(totalVotes/1_000_000).toFixed(1)}M` : `${(totalVotes/1000).toFixed(0)}K`) : '—'} />
+          <StatCard label="Top ELO" value={models.length > 0 ? topElo : '—'} color="#34C759" />
+          <StatCard label="Open weight" value={models.length > 0 ? openCount : '—'} color="#007AFF" />
         </div>
 
         {/* ── Search ───────────────────────────────────────────────── */}
@@ -263,7 +269,11 @@ export default function LeaderboardPage() {
 
         {/* ── Count ────────────────────────────────────────────────── */}
         <p style={{ fontSize: 11, fontWeight: 600, color: 'var(--muted2)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 6, paddingLeft: 2 }}>
-          {(q || activeFilters > 0) ? `${filtered.length} result${filtered.length !== 1 ? 's' : ''}` : `${filtered.length} models`}
+          {models.length === 0
+            ? 'Loading…'
+            : (q || activeFilters > 0)
+              ? `${filtered.length} result${filtered.length !== 1 ? 's' : ''}`
+              : `${filtered.length} models`}
         </p>
 
         {/* ── Table ────────────────────────────────────────────────── */}
@@ -293,7 +303,7 @@ export default function LeaderboardPage() {
 
           {filtered.length === 0 && (
             <div style={{ padding: '48px 20px', textAlign: 'center', color: 'var(--muted)', fontSize: 15 }}>
-              No models match — try adjusting filters
+              {models.length === 0 ? 'Loading models…' : 'No models match — try adjusting filters'}
             </div>
           )}
 
