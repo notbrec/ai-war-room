@@ -31,6 +31,17 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: 'instant' });
   };
 
+  // Send a GA4 page_view whenever the SPA route changes
+  useEffect(() => {
+    if (typeof window === 'undefined' || typeof window.gtag !== 'function') return;
+    const path = page === 'home' ? '/' : `/${page}`;
+    window.gtag('event', 'page_view', {
+      page_path: path,
+      page_title: page === 'home' ? 'AI WAR ROOM' : `AI WAR ROOM — ${page}`,
+      page_location: window.location.origin + path,
+    });
+  }, [page]);
+
   useEffect(() => {
     const onHash = () => setPage(pageFromHash());
     window.addEventListener('hashchange', onHash);
