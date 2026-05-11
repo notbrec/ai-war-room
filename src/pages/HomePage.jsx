@@ -81,7 +81,7 @@ function PodiumCard({ model, medal, onNavigate, dark }) {
   );
 }
 
-export default function HomePage({ onNavigate, liveModels }) {
+export default function HomePage({ onNavigate, liveModels, countSnapshot }) {
   const dark       = useDark();
   const mobile     = useMobile();
   const isLoaded   = !!liveModels;
@@ -91,6 +91,12 @@ export default function HomePage({ onNavigate, liveModels }) {
   const orgs       = new Set(data.map(m => m.org)).size;
   const openCount  = data.filter(m => m.isOpen).length;
   const SKEL       = '—';
+
+  // Always-visible model count — never shows the 63-entry fallback flash.
+  // Defaults to "280+" on first paint, updates to exact number once live data arrives.
+  const snap          = countSnapshot ?? { count: 280, exact: false };
+  const modelCountStr = snap.exact ? String(snap.count) : `${snap.count}+`;
+  const modelLabel    = snap.exact ? `${snap.count} models` : `${snap.count}+ models`;
 
   const bestValue  = isLoaded ? [...data].filter(m => m.priceIn != null && m.elo >= 1350)
     .sort((a, b) => a.priceIn - b.priceIn)[0] : null;
@@ -122,7 +128,7 @@ export default function HomePage({ onNavigate, liveModels }) {
             </h1>
 
             <p style={{ fontSize: mobile ? 16 : 18, lineHeight: 1.55, color: 'var(--muted)', letterSpacing: '-0.02em', maxWidth: 500, margin: '0 0 28px' }}>
-              {isLoaded ? `${data.length} models` : 'Hundreds of models'} ranked by ELO — earned from real arena battles, not benchmarks. Updated live from OpenRouter.
+              {modelLabel} ranked by ELO — earned from real arena battles, not benchmarks. Updated live from OpenRouter.
             </p>
 
             <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
@@ -144,13 +150,13 @@ export default function HomePage({ onNavigate, liveModels }) {
 
             <div style={{ display: 'flex', gap: mobile ? 20 : 32, marginTop: 36, flexWrap: 'wrap' }}>
               {[
-                { v: isLoaded ? data.length                                                                              : SKEL, l: 'Models'      },
-                { v: isLoaded ? orgs                                                                                     : SKEL, l: 'Labs'        },
-                { v: isLoaded ? (totalVotes >= 1_000_000 ? `${(totalVotes/1_000_000).toFixed(1)}M` : `${(totalVotes/1000).toFixed(0)}K`) : SKEL, l: 'Votes cast' },
-                { v: isLoaded ? openCount                                                                                : SKEL, l: 'Open weight' },
+                { v: modelCountStr,                                                                                                       l: 'Models',       confirmed: snap.exact },
+                { v: isLoaded ? orgs                                                                                              : SKEL, l: 'Labs',         confirmed: isLoaded },
+                { v: isLoaded ? (totalVotes >= 1_000_000 ? `${(totalVotes/1_000_000).toFixed(1)}M` : `${(totalVotes/1000).toFixed(0)}K`) : SKEL, l: 'Votes cast', confirmed: isLoaded },
+                { v: isLoaded ? openCount                                                                                         : SKEL, l: 'Open weight',  confirmed: isLoaded },
               ].map(s => (
                 <div key={s.l}>
-                  <div style={{ fontSize: mobile ? 22 : 28, fontWeight: 700, letterSpacing: '-0.04em', color: isLoaded ? 'var(--text)' : 'var(--muted2)', fontVariantNumeric: 'tabular-nums', transition: 'color 0.25s' }}>{s.v}</div>
+                  <div style={{ fontSize: mobile ? 22 : 28, fontWeight: 700, letterSpacing: '-0.04em', color: s.confirmed ? 'var(--text)' : 'var(--muted2)', fontVariantNumeric: 'tabular-nums', transition: 'color 0.25s' }}>{s.v}</div>
                   <div style={{ fontSize: 12, color: 'var(--muted)', letterSpacing: '-0.01em', marginTop: 1 }}>{s.l}</div>
                 </div>
               ))}
@@ -252,7 +258,7 @@ export default function HomePage({ onNavigate, liveModels }) {
           }}>
             <div>
               <div style={{ fontSize: 20, fontWeight: 700, color: dark ? 'var(--text)' : 'var(--bg)', letterSpacing: '-0.03em', lineHeight: 1.2 }}>
-                {isLoaded ? `See all ${data.length} models.` : 'See the full leaderboard.'}
+                {snap.exact ? `See all ${snap.count} models.` : `See all ${snap.count}+ models.`}
               </div>
               <div style={{ fontSize: 13, color: 'var(--muted)', marginTop: 4, letterSpacing: '-0.01em' }}>
                 Sort by ELO, votes, price, or context window.

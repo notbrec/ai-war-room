@@ -3,9 +3,10 @@ import Logo from './Logo.jsx';
 const SF = "-apple-system,'SF Pro Display','SF Pro Text',BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif";
 
 const LINKS = [
-  { id: 'home',        label: 'Home'        },
   { id: 'leaderboard', label: 'Leaderboard' },
   { id: 'methodology', label: 'Methodology' },
+  { id: 'blog',        label: 'Blog'        },
+  { id: 'about',       label: 'About'       },
 ];
 
 function SunIcon() {

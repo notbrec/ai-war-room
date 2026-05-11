@@ -17,13 +17,16 @@ const ELO_TIERS = [
   { range: '< 1300',   label: 'C-Tier', color: '#FF3B30', desc: 'Developing. Useful for simpler or cost-sensitive tasks.'    },
 ];
 
-export default function MethodologyPage({ liveModels }) {
+export default function MethodologyPage({ liveModels, countSnapshot }) {
   const isLoaded   = !!liveModels;
   const data       = liveModels ?? MODELS;
   const orgs       = new Set(data.map(m => m.org)).size;
   const maxElo     = Math.max(...data.map(m => m.elo));
   const totalVotes = data.reduce((s, m) => s + m.votes, 0);
   const SKEL       = '—';
+
+  const snap          = countSnapshot ?? { count: 280, exact: false };
+  const modelCountStr = snap.exact ? String(snap.count) : `${snap.count}+`;
 
   return (
     <div className="page-enter" style={{ background: 'var(--bg)', fontFamily: SF, minHeight: '100vh' }}>
@@ -43,7 +46,7 @@ export default function MethodologyPage({ liveModels }) {
         {/* ── Stat chips ─────────────────────────────────────────────── */}
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 44 }}>
           {[
-            { v: isLoaded ? data.length                                                                                       : SKEL, l: 'Models ranked'   },
+            { v: modelCountStr,                                                                                                       l: 'Models ranked'   },
             { v: isLoaded ? orgs                                                                                              : SKEL, l: 'Organizations'   },
             { v: isLoaded ? (totalVotes >= 1_000_000 ? `${(totalVotes/1_000_000).toFixed(1)}M` : `${(totalVotes/1000).toFixed(0)}K`) : SKEL, l: 'Arena votes' },
             { v: isLoaded ? maxElo                                                                                            : SKEL, l: 'Highest ELO'     },

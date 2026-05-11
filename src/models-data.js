@@ -10,6 +10,25 @@ export const LEADERBOARD_URL       = '/api/leaderboard';
 export const AUTO_REFRESH_MS       = 30 * 60 * 1000; // 30 min
 export const RELEASE               = 'AI-WAR-LIVE';
 
+// ── Stable count snapshot (avoids the 63 → 280 flash on first paint) ─────
+// Default shows "280+" until a real live count loads or is read from localStorage.
+const LAST_COUNT_KEY    = 'aiwar-last-model-count';
+const DEFAULT_COUNT     = 280;
+
+export function readModelCountSnapshot() {
+  try {
+    const v = localStorage.getItem(LAST_COUNT_KEY);
+    const n = parseInt(v, 10);
+    if (Number.isFinite(n) && n > 50) return { count: n, exact: true };
+  } catch {}
+  return { count: DEFAULT_COUNT, exact: false };
+}
+
+export function writeModelCountSnapshot(n) {
+  if (!Number.isFinite(n) || n <= 50) return;
+  try { localStorage.setItem(LAST_COUNT_KEY, String(n)); } catch {}
+}
+
 // Normalize a model name into a lookup key (alphanumerics only, lowercase)
 function descKey(s) {
   return (s ?? '').toLowerCase().replace(/[^a-z0-9]+/g, '');
