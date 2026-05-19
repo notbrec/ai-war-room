@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { MODELS, ORG_CONFIG, LICENSE_CONFIG, RELEASE, AUTO_REFRESH_MS, fetchLeaderboard, fetchOpenRouterMeta, getDescription } from '../models-data.js';
 import { useDark, useMobile } from '../hooks/useTheme.js';
-import { SF, MONO, EASE, Reveal, AnimatedNumber, Eyebrow, LivePulse, GlobalMotion } from '../components/design.jsx';
+import { SF, MONO, EASE, Reveal, AnimatedNumber, Eyebrow, LivePulse, GlobalMotion, ComparisonBar } from '../components/design.jsx';
 
 const SORTS = [
   { key: 'elo',      label: 'ELO'      },
@@ -52,16 +52,19 @@ function sortModels(models, sortKey) {
 
 function Pill({ active, color, label, icon, onClick }) {
   return (
-    <button onClick={onClick} style={{
-      height: 28, paddingInline: 12, borderRadius: 980,
-      display: 'flex', alignItems: 'center', gap: 4,
-      background: active ? `${color}20` : 'var(--pill)',
-      border: `1px solid ${active ? color + '55' : 'transparent'}`,
-      color: active ? color : 'var(--pill-text)',
-      fontSize: 12, fontWeight: active ? 600 : 400,
-      cursor: 'pointer', letterSpacing: '-0.01em',
-      transition: 'all 0.15s', flexShrink: 0,
-    }}>
+    <button onClick={onClick}
+      className="aiwar-press-btn"
+      style={{
+        height: 30, paddingInline: 14, borderRadius: 980,
+        display: 'inline-flex', alignItems: 'center', gap: 6,
+        background: active ? `${color}18` : 'transparent',
+        border: `0.5px solid ${active ? color + '88' : 'var(--sep)'}`,
+        color: active ? color : 'var(--text)',
+        fontSize: 12, fontWeight: 500,
+        cursor: 'pointer', letterSpacing: '-0.01em',
+        flexShrink: 0,
+        boxShadow: active ? `0 0 0 4px ${color}14` : 'none',
+      }}>
       {icon && <span style={{ fontSize: 11 }}>{icon}</span>}
       {label}
     </button>
@@ -245,49 +248,73 @@ export default function LeaderboardPage({ liveModels }) {
 
         {/* ── Filter bar ───────────────────────────────────────────── */}
         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 8, alignItems: 'center' }}>
-          <span style={{ fontSize: 12, color: 'var(--muted)', marginRight: 2, letterSpacing: '-0.01em', flexShrink: 0 }}>Sort:</span>
+          <span style={{
+            fontSize: 10.5, color: 'var(--muted2)', marginRight: 6, letterSpacing: '0.08em',
+            flexShrink: 0, fontFamily: MONO, fontWeight: 600, textTransform: 'uppercase',
+          }}>Sort</span>
           {SORTS.map(s => (
-            <button key={s.key} onClick={() => setSort(s.key)} style={{
-              height: 28, paddingInline: 12, borderRadius: 980,
-              background: sort === s.key ? 'var(--text)' : 'var(--pill)',
-              color: sort === s.key ? 'var(--bg)' : 'var(--pill-text)',
-              fontSize: 12, fontWeight: sort === s.key ? 600 : 400,
-              border: 'none', cursor: 'pointer', letterSpacing: '-0.01em',
-              transition: 'background 0.15s, color 0.15s',
-            }}>{s.label}</button>
+            <button key={s.key} onClick={() => setSort(s.key)}
+              className="aiwar-press-btn"
+              style={{
+                height: 30, paddingInline: 14, borderRadius: 980,
+                background: sort === s.key ? 'var(--text)' : 'transparent',
+                color: sort === s.key ? 'var(--bg)' : 'var(--text)',
+                fontSize: 12, fontWeight: sort === s.key ? 600 : 500,
+                border: `0.5px solid ${sort === s.key ? 'var(--text)' : 'var(--sep)'}`,
+                cursor: 'pointer', letterSpacing: '-0.01em',
+                boxShadow: sort === s.key ? '0 0 0 4px rgba(255,255,255,0.04)' : 'none',
+              }}>{s.label}</button>
           ))}
-          <div style={{ width: '0.5px', height: 16, background: 'var(--sep)', marginInline: 2, flexShrink: 0 }} />
+          <div style={{ width: '0.5px', height: 18, background: 'var(--sep)', marginInline: 6, flexShrink: 0 }} />
           <Pill active={filterOpen}     color="#34C759" label="Open"     icon="🔓" onClick={() => setFilterOpen(v => !v)} />
           <Pill active={filterThinking} color="#5856D6" label="Thinking" icon="🧠" onClick={() => setFilterThinking(v => !v)} />
           {activeFilters > 0 && (
-            <button onClick={clearFilters} style={{
-              height: 26, paddingInline: 9, borderRadius: 980,
-              background: 'rgba(255,59,48,0.10)', color: '#FF3B30',
-              fontSize: 11, fontWeight: 500, border: 'none', cursor: 'pointer', flexShrink: 0,
-            }}>Clear ×{activeFilters}</button>
+            <button onClick={clearFilters}
+              className="aiwar-press-btn"
+              style={{
+                height: 28, paddingInline: 12, borderRadius: 980,
+                background: 'rgba(255,59,48,0.10)', color: '#FF3B30',
+                fontSize: 11.5, fontWeight: 600, border: '0.5px solid rgba(255,59,48,0.30)',
+                cursor: 'pointer', flexShrink: 0, letterSpacing: '-0.005em',
+              }}>Clear ×{activeFilters}</button>
           )}
         </div>
 
         {/* ── Org strip ────────────────────────────────────────────── */}
-        <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap', marginBottom: 14 }}>
-          <button onClick={() => setFilterOrg('')} style={{
-            height: 24, paddingInline: 10, borderRadius: 980, flexShrink: 0,
-            background: !filterOrg ? 'var(--text)' : 'var(--pill)',
-            color: !filterOrg ? 'var(--bg)' : 'var(--pill-text)',
-            fontSize: 11, fontWeight: !filterOrg ? 600 : 400, border: 'none', cursor: 'pointer',
-          }}>All labs</button>
+        <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap', marginBottom: 18, alignItems: 'center' }}>
+          <span style={{
+            fontSize: 10.5, color: 'var(--muted2)', marginRight: 6, letterSpacing: '0.08em',
+            flexShrink: 0, fontFamily: MONO, fontWeight: 600, textTransform: 'uppercase',
+          }}>Lab</span>
+          <button onClick={() => setFilterOrg('')}
+            className="aiwar-press-btn"
+            style={{
+              height: 26, paddingInline: 11, borderRadius: 980, flexShrink: 0,
+              background: !filterOrg ? 'var(--text)' : 'transparent',
+              color: !filterOrg ? 'var(--bg)' : 'var(--text)',
+              fontSize: 11.5, fontWeight: !filterOrg ? 600 : 500,
+              border: `0.5px solid ${!filterOrg ? 'var(--text)' : 'var(--sep)'}`, cursor: 'pointer',
+              letterSpacing: '-0.005em',
+            }}>All</button>
           {ALL_ORGS.map(org => {
             const cfg = ORG_CONFIG[org] ?? { color: '#8E8E93' };
             const on  = filterOrg === org;
             return (
-              <button key={org} onClick={() => setFilterOrg(on ? '' : org)} style={{
-                height: 24, paddingInline: 10, borderRadius: 980, flexShrink: 0,
-                background: on ? `${cfg.color}20` : 'var(--pill)',
-                border: `1px solid ${on ? cfg.color + '55' : 'transparent'}`,
-                color: on ? cfg.color : 'var(--pill-text)',
-                fontSize: 11, fontWeight: on ? 600 : 400,
-                cursor: 'pointer', transition: 'all 0.15s',
-              }}>{org}</button>
+              <button key={org} onClick={() => setFilterOrg(on ? '' : org)}
+                className="aiwar-press-btn"
+                style={{
+                  height: 26, paddingInline: 11, borderRadius: 980, flexShrink: 0,
+                  background: on ? `${cfg.color}18` : 'transparent',
+                  border: `0.5px solid ${on ? cfg.color + '88' : 'var(--sep)'}`,
+                  color: on ? cfg.color : 'var(--text)',
+                  fontSize: 11.5, fontWeight: on ? 600 : 500,
+                  cursor: 'pointer', letterSpacing: '-0.005em',
+                  boxShadow: on ? `0 0 0 4px ${cfg.color}14` : 'none',
+                  display: 'inline-flex', alignItems: 'center', gap: 6,
+                }}>
+                <span style={{ width: 5, height: 5, borderRadius: 3, background: cfg.color }} />
+                {org}
+              </button>
             );
           })}
         </div>
@@ -410,7 +437,12 @@ export default function LeaderboardPage({ liveModels }) {
             if (mobile) {
               // ── Mobile row ──────────────────────────────────────
               return (
-                <div key={model.slug}>
+                <div key={model.slug} style={{
+                  opacity: 0,
+                  animation: i < 30
+                    ? `aiwar-fade-up 500ms ${EASE} ${Math.min(i * 30, 360)}ms both`
+                    : `aiwar-fade-in 300ms ${EASE} both`,
+                }}>
                   <div onClick={toggleExpand} style={{
                     display: 'grid', gridTemplateColumns: '4px 40px 1fr auto',
                     alignItems: 'center', cursor: 'pointer',
@@ -479,13 +511,18 @@ export default function LeaderboardPage({ liveModels }) {
 
             // ── Desktop row ──────────────────────────────────────────
             return (
-              <div key={model.slug}>
+              <div key={model.slug} style={{
+                opacity: 0,
+                animation: i < 30
+                  ? `aiwar-fade-up 500ms ${EASE} ${Math.min(i * 30, 360)}ms both`
+                  : `aiwar-fade-in 300ms ${EASE} both`,
+              }}>
                 <div onClick={toggleExpand} style={{
                   display: 'grid',
                   gridTemplateColumns: `4px ${COL.rank}px ${COL.icon}px 1fr ${COL.badges}px ${COL.elo}px ${COL.votes}px ${COL.price}px ${COL.ctx}px ${COL.chev}px`,
                   alignItems: 'center',
                   cursor: 'pointer',
-                  transition: 'background 0.1s',
+                  transition: 'background 250ms ease',
                   background: expanded ? 'var(--hover)' : 'transparent',
                 }}
                   onMouseEnter={e => { if (!expanded) e.currentTarget.style.background = 'var(--hover)'; }}
@@ -583,18 +620,53 @@ export default function LeaderboardPage({ liveModels }) {
                   </div>
                 </div>
                 {expanded && (
-                  <div style={{ padding: '16px 28px 20px 72px', background: dark ? 'rgba(255,255,255,0.025)' : 'rgba(0,0,0,0.025)', borderTop: '0.5px solid var(--sep)' }}>
-                    <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--muted2)', textTransform: 'uppercase', letterSpacing: '0.09em', marginBottom: 8 }}>About</div>
-                    <p style={{ fontSize: 13, lineHeight: 1.6, color: 'var(--text)', letterSpacing: '-0.01em', margin: '0 0 12px', maxWidth: 820 }}>
+                  <div style={{
+                    padding: '20px 28px 24px 72px',
+                    background: dark ? 'rgba(255,255,255,0.025)' : 'rgba(0,0,0,0.025)',
+                    borderTop: '0.5px solid var(--sep)',
+                    animation: `aiwar-fade-up 380ms ${EASE} both`,
+                  }}>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--muted2)', textTransform: 'uppercase', letterSpacing: '0.09em', marginBottom: 10, fontFamily: MONO }}>About</div>
+                    <p style={{ fontSize: 13.5, lineHeight: 1.65, color: 'var(--text)', letterSpacing: '-0.01em', margin: '0 0 18px', maxWidth: 820, opacity: 0.88 }}>
                       {description ?? `${model.name} — ${model.org} model. ELO ${model.elo} from ${model.votesLabel} arena battles. No description available yet.`}
                     </p>
+
+                    {/* Comparison bars */}
+                    <div style={{
+                      display: 'grid',
+                      gridTemplateColumns: model.priceIn != null ? 'repeat(3, 1fr)' : 'repeat(2, 1fr)',
+                      gap: 18, maxWidth: 720, marginBottom: 16,
+                    }}>
+                      <ComparisonBar
+                        label="ELO"
+                        valueText={String(model.elo)}
+                        width={Math.max(0.05, (model.elo - 1280) / Math.max(1, topElo - 1280))}
+                        color={tierColor}
+                      />
+                      {model.priceIn != null && (
+                        <ComparisonBar
+                          label="Price/M in"
+                          valueText={fmtPrice(model.priceIn)}
+                          width={Math.max(0.05, Math.min(1, model.priceIn / 25))}
+                          color="var(--text)"
+                        />
+                      )}
+                      <ComparisonBar
+                        label="Context"
+                        valueText={model.context ?? '—'}
+                        width={(() => {
+                          const ctxMap = { '2M':1, '1.1M':0.55, '1M':0.5, '400K':0.20, '262K':0.13, '256K':0.13, '204K':0.10, '200K':0.10, '163K':0.08, '131K':0.07, '128K':0.06 };
+                          return ctxMap[model.context] ?? 0.05;
+                        })()}
+                        color="var(--text)"
+                      />
+                    </div>
+
                     <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                      <span style={{ fontSize: 10, fontWeight: 600, color: tierColor, background: `${tierColor}18`, borderRadius: 6, padding: '3px 8px', letterSpacing: '-0.01em' }}>Tier {eloTier(model.elo)} · {model.elo}</span>
-                      <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--pill-text)', background: 'var(--pill)', borderRadius: 6, padding: '3px 8px', letterSpacing: '-0.01em' }}>{model.context ?? '—'} context</span>
-                      <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--pill-text)', background: 'var(--pill)', borderRadius: 6, padding: '3px 8px', letterSpacing: '-0.01em' }}>{model.votesLabel} votes</span>
-                      {model.priceIn != null && <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--pill-text)', background: 'var(--pill)', borderRadius: 6, padding: '3px 8px', letterSpacing: '-0.01em' }}>{fmtPrice(model.priceIn)} / {fmtPrice(model.priceOut)} per M</span>}
-                      {model.isThinking && <span style={{ fontSize: 10, fontWeight: 600, color: '#5856D6', background: 'rgba(88,86,214,0.12)', borderRadius: 6, padding: '3px 8px', letterSpacing: '-0.01em' }}>🧠 Thinking</span>}
-                      {model.isOpen && <span style={{ fontSize: 10, fontWeight: 600, color: '#34C759', background: 'rgba(52,199,89,0.12)', borderRadius: 6, padding: '3px 8px', letterSpacing: '-0.01em' }}>🔓 Open weight</span>}
+                      <span style={{ fontSize: 10, fontWeight: 600, color: tierColor, background: `${tierColor}18`, borderRadius: 6, padding: '3px 8px', letterSpacing: '-0.005em', fontFamily: MONO }}>Tier {eloTier(model.elo)}</span>
+                      <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--muted)', background: 'transparent', border: '0.5px solid var(--sep)', borderRadius: 6, padding: '3px 8px', letterSpacing: '-0.005em', fontFamily: MONO }}>{model.votesLabel} votes</span>
+                      {model.isThinking && <span style={{ fontSize: 10, fontWeight: 600, color: '#5856D6', background: 'rgba(88,86,214,0.12)', borderRadius: 6, padding: '3px 8px', letterSpacing: '-0.005em', fontFamily: MONO }}>Thinking</span>}
+                      {model.isOpen && <span style={{ fontSize: 10, fontWeight: 600, color: '#34C759', background: 'rgba(52,199,89,0.12)', borderRadius: 6, padding: '3px 8px', letterSpacing: '-0.005em', fontFamily: MONO }}>Open weight</span>}
                     </div>
                   </div>
                 )}

@@ -1,40 +1,43 @@
-/* ─── Theme tokens ─────────────────────────────────────────────────────── */
+/* ─── Theme tokens — graphite Bloomberg-grade ────────────────────────────── */
 :root {
-  --bg:          #F2F2F7;
-  --bg2:         #E5E5EA;
-  --card:        #FFFFFF;
-  --card2:       #F2F2F7;
-  --text:        #000000;
-  --text2:       #3C3C43;
-  --muted:       rgba(60,60,67,0.55);
-  --muted2:      rgba(60,60,67,0.38);
-  --sep:         rgba(60,60,67,0.12);
-  --sep2:        rgba(60,60,67,0.06);
-  --nav:         rgba(242,242,247,0.82);
-  --search:      rgba(116,116,128,0.12);
-  --hover:       rgba(0,0,0,0.025);
-  --pill:        rgba(116,116,128,0.10);
-  --pill-text:   rgba(60,60,67,0.80);
-  --shadow:      0 1px 0 rgba(60,60,67,0.10);
+  --bg:          #F5F5F7;
+  --bg2:         #ECECEE;
+  --card:        rgba(255,255,255,0.78);
+  --card2:       #FFFFFF;
+  --text:        #0a0a0c;
+  --text2:       #2c2c2e;
+  --muted:       rgba(28,28,30,0.62);
+  --muted2:      rgba(28,28,30,0.40);
+  --sep:         rgba(28,28,30,0.10);
+  --sep2:        rgba(28,28,30,0.05);
+  --nav:         rgba(245,245,247,0.78);
+  --search:      rgba(28,28,30,0.06);
+  --hover:       rgba(0,0,0,0.035);
+  --pill:        rgba(28,28,30,0.06);
+  --pill-text:   rgba(28,28,30,0.78);
+  --shadow:      0 1px 0 rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.04);
+  --accent:      #FF3B30;
 }
 
 html.dark {
-  --bg:          #111113;
-  --bg2:         #1C1C1E;
-  --card:        #1C1C1E;
-  --card2:       #2C2C2E;
-  --text:        #FFFFFF;
-  --text2:       #EBEBF5;
-  --muted:       rgba(235,235,245,0.55);
-  --muted2:      rgba(235,235,245,0.30);
-  --sep:         rgba(84,84,88,0.36);
-  --sep2:        rgba(84,84,88,0.18);
-  --nav:         rgba(17,17,19,0.90);
-  --search:      rgba(118,118,128,0.22);
-  --hover:       rgba(255,255,255,0.05);
-  --pill:        rgba(118,118,128,0.20);
-  --pill-text:   rgba(235,235,245,0.65);
-  --shadow:      0 1px 0 rgba(0,0,0,0.50), 0 4px 16px rgba(0,0,0,0.18);
+  /* Bloomberg-graphite: near-black backgrounds, glass cards, hairline borders */
+  --bg:          #07070a;
+  --bg2:         #0d0d10;
+  --card:        rgba(22,22,26,0.74);
+  --card2:       #15151a;
+  --text:        #f5f5f7;
+  --text2:       #d2d2d7;
+  --muted:       rgba(245,245,247,0.62);
+  --muted2:      rgba(245,245,247,0.38);
+  --sep:         rgba(255,255,255,0.08);
+  --sep2:        rgba(255,255,255,0.04);
+  --nav:         rgba(7,7,10,0.72);
+  --search:      rgba(255,255,255,0.05);
+  --hover:       rgba(255,255,255,0.035);
+  --pill:        rgba(255,255,255,0.05);
+  --pill-text:   rgba(245,245,247,0.78);
+  --shadow:      0 1px 0 rgba(0,0,0,0.6), 0 12px 32px rgba(0,0,0,0.42);
+  --accent:      #FF3B30;
 }
 
 /* ─── Reset ────────────────────────────────────────────────────────────── */
@@ -51,12 +54,12 @@ body {
   color: var(--text);
   overscroll-behavior: none;
   scrollbar-gutter: stable;
-  transition: background 0.25s ease, color 0.25s ease;
+  font-feature-settings: 'ss01', 'cv11', 'liga';
 }
 
 input, button, select, textarea { font-family: inherit; }
 
-/* ─── Page enter animation ─────────────────────────────────────────────── */
+/* ─── Page enter animation (legacy, kept for class compat) ──────────────── */
 @keyframes pageEnter {
   from { opacity: 0; transform: translateY(8px); }
   to   { opacity: 1; transform: translateY(0);   }
@@ -66,77 +69,89 @@ input, button, select, textarea { font-family: inherit; }
 }
 
 /* ─── Smooth theme transitions ─────────────────────────────────────────── */
-/* Only on specific properties, not everything — avoids killing page animations */
 body, body * {
   transition:
-    background-color 0.22s ease,
-    border-color     0.22s ease,
-    color            0.22s ease;
+    background-color 0.30s ease,
+    border-color     0.30s ease,
+    color            0.30s ease;
 }
 
-/* Exclude elements that should not transition (animations, transforms) */
-button, input, a, .page-enter {
+button, input, a, .page-enter, .aiwar-marquee-track, .aiwar-marquee-track * {
   transition:
-    background-color 0.15s ease,
-    border-color     0.15s ease,
-    color            0.15s ease,
-    opacity          0.15s ease,
-    transform        0.18s ease,
-    box-shadow       0.18s ease;
+    background-color 0.18s ease,
+    border-color     0.18s ease,
+    color            0.18s ease,
+    opacity          0.18s ease;
 }
 
-/* ─── Cyberpunk background ─────────────────────────────────────────────── */
-.cyber-bg {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 0;
-  overflow: hidden;
+/* ─── Premium ambient background — noise + radial vignette + soft drift ── */
+.aiwar-bg {
+  position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden;
 }
 
-.cyber-grid {
-  position: absolute;
-  inset: -80px;
+/* Subtle SVG noise grain — dark mode only */
+html.dark .aiwar-bg::before {
+  content: '';
+  position: absolute; inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.92' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.06 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  opacity: 0.55;
+  mix-blend-mode: overlay;
+}
+
+/* Hairline grid — barely visible, dark mode */
+html.dark .aiwar-bg::after {
+  content: '';
+  position: absolute; inset: -2px;
   background-image:
-    linear-gradient(rgba(0, 180, 255, 0.028) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0, 180, 255, 0.028) 1px, transparent 1px);
-  background-size: 64px 64px;
-  animation: cyberGridMove 28s linear infinite;
+    linear-gradient(rgba(255,255,255,0.018) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.018) 1px, transparent 1px);
+  background-size: 88px 88px;
+  mask-image: radial-gradient(ellipse at 50% 30%, black 40%, transparent 80%);
+  -webkit-mask-image: radial-gradient(ellipse at 50% 30%, black 40%, transparent 80%);
 }
 
-@keyframes cyberGridMove {
-  from { transform: translate(0, 0); }
-  to   { transform: translate(64px, 64px); }
+/* Soft drifting light blob (no purple, no neon — neutral white) */
+.aiwar-bg-light {
+  position: absolute; top: -300px; left: 50%; transform: translateX(-50%);
+  width: 1200px; height: 900px;
+  background: radial-gradient(ellipse at center, rgba(255,255,255,0.05) 0%, transparent 60%);
+  animation: aiwar-bg-drift 22s ease-in-out infinite alternate;
+  filter: blur(40px);
+}
+html:not(.dark) .aiwar-bg-light {
+  background: radial-gradient(ellipse at center, rgba(255,255,255,0.85) 0%, transparent 60%);
 }
 
-.cyber-scan {
-  position: absolute;
-  left: 0;
-  right: 0;
-  height: 220px;
-  background: linear-gradient(
-    180deg,
-    transparent 0%,
-    rgba(0, 180, 255, 0.035) 45%,
-    rgba(0, 220, 255, 0.06)  50%,
-    rgba(0, 180, 255, 0.035) 55%,
-    transparent 100%
-  );
-  animation: cyberScanMove 14s linear infinite;
-  top: -220px;
+@keyframes aiwar-bg-drift {
+  from { transform: translate(-50%, 0)    rotate(0deg); }
+  to   { transform: translate(-50%, 40px) rotate(8deg); }
 }
 
-.cyber-scan--delayed {
-  animation-delay: -7s;
+/* Subtle vignette darkening the very corners — anchors the eye */
+.aiwar-bg-vignette {
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.35) 100%);
+  pointer-events: none;
 }
-
-@keyframes cyberScanMove {
-  from { top: -220px; }
-  to   { top: 100vh;  }
-}
+html:not(.dark) .aiwar-bg-vignette { display: none; }
 
 /* ─── Scrollbar ─────────────────────────────────────────────────────────── */
 ::-webkit-scrollbar { width: 0; background: transparent; }
 
-/* ─── Selection ─────────────────────────────────────────────────────────── */
-::selection { background: rgba(0, 122, 255, 0.18); }
+/* ─── Selection (neutral, not blue) ─────────────────────────────────────── */
+::selection { background: rgba(255,255,255,0.18); color: inherit; }
+html:not(.dark) ::selection { background: rgba(0,0,0,0.10); }
+
+/* ─── Focus ring (premium hairline, not chrome blue) ────────────────────── */
+:focus-visible {
+  outline: 1px solid var(--text);
+  outline-offset: 2px;
+}
+
+/* ─── Premium glass surface helper ─────────────────────────────────────── */
+.aiwar-glass {
+  background: var(--card);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  border: 0.5px solid var(--sep);
+}

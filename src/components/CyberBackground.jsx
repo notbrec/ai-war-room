@@ -1,10 +1,12 @@
+/**
+ * Ambient premium background — noise + hairline grid + soft drifting light
+ * + vignette. No neon, no cyan, no purple, no military feel.
+ */
 export default function CyberBackground({ dark }) {
-  if (!dark) return null;
   return (
-    <div className="cyber-bg">
-      <div className="cyber-grid" />
-      <div className="cyber-scan" />
-      <div className="cyber-scan cyber-scan--delayed" />
+    <div className="aiwar-bg" aria-hidden>
+      <div className="aiwar-bg-light" />
+      <div className="aiwar-bg-vignette" />
     </div>
   );
 }

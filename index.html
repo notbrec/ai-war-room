@@ -33,25 +33,27 @@
       });
     </script>
 
-    <!-- ─ Blocking theme script: runs before first paint, no flash ─ -->
+    <!-- ─ Blocking theme script: dark is default, user can toggle ─ -->
     <script>
       (function () {
         try {
           var stored = localStorage.getItem('aiwar-theme');
-          var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-          var isDark = stored ? stored === 'dark' : prefersDark;
+          // Dark by default unless the user has explicitly chosen light.
+          var isDark = stored ? stored === 'dark' : true;
           if (isDark) document.documentElement.classList.add('dark');
           document.querySelector('meta[name=theme-color]') ||
             document.head.insertAdjacentHTML('beforeend',
-              '<meta name="theme-color" content="' + (isDark ? '#111113' : '#F2F2F7') + '">');
-        } catch (e) {}
+              '<meta name="theme-color" content="' + (isDark ? '#07070a' : '#F5F5F7') + '">');
+        } catch (e) {
+          document.documentElement.classList.add('dark');
+        }
       })();
     </script>
 
     <style>
       /* Match body bg before CSS loads to prevent FOUC */
-      html        { background: #F2F2F7; }
-      html.dark   { background: #111113; }
+      html        { background: #F5F5F7; }
+      html.dark   { background: #07070a; }
 
       /* Crawlable hero content — visible to bots & no-JS, hidden once React mounts */
       #seo-hero {

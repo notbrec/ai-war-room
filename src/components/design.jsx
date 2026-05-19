@@ -340,6 +340,113 @@ export function AmbientDots({ count = 14, color = 'var(--muted2)', opacity = 0.3
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
+   <ComparisonBar/> — animated horizontal bar with label
+   width is a 0–1 fraction; bar grows from 0 to width when in view.
+   ────────────────────────────────────────────────────────────────────── */
+export function ComparisonBar({ width = 0.5, color = 'var(--text)', height = 4, label, valueText, mono = true, animate = true }) {
+  const [ref, shown] = useReveal({ threshold: 0.2 });
+  const target = Math.max(0, Math.min(1, width));
+  const pct = shown ? target * 100 : 0;
+  return (
+    <div ref={ref} style={{ display: 'flex', flexDirection: 'column', gap: 6, width: '100%' }}>
+      {(label || valueText) && (
+        <div style={{
+          display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 8,
+        }}>
+          {label && (
+            <span style={{
+              fontSize: 10.5, color: 'var(--muted2)', textTransform: 'uppercase',
+              letterSpacing: '0.08em', fontFamily: MONO, fontWeight: 600,
+            }}>{label}</span>
+          )}
+          {valueText && (
+            <span style={{
+              fontSize: 12, color: 'var(--text)', fontWeight: 600,
+              fontVariantNumeric: 'tabular-nums',
+              fontFamily: mono ? MONO : SF, letterSpacing: '-0.005em',
+            }}>{valueText}</span>
+          )}
+        </div>
+      )}
+      <div style={{
+        position: 'relative', width: '100%', height,
+        background: 'var(--sep2)', borderRadius: height/2, overflow: 'hidden',
+      }}>
+        <div style={{
+          position: 'absolute', left: 0, top: 0, bottom: 0,
+          width: `${pct}%`,
+          background: color,
+          borderRadius: height/2,
+          transition: animate
+            ? `width 1200ms cubic-bezier(0.16,1,0.3,1)`
+            : 'none',
+          willChange: 'width',
+        }} />
+      </div>
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   <EditorialNote/> — analyst commentary card
+   ────────────────────────────────────────────────────────────────────── */
+export function EditorialNote({ author = 'Analyst', date, kicker, title, children }) {
+  return (
+    <div style={{
+      background: 'var(--card)',
+      border: '0.5px solid var(--sep)',
+      borderRadius: 18,
+      padding: '22px 24px',
+      backdropFilter: 'saturate(180%) blur(20px)',
+      WebkitBackdropFilter: 'saturate(180%) blur(20px)',
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
+        <span style={{ width: 6, height: 6, borderRadius: 3, background: 'var(--accent)' }} />
+        <span style={{
+          fontSize: 11, fontWeight: 600, color: 'var(--accent)',
+          textTransform: 'uppercase', letterSpacing: '0.10em', fontFamily: MONO,
+        }}>{kicker || 'Analyst note'}</span>
+      </div>
+      {title && (
+        <div style={{
+          fontSize: 18, fontWeight: 600, color: 'var(--text)',
+          letterSpacing: '-0.024em', lineHeight: 1.25, marginBottom: 10,
+        }}>{title}</div>
+      )}
+      <div style={{
+        fontSize: 14.5, lineHeight: 1.6, color: 'var(--muted)',
+        letterSpacing: '-0.01em',
+      }}>
+        {children}
+      </div>
+      {(author || date) && (
+        <div style={{
+          marginTop: 16, paddingTop: 14, borderTop: '0.5px solid var(--sep)',
+          fontSize: 11.5, color: 'var(--muted2)', fontFamily: MONO,
+          letterSpacing: '-0.005em',
+          display: 'flex', justifyContent: 'space-between',
+        }}>
+          <span>{author}</span>
+          {date && <span>{date}</span>}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   <Skeleton/> — premium loading shimmer
+   ────────────────────────────────────────────────────────────────────── */
+export function Skeleton({ width = '100%', height = 14, radius = 8, style }) {
+  return (
+    <div className="aiwar-shimmer" style={{
+      width, height, borderRadius: radius,
+      ...style,
+    }} />
+  );
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
    <TrendArrow/> seeded ↑/↓
    ────────────────────────────────────────────────────────────────────── */
 export function TrendArrow({ seed = 0, size = 10 }) {
