@@ -250,7 +250,7 @@ function LiveTicker({ models, dark }) {
       <Marquee3D
         items={items}
         renderItem={renderItem}
-        speed={40}
+        speed={70}
         gap={28}
         height={56}
         dark={dark}

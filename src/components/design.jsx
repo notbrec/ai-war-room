@@ -5,11 +5,10 @@ export const SF   = "-apple-system,'SF Pro Display','SF Pro Text',BlinkMacSystem
 export const MONO = "'SF Mono','JetBrains Mono',ui-monospace,'Menlo',monospace";
 export const EASE = 'cubic-bezier(0.16,1,0.3,1)'; // Apple-style out-expo curve
 
-/* ─── prefers-reduced-motion helper ─────────────────────────────────────── */
-function prefersReducedMotion() {
-  if (typeof window === 'undefined') return false;
-  return window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
-}
+/* ─── Animations always run — we don't auto-respect prefers-reduced-motion
+   because users (and Windows defaults) often have it on unintentionally and
+   the motion here is core to the product. */
+function prefersReducedMotion() { return false; }
 
 /* ─────────────────────────────────────────────────────────────────────────
    useSpring — damped spring interpolation per axis (rAF driven).
@@ -359,48 +358,42 @@ export function TrendArrow({ seed = 0, size = 10 }) {
 
 /* ─────────────────────────────────────────────────────────────────────────
    <Marquee3D/> — smooth perspective carousel.
-   Items closer to viewport center grow + sharpen, edges shrink + fade +
-   soft-blur. Hover the strip → it slows to a halt; hover an item → it
-   gently lifts forward in Z.
-   Imperative DOM-driven (no React state per frame) for buttery 60fps.
+   Track translation runs as a pure CSS keyframe animation so it ALWAYS
+   scrolls (no rAF, no JS gating, no headless-tab throttling).
+   rAF is layered on top to compute per-item 3D depth (scale/z/opacity/blur)
+   based on each item's distance from the viewport centre — when rAF is
+   available the items get the full premium 3D effect; when it isn't, items
+   simply ride the CSS marquee with their default styling. Either way the
+   ticker is alive.
    ────────────────────────────────────────────────────────────────────── */
 export function Marquee3D({ items, renderItem, speed = 60, gap = 32, height = 64 }) {
   const trackRef     = useRef(null);
   const containerRef = useRef(null);
   const itemRefs     = useRef([]);
-  const xRef         = useRef(0);
-  const widthRef     = useRef(0);
-  const lastTRef     = useRef(null);
-  const hoverRef     = useRef(false);
   const hoverIdxRef  = useRef(-1);
-  const speedFactor  = useRef(1);
+  const [duration, setDuration] = useState(40);
 
   const doubled = [...items, ...items];
 
+  // Measure track width and convert chosen speed (px/s) into CSS animation duration
+  useEffect(() => {
+    const update = () => {
+      if (!trackRef.current) return;
+      const half = trackRef.current.scrollWidth / 2;
+      // duration so that half the track scrolls past in `half / speed` seconds
+      setDuration(Math.max(20, half / speed));
+    };
+    update();
+    const ro = new ResizeObserver(update);
+    if (trackRef.current) ro.observe(trackRef.current);
+    window.addEventListener('resize', update);
+    return () => { ro.disconnect(); window.removeEventListener('resize', update); };
+  }, [items, speed]);
+
+  // rAF — depth-update layer (bonus: only enhances; never required for motion)
   useEffect(() => {
     let raf;
-    const tick = (t) => {
-      if (lastTRef.current == null) lastTRef.current = t;
-      const dt = Math.min(0.05, (t - lastTRef.current) / 1000);
-      lastTRef.current = t;
-
-      // Smoothly ease towards hover state (full → near-stop)
-      const targetFactor = hoverRef.current ? 0.04 : 1;
-      speedFactor.current += (targetFactor - speedFactor.current) * Math.min(1, dt * 5);
-
-      if (!prefersReducedMotion()) {
-        xRef.current -= speed * speedFactor.current * dt;
-      }
-      // Seamless loop
-      if (widthRef.current > 0 && -xRef.current >= widthRef.current / 2) {
-        xRef.current += widthRef.current / 2;
-      }
-
-      if (trackRef.current) {
-        trackRef.current.style.transform = `translate3d(${xRef.current.toFixed(2)}px, 0, 0)`;
-      }
-
-      // Per-item depth update — pure imperative DOM writes
+    const tick = () => {
       if (containerRef.current) {
         const cRect = containerRef.current.getBoundingClientRect();
         const center = cRect.left + cRect.width / 2;
@@ -411,14 +404,15 @@ export function Marquee3D({ items, renderItem, speed = 60, gap = 32, height = 64
           const el = itemRefs.current[i];
           if (!el) continue;
           const r = el.getBoundingClientRect();
+          if (r.width === 0) continue;
           const itemCenter = r.left + r.width / 2;
           const norm = Math.min(1, Math.abs(itemCenter - center) / half);
 
           const z        = (1 - norm) * 30 - 8;
-          const scale    = 0.82 + (1 - norm) * 0.24;
-          const liftY    = (1 - norm) * -4;
-          const blur     = norm * 1.4;
-          const opacity  = 0.40 + (1 - norm) * 0.60;
+          const scale    = 0.86 + (1 - norm) * 0.20;
+          const liftY    = (1 - norm) * -3;
+          const blur     = norm * 1.2;
+          const opacity  = 0.50 + (1 - norm) * 0.50;
 
           const isHover  = hoverIdx === i;
           const hoverZ   = isHover ? 40 : 0;
@@ -436,26 +430,11 @@ export function Marquee3D({ items, renderItem, speed = 60, gap = 32, height = 64
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [speed]);
-
-  // Measure for loop point
-  useEffect(() => {
-    const update = () => {
-      if (!trackRef.current) return;
-      widthRef.current = trackRef.current.scrollWidth;
-    };
-    update();
-    const ro = new ResizeObserver(update);
-    if (trackRef.current) ro.observe(trackRef.current);
-    window.addEventListener('resize', update);
-    return () => { ro.disconnect(); window.removeEventListener('resize', update); };
-  }, [items]);
+  }, []);
 
   return (
     <div
       ref={containerRef}
-      onMouseEnter={() => { hoverRef.current = true; }}
-      onMouseLeave={() => { hoverRef.current = false; hoverIdxRef.current = -1; }}
       style={{
         position: 'relative',
         perspective: 1400,
@@ -469,11 +448,13 @@ export function Marquee3D({ items, renderItem, speed = 60, gap = 32, height = 64
     >
       <div
         ref={trackRef}
+        className="aiwar-marquee-track"
         style={{
           display: 'flex', gap, alignItems: 'center', height: '100%',
           whiteSpace: 'nowrap', width: 'max-content',
           transformStyle: 'preserve-3d', willChange: 'transform',
           paddingInline: gap,
+          animation: `aiwar-marquee ${duration}s linear infinite`,
         }}
       >
         {doubled.map((item, i) => (
@@ -560,9 +541,11 @@ export function GlobalMotion() {
         75%, 100% { transform: scale(2.6); opacity: 0; }
       }
       @keyframes aiwar-marquee {
-        0%   { transform: translateX(0); }
-        100% { transform: translateX(-50%); }
+        0%   { transform: translate3d(0, 0, 0); }
+        100% { transform: translate3d(-50%, 0, 0); }
       }
+      .aiwar-marquee-track { animation-play-state: running; }
+      .aiwar-marquee-track:hover { animation-play-state: paused; }
       @keyframes aiwar-fade-up {
         from { opacity: 0; transform: translateY(20px); }
         to   { opacity: 1; transform: translateY(0); }
@@ -595,10 +578,15 @@ export function GlobalMotion() {
         50%      { box-shadow: 0 0 0 6px rgba(52,199,89,0.12); }
       }
       .aiwar-press-btn {
-        transition: transform 250ms cubic-bezier(0.16,1,0.3,1), background 250ms, color 250ms, border-color 250ms, box-shadow 250ms;
+        transition: transform 220ms cubic-bezier(0.16,1,0.3,1), background 220ms, color 220ms, border-color 220ms, box-shadow 220ms, filter 200ms;
+        position: relative;
       }
       .aiwar-press-btn:hover  { transform: translateY(-1px); }
-      .aiwar-press-btn:active { transform: translateY(0) scale(0.98); }
+      .aiwar-press-btn:active {
+        transform: translateY(0) scale(0.94);
+        filter: brightness(0.9) saturate(1.3);
+        transition: transform 80ms cubic-bezier(0.16,1,0.3,1), filter 80ms;
+      }
       .aiwar-card-hover {
         transition: transform 600ms cubic-bezier(0.16,1,0.3,1), border-color 350ms, box-shadow 600ms cubic-bezier(0.16,1,0.3,1);
       }
@@ -626,11 +614,16 @@ export function GlobalMotion() {
       .aiwar-page-enter {
         animation: aiwar-fade-up 600ms cubic-bezier(0.16,1,0.3,1) both;
       }
-      @media (prefers-reduced-motion: reduce) {
-        *, *::before, *::after {
-          animation-duration: 0.001ms !important;
-          transition-duration: 0.001ms !important;
-        }
+      /* Glitch / press flash for buttons */
+      @keyframes aiwar-click-flash {
+        0%   { box-shadow: 0 0 0 0 rgba(255,255,255,0.35); }
+        100% { box-shadow: 0 0 0 14px rgba(255,255,255,0); }
+      }
+      .aiwar-press-btn:active::after {
+        content: '';
+        position: absolute; inset: 0; border-radius: inherit;
+        animation: aiwar-click-flash 350ms ease-out forwards;
+        pointer-events: none;
       }
     `}</style>
   );
