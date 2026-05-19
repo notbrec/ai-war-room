@@ -15,6 +15,7 @@ import LabPage                   from './pages/LabPage.jsx';
 import GuidePage                  from './pages/GuidePage.jsx';
 import FAQPage                    from './pages/FAQPage.jsx';
 import { BlogIndexPage, BlogPostPage } from './pages/BlogPage.jsx';
+import { ScrollProgress, GlobalMotion } from './components/design.jsx';
 import { MODELS, fetchLeaderboard, readModelCountSnapshot, writeModelCountSnapshot } from './models-data.js';
 
 const CACHE_KEY = 'aiwar-models-v1';
@@ -146,6 +147,8 @@ export default function App() {
 
   return (
     <>
+      <GlobalMotion />
+      <ScrollProgress />
       <CyberBackground dark={dark} />
       <NavBar
         page={route.type}
@@ -153,7 +156,9 @@ export default function App() {
         dark={dark}
         onToggleTheme={toggle}
       />
-      {body}
+      <div key={`${route.type}/${route.slug ?? ''}`} className="aiwar-page-enter">
+        {body}
+      </div>
       <Footer onNavigate={navigate} />
     </>
   );
