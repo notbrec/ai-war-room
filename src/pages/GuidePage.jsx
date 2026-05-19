@@ -1,24 +1,23 @@
 import { MODELS, RELEASE } from '../models-data.js';
 import { useMobile } from '../hooks/useTheme.js';
-
-const SF = "-apple-system,'SF Pro Display','SF Pro Text',BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif";
+import { SF, MONO, EASE, Reveal, Eyebrow, GlobalMotion } from '../components/design.jsx';
 
 function H2({ children }) {
   return (
-    <h2 style={{
-      fontSize: 'clamp(22px, 3.2vw, 28px)', fontWeight: 700,
-      letterSpacing: '-0.03em', color: 'var(--text)',
-      margin: '40px 0 12px',
-    }}>{children}</h2>
+    <Reveal as="h2" style={{
+      fontSize: 'clamp(28px, 4vw, 36px)', fontWeight: 700,
+      letterSpacing: '-0.035em', color: 'var(--text)',
+      margin: '56px 0 16px', lineHeight: 1.1,
+    }}>{children}</Reveal>
   );
 }
 
 function H3({ children }) {
   return (
     <h3 style={{
-      fontSize: 18, fontWeight: 600,
-      letterSpacing: '-0.02em', color: 'var(--text)',
-      margin: '22px 0 8px',
+      fontSize: 20, fontWeight: 600,
+      letterSpacing: '-0.022em', color: 'var(--text)',
+      margin: '28px 0 10px', lineHeight: 1.3,
     }}>{children}</h3>
   );
 }
@@ -26,8 +25,8 @@ function H3({ children }) {
 function P({ children }) {
   return (
     <p style={{
-      fontSize: 16, lineHeight: 1.7, color: 'var(--text)',
-      letterSpacing: '-0.012em', margin: '0 0 14px', opacity: 0.92,
+      fontSize: 17, lineHeight: 1.7, color: 'var(--text)',
+      letterSpacing: '-0.012em', margin: '0 0 16px', opacity: 0.92,
     }}>{children}</p>
   );
 }
@@ -35,31 +34,46 @@ function P({ children }) {
 function LI({ children }) {
   return (
     <li style={{
-      fontSize: 16, lineHeight: 1.7, color: 'var(--text)',
-      letterSpacing: '-0.012em', marginBottom: 8, opacity: 0.92,
+      fontSize: 17, lineHeight: 1.7, color: 'var(--text)',
+      letterSpacing: '-0.012em', marginBottom: 10, opacity: 0.92,
     }}>{children}</li>
   );
 }
 
 function Callout({ tone = 'blue', title, children }) {
   const colors = {
-    blue:   { fg: '#007AFF', bg: 'rgba(0,122,255,0.08)',  bd: 'rgba(0,122,255,0.25)'  },
-    green:  { fg: '#34C759', bg: 'rgba(52,199,89,0.08)',  bd: 'rgba(52,199,89,0.25)'  },
-    orange: { fg: '#FF9500', bg: 'rgba(255,149,0,0.08)',  bd: 'rgba(255,149,0,0.25)'  },
-    red:    { fg: '#FF3B30', bg: 'rgba(255,59,48,0.08)',  bd: 'rgba(255,59,48,0.25)'  },
-  }[tone];
+    blue:   '#007AFF',
+    green:  '#34C759',
+    orange: '#FF9500',
+    red:    '#FF3B30',
+  };
+  const accent = colors[tone];
   return (
-    <div style={{
-      background: colors.bg, border: `1px solid ${colors.bd}`,
-      borderRadius: 12, padding: '14px 16px', margin: '14px 0 18px',
-    }}>
-      <div style={{ fontSize: 12, fontWeight: 700, color: colors.fg, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>
-        {title}
+    <Reveal>
+      <div style={{
+        background: 'var(--card)',
+        border: '0.5px solid var(--sep)',
+        borderRadius: 16,
+        padding: '20px 22px',
+        margin: '20px 0 28px',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+          <span style={{ width: 6, height: 6, borderRadius: 3, background: accent }} />
+          <span style={{
+            fontSize: 11, fontWeight: 600, color: accent,
+            textTransform: 'uppercase', letterSpacing: '0.08em', fontFamily: MONO,
+          }}>
+            {title}
+          </span>
+        </div>
+        <div style={{
+          fontSize: 16, lineHeight: 1.65, color: 'var(--text)',
+          letterSpacing: '-0.012em', opacity: 0.92,
+        }}>
+          {children}
+        </div>
       </div>
-      <div style={{ fontSize: 15, lineHeight: 1.65, color: 'var(--text)', letterSpacing: '-0.012em', opacity: 0.92 }}>
-        {children}
-      </div>
-    </div>
+    </Reveal>
   );
 }
 
@@ -70,36 +84,48 @@ export default function GuidePage({ onNavigate, liveModels }) {
 
   return (
     <div className="page-enter" style={{ background: 'var(--bg)', fontFamily: SF, minHeight: '100vh' }}>
-      <article style={{ maxWidth: 760, margin: '0 auto', padding: mobile ? '0 18px 80px' : '0 24px 80px' }}>
+      <GlobalMotion />
+
+      <article style={{ maxWidth: 760, margin: '0 auto', padding: mobile ? '40px 18px 96px' : '72px 24px 112px' }}>
 
         {/* ── Header ─────────────────────────────────────────────── */}
-        <header style={{ paddingTop: mobile ? 32 : 48, paddingBottom: 12 }}>
-          <div style={{ fontSize: 12, fontWeight: 700, color: '#FF3B30', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 14 }}>
-            The Guide
+        <header style={{ marginBottom: 36 }}>
+          <div style={{ opacity: 0, animation: `aiwar-fade-up 700ms ${EASE} both` }}>
+            <Eyebrow>The Guide</Eyebrow>
           </div>
           <h1 style={{
-            fontSize: mobile ? 'clamp(30px,8vw,40px)' : 'clamp(38px,5vw,54px)',
-            fontWeight: 700, letterSpacing: '-0.04em', lineHeight: 1.05,
-            color: 'var(--text)', margin: '0 0 14px',
+            fontSize: mobile ? 'clamp(36px,9vw,48px)' : 'clamp(52px,5.8vw,76px)',
+            fontWeight: 700, letterSpacing: '-0.05em', lineHeight: 0.98,
+            color: 'var(--text)', margin: '10px 0 18px',
+            opacity: 0, animation: `aiwar-fade-up 800ms ${EASE} 80ms both`,
           }}>
-            How to read the AI model leaderboard in 2026
+            How to read the<br />AI leaderboard.
           </h1>
-          <p style={{ fontSize: 17, lineHeight: 1.55, color: 'var(--muted)', letterSpacing: '-0.018em', margin: 0 }}>
-            An honest, plain-English walkthrough of ELO ratings, arena battles, model families,
-            and the tradeoffs that actually matter when you pick a model for real work.
+          <p style={{
+            fontSize: mobile ? 17 : 21, lineHeight: 1.45,
+            color: 'var(--muted)', letterSpacing: '-0.02em',
+            margin: 0,
+            opacity: 0, animation: `aiwar-fade-up 800ms ${EASE} 160ms both`,
+          }}>
+            An honest, plain-English walkthrough of ELO ratings, arena battles,
+            and the tradeoffs that actually matter when picking a model for real work.
           </p>
-          <div style={{ display: 'flex', gap: 8, marginTop: 18, flexWrap: 'wrap' }}>
-            <span style={{ fontSize: 12, color: 'var(--muted2)' }}>Updated {new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</span>
-            <span style={{ fontSize: 12, color: 'var(--muted2)' }}>·</span>
-            <span style={{ fontSize: 12, color: 'var(--muted2)' }}>~10 min read</span>
-            <span style={{ fontSize: 12, color: 'var(--muted2)' }}>·</span>
-            <span style={{ fontSize: 12, color: 'var(--muted2)' }}>{data.length} models · {labs} labs</span>
+          <div style={{
+            display: 'flex', gap: 10, marginTop: 22, flexWrap: 'wrap',
+            fontSize: 12, color: 'var(--muted2)', fontFamily: MONO,
+            opacity: 0, animation: `aiwar-fade-up 800ms ${EASE} 240ms both`,
+          }}>
+            <span>Updated {new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</span>
+            <span>·</span>
+            <span>~10 min read</span>
+            <span>·</span>
+            <span>{data.length} models · {labs} labs</span>
           </div>
         </header>
 
-        <hr style={{ border: 'none', borderTop: '0.5px solid var(--sep)', margin: '20px 0 0' }} />
+        <div style={{ height: '0.5px', background: 'var(--sep)', margin: '0 0 36px' }} />
 
-        {/* ── Why this site exists ───────────────────────────────── */}
+        {/* ── Body ───────────────────────────────────────────────── */}
         <H2>Why we built AI WAR ROOM</H2>
         <P>
           When a new AI model drops, the marketing claims arrive first — "best in class", "state of the art",
@@ -127,7 +153,6 @@ export default function GuidePage({ onNavigate, liveModels }) {
           then pick on price, context window, license, and your actual use case.
         </Callout>
 
-        {/* ── ELO Explained ──────────────────────────────────────── */}
         <H2>ELO, in plain English</H2>
         <P>
           ELO comes from chess. The Hungarian-American physicist Arpad Elo designed it in the 1960s to
@@ -152,7 +177,6 @@ export default function GuidePage({ onNavigate, liveModels }) {
           it a week of voting before betting on it.
         </P>
 
-        {/* ── Reading the ranks ──────────────────────────────────── */}
         <H2>Tiers, not ranks</H2>
         <P>
           Ranks are seductive but misleading. "I want the #1 model" rarely matches "I want the model that
@@ -186,7 +210,6 @@ export default function GuidePage({ onNavigate, liveModels }) {
           a fifth of a cent than a full cent per call.
         </P>
 
-        {/* ── How to choose ──────────────────────────────────────── */}
         <H2>How to actually pick a model</H2>
         <P>
           ELO is one input among several. Here's the decision tree we'd suggest if you're picking a model
@@ -234,7 +257,6 @@ export default function GuidePage({ onNavigate, liveModels }) {
           S-tier only when arena ELO and your own evals both say it matters.
         </Callout>
 
-        {/* ── Lab landscape ──────────────────────────────────────── */}
         <H2>The 2026 landscape</H2>
         <P>
           A year ago, the frontier was three or four labs; today it is closer to ten. The race for the
@@ -288,12 +310,11 @@ export default function GuidePage({ onNavigate, liveModels }) {
           for most production work, at vanishing cost.
         </P>
 
-        {/* ── Glossary ───────────────────────────────────────────── */}
         <H2>Glossary</H2>
         <P>
           A few terms that show up everywhere on the leaderboard.
         </P>
-        <ul style={{ paddingLeft: 22, margin: '0 0 14px' }}>
+        <ul style={{ paddingLeft: 22, margin: '0 0 16px' }}>
           <LI><strong>Arena</strong> — a head-to-head voting system (chat.lmsys.org → arena.ai) where humans pick the better of two anonymised model responses.</LI>
           <LI><strong>ELO</strong> — relative skill rating; higher = stronger; gaps predict win probability.</LI>
           <LI><strong>CI (confidence interval)</strong> — uncertainty in the ELO rating; smaller is more stable.</LI>
@@ -306,7 +327,6 @@ export default function GuidePage({ onNavigate, liveModels }) {
           <LI><strong>Multimodal</strong> — accepts not just text but also images, audio, or video as input.</LI>
         </ul>
 
-        {/* ── Pitfalls ──────────────────────────────────────────── */}
         <H2>Common pitfalls</H2>
         <H3>Chasing #1</H3>
         <P>
@@ -341,7 +361,6 @@ export default function GuidePage({ onNavigate, liveModels }) {
           renamed.
         </Callout>
 
-        {/* ── Closing ────────────────────────────────────────────── */}
         <H2>Where to start</H2>
         <P>
           If you're new to the field, open the leaderboard and sort by ELO. Read the descriptions for
@@ -353,24 +372,33 @@ export default function GuidePage({ onNavigate, liveModels }) {
           get most often from people doing exactly that.
         </P>
 
-        <div style={{ display: 'flex', gap: 10, marginTop: 28, flexWrap: 'wrap' }}>
-          <button onClick={() => onNavigate('leaderboard')} style={{
-            height: 44, paddingInline: 22, borderRadius: 980,
-            background: 'var(--text)', color: 'var(--bg)',
-            fontSize: 15, fontWeight: 600, border: 'none', cursor: 'pointer', letterSpacing: '-0.015em',
-          }}>
-            Open the leaderboard
-          </button>
-          <button onClick={() => onNavigate('faq')} style={{
-            height: 44, paddingInline: 22, borderRadius: 980,
-            background: 'var(--pill)', color: 'var(--text)',
-            fontSize: 15, fontWeight: 600, border: 'none', cursor: 'pointer', letterSpacing: '-0.015em',
-          }}>
-            Read the FAQ →
-          </button>
-        </div>
+        <Reveal>
+          <div style={{ display: 'flex', gap: 10, marginTop: 36, flexWrap: 'wrap' }}>
+            <button onClick={() => onNavigate('leaderboard')}
+              className="aiwar-press-btn"
+              style={{
+                height: 48, paddingInline: 22, borderRadius: 980,
+                background: 'var(--text)', color: 'var(--bg)',
+                fontSize: 15, fontWeight: 600, border: 'none', cursor: 'pointer', letterSpacing: '-0.015em',
+              }}>
+              Open the leaderboard
+            </button>
+            <button onClick={() => onNavigate('faq')}
+              className="aiwar-press-btn"
+              style={{
+                height: 48, paddingInline: 22, borderRadius: 980,
+                background: 'transparent', color: 'var(--text)',
+                fontSize: 15, fontWeight: 600, border: '0.5px solid var(--sep)', cursor: 'pointer', letterSpacing: '-0.015em',
+              }}>
+              Read the FAQ →
+            </button>
+          </div>
+        </Reveal>
 
-        <p style={{ fontSize: 12, color: 'var(--muted2)', textAlign: 'center', marginTop: 48, letterSpacing: '-0.01em' }}>
+        <p style={{
+          fontSize: 12, color: 'var(--muted2)', textAlign: 'center',
+          marginTop: 56, letterSpacing: '-0.005em', fontFamily: MONO,
+        }}>
           AI WAR ROOM · aiwarroom.app · {RELEASE}
         </p>
       </article>

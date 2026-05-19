@@ -559,7 +559,6 @@ export default function HomePage({ onNavigate, liveModels, countSnapshot }) {
           <div className="aiwar-hero-stats" style={{
             display: 'flex', gap: mobile ? 28 : 56, flexWrap: 'wrap',
             justifyContent: mobile ? 'flex-start' : 'center',
-            paddingTop: mobile ? 8 : 16,
             borderTop: mobile ? 'none' : '0.5px solid var(--sep)',
             paddingTop: mobile ? 0 : 32,
           }}>

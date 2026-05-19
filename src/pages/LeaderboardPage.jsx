@@ -1,8 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { MODELS, ORG_CONFIG, LICENSE_CONFIG, RELEASE, AUTO_REFRESH_MS, fetchLeaderboard, fetchOpenRouterMeta, getDescription } from '../models-data.js';
 import { useDark, useMobile } from '../hooks/useTheme.js';
-
-const SF = "-apple-system,'SF Pro Display','SF Pro Text',BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif";
+import { SF, MONO, EASE, Reveal, AnimatedNumber, Eyebrow, LivePulse, GlobalMotion } from '../components/design.jsx';
 
 const SORTS = [
   { key: 'elo',      label: 'ELO'      },
@@ -70,15 +69,19 @@ function Pill({ active, color, label, icon, onClick }) {
 }
 
 // ── Stat card for header ───────────────────────────────────────────────────
-function StatCard({ label, value, color }) {
+function StatCard({ label, value, color, animate = false, format, suffix }) {
   return (
     <div style={{
-      background: 'var(--card)', borderRadius: 12,
-      padding: '12px 16px', flex: 1, minWidth: 0,
-      boxShadow: 'var(--shadow)',
+      background: 'var(--card)', borderRadius: 14,
+      padding: '16px 18px', flex: 1, minWidth: 0,
+      border: '0.5px solid var(--sep)',
     }}>
-      <div style={{ fontSize: 11, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>{label}</div>
-      <div style={{ fontSize: 20, fontWeight: 700, color: color ?? 'var(--text)', letterSpacing: '-0.03em', fontVariantNumeric: 'tabular-nums' }}>{value}</div>
+      <div style={{ fontSize: 11, color: 'var(--muted2)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8, fontFamily: MONO, fontWeight: 600 }}>{label}</div>
+      <div style={{ fontSize: 24, fontWeight: 700, color: color ?? 'var(--text)', letterSpacing: '-0.04em', fontVariantNumeric: 'tabular-nums', lineHeight: 1 }}>
+        {animate && typeof value === 'number'
+          ? <AnimatedNumber value={value} format={format} suffix={suffix} />
+          : value}
+      </div>
     </div>
   );
 }
@@ -159,58 +162,80 @@ export default function LeaderboardPage({ liveModels }) {
 
   return (
     <div className="page-enter" style={{ background: 'var(--bg)', fontFamily: SF, minHeight: '100vh' }}>
-      <div style={{ maxWidth: 1100, margin: '0 auto', padding: mobile ? '0 14px 80px' : '0 24px 80px' }}>
+      <GlobalMotion />
+      <div style={{ maxWidth: 1100, margin: '0 auto', padding: mobile ? '40px 16px 96px' : '64px 24px 112px' }}>
 
-        {/* ── Title ────────────────────────────────────────────────── */}
-        <div style={{ paddingTop: 32, paddingBottom: 20 }}>
-          <h1 style={{ fontSize: 'clamp(28px, 5vw, 42px)', fontWeight: 700, letterSpacing: '-0.04em', color: 'var(--text)', margin: '0 0 6px' }}>
-            Leaderboard
+        {/* ── Header ─────────────────────────────────────────────── */}
+        <header style={{ marginBottom: mobile ? 28 : 36 }}>
+          <div style={{ opacity: 0, animation: `aiwar-fade-up 700ms ${EASE} both` }}>
+            <Eyebrow>Leaderboard</Eyebrow>
+          </div>
+          <h1 style={{
+            fontSize: mobile ? 'clamp(34px,8.5vw,46px)' : 'clamp(48px,5.4vw,72px)',
+            fontWeight: 700, letterSpacing: '-0.05em', lineHeight: 0.98,
+            color: 'var(--text)', margin: '10px 0 18px',
+            opacity: 0, animation: `aiwar-fade-up 800ms ${EASE} 80ms both`,
+          }}>
+            The ranking.
           </h1>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-              <div style={{ width: 6, height: 6, borderRadius: 3, background: loading ? '#FF9500' : '#34C759',
-                boxShadow: loading ? 'none' : '0 0 6px #34C759' }} />
-              <span style={{ fontSize: 12, color: 'var(--muted)', letterSpacing: '-0.01em' }}>
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap',
+            opacity: 0, animation: `aiwar-fade-up 800ms ${EASE} 160ms both`,
+          }}>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '5px 10px', borderRadius: 980, background: 'var(--card)', border: '0.5px solid var(--sep)' }}>
+              {loading
+                ? <span style={{ width: 6, height: 6, borderRadius: 3, background: '#FF9500' }} />
+                : <LivePulse color="#34C759" size={6} />}
+              <span style={{ fontSize: 12, color: 'var(--text)', letterSpacing: '-0.005em', fontFamily: MONO, fontWeight: 500 }}>
                 {loading ? 'Syncing…' : timeAgo(lastUpdated)}
               </span>
             </div>
-            <span style={{ color: 'var(--sep)', fontSize: 13 }}>·</span>
-            <span style={{ fontSize: 12, color: 'var(--muted)' }}>Source: AI War Room</span>
-            <button onClick={loadData} disabled={loading} style={{
-              height: 22, paddingInline: 9, borderRadius: 980,
-              background: 'rgba(0,122,255,0.10)', color: '#007AFF',
-              fontSize: 11, fontWeight: 600, border: 'none',
-              cursor: loading ? 'default' : 'pointer', opacity: loading ? 0.4 : 1,
-            }}>Refresh</button>
+            <span style={{ fontSize: 12, color: 'var(--muted)', fontFamily: MONO }}>arena.ai + OpenRouter</span>
+            <button onClick={loadData} disabled={loading}
+              className="aiwar-press-btn"
+              style={{
+                height: 28, paddingInline: 12, borderRadius: 980,
+                background: 'transparent', color: 'var(--text)',
+                fontSize: 12, fontWeight: 600, border: '0.5px solid var(--sep)',
+                cursor: loading ? 'default' : 'pointer', opacity: loading ? 0.4 : 1,
+                letterSpacing: '-0.01em',
+              }}>Refresh</button>
           </div>
-        </div>
+        </header>
 
         {/* ── Stats row ────────────────────────────────────────────── */}
-        <div style={{ display: 'flex', gap: 10, marginBottom: 20, flexWrap: mobile ? 'wrap' : 'nowrap' }}>
-          <StatCard label="Models" value={models.length > 0 ? models.length : '—'} />
-          <StatCard label="Total votes" value={models.length > 0 ? (totalVotes >= 1_000_000 ? `${(totalVotes/1_000_000).toFixed(1)}M` : `${(totalVotes/1000).toFixed(0)}K`) : '—'} />
-          <StatCard label="Top ELO" value={models.length > 0 ? topElo : '—'} color="#34C759" />
-          <StatCard label="Open weight" value={models.length > 0 ? openCount : '—'} color="#007AFF" />
-        </div>
+        <Reveal>
+          <div style={{ display: 'flex', gap: 10, marginBottom: 24, flexWrap: mobile ? 'wrap' : 'nowrap' }}>
+            <StatCard label="Models" value={models.length > 0 ? models.length : '—'} animate format={v => Math.round(v).toString()} />
+            <StatCard label="Total votes" value={models.length > 0 ? totalVotes : '—'} animate format={v => {
+              const n = Math.round(v);
+              if (n >= 1_000_000) return `${(n/1_000_000).toFixed(1)}M`;
+              return `${Math.round(n/1000)}K`;
+            }} />
+            <StatCard label="Top ELO" value={models.length > 0 ? topElo : '—'} animate format={v => Math.round(v).toString()} />
+            <StatCard label="Open weight" value={models.length > 0 ? openCount : '—'} animate format={v => Math.round(v).toString()} />
+          </div>
+        </Reveal>
 
         {/* ── Search ───────────────────────────────────────────────── */}
         <div style={{
-          display: 'flex', alignItems: 'center', gap: 9,
-          background: 'var(--card)', borderRadius: 12,
-          padding: '10px 14px', marginBottom: 10,
-          boxShadow: 'var(--shadow)',
+          display: 'flex', alignItems: 'center', gap: 10,
+          background: 'var(--card)', borderRadius: 14,
+          padding: '12px 16px', marginBottom: 12,
+          border: '0.5px solid var(--sep)',
+          transition: 'border-color 200ms',
         }}>
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ flexShrink: 0, opacity: 0.35 }}>
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ flexShrink: 0, opacity: 0.4 }}>
             <circle cx="6" cy="6" r="4.5" stroke="currentColor" strokeWidth="1.4"/>
             <path d="M9.5 9.5L12 12" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
           </svg>
           <input value={query} onChange={e => setQuery(e.target.value)}
-            placeholder="Search model or organization…"
+            placeholder="Search model or organisation…"
             style={{ flex: 1, background: 'none', border: 'none', outline: 'none',
-              fontSize: 14, color: 'var(--text)', letterSpacing: '-0.015em', fontFamily: SF }}
+              fontSize: 14.5, color: 'var(--text)', letterSpacing: '-0.015em', fontFamily: SF }}
           />
           {query && (
-            <button onClick={() => setQuery('')} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, opacity: 0.5 }}>
+            <button onClick={() => setQuery('')} className="aiwar-press-btn" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, opacity: 0.5 }}>
               <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
                 <path d="M2 2l8 8M10 2l-8 8" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
               </svg>

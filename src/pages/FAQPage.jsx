@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import { MODELS, RELEASE } from '../models-data.js';
 import { useMobile } from '../hooks/useTheme.js';
-
-const SF = "-apple-system,'SF Pro Display','SF Pro Text',BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif";
+import { SF, MONO, EASE, Reveal, Eyebrow, GlobalMotion } from '../components/design.jsx';
 
 const FAQ = [
   {
@@ -191,51 +190,62 @@ const FAQ = [
 
 const CATEGORIES = [...new Set(FAQ.map(f => f.cat))];
 
-function QA({ item, isOpen, onToggle }) {
+function QA({ item, isOpen, onToggle, delay }) {
   return (
-    <div style={{ borderBottom: '0.5px solid var(--sep)' }}>
-      <button
-        onClick={onToggle}
-        aria-expanded={isOpen}
-        style={{
-          width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          gap: 12, padding: '18px 0', background: 'none', border: 'none', cursor: 'pointer',
-          textAlign: 'left', fontFamily: SF, color: 'var(--text)',
-        }}
-      >
-        <span style={{ fontSize: 16, fontWeight: 600, letterSpacing: '-0.02em', lineHeight: 1.4 }}>
-          {item.q}
-        </span>
-        <span style={{
-          width: 22, height: 22, borderRadius: 11, background: 'var(--pill)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          color: 'var(--muted)', flexShrink: 0,
-          transform: isOpen ? 'rotate(45deg)' : 'rotate(0deg)',
-          transition: 'transform 0.18s',
+    <Reveal delay={delay}>
+      <div style={{ borderBottom: '0.5px solid var(--sep)' }}>
+        <button
+          onClick={onToggle}
+          aria-expanded={isOpen}
+          className="aiwar-press-btn"
+          style={{
+            width: '100%', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between',
+            gap: 16, padding: '22px 0', background: 'none', border: 'none', cursor: 'pointer',
+            textAlign: 'left', fontFamily: SF, color: 'var(--text)',
+          }}
+        >
+          <span style={{
+            fontSize: 18, fontWeight: 600, letterSpacing: '-0.024em',
+            lineHeight: 1.35, paddingRight: 8,
+          }}>
+            {item.q}
+          </span>
+          <span style={{
+            width: 28, height: 28, borderRadius: 14,
+            background: 'var(--card)', border: '0.5px solid var(--sep)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            color: 'var(--muted)', flexShrink: 0,
+            transform: isOpen ? 'rotate(45deg)' : 'rotate(0deg)',
+            transition: `transform 300ms ${EASE}, background 200ms`,
+          }}>
+            <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
+              <path d="M5.5 1v9M1 5.5h9" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
+            </svg>
+          </span>
+        </button>
+        <div style={{
+          overflow: 'hidden',
+          maxHeight: isOpen ? 800 : 0,
+          opacity: isOpen ? 1 : 0,
+          transition: `max-height 500ms ${EASE}, opacity 300ms ${EASE}`,
         }}>
-          <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-            <path d="M5 1v8M1 5h8" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
-          </svg>
-        </span>
-      </button>
-      {isOpen && (
-        <div style={{ padding: '0 0 20px' }}>
           <p style={{
-            fontSize: 15, lineHeight: 1.7, color: 'var(--text)',
-            letterSpacing: '-0.012em', margin: 0, opacity: 0.88, whiteSpace: 'pre-line',
+            fontSize: 16.5, lineHeight: 1.7, color: 'var(--text)',
+            letterSpacing: '-0.012em', margin: '0 0 24px', opacity: 0.86,
+            whiteSpace: 'pre-line', paddingRight: 44,
           }}>
             {item.a}
           </p>
         </div>
-      )}
-    </div>
+      </div>
+    </Reveal>
   );
 }
 
 export default function FAQPage({ onNavigate, liveModels }) {
   const mobile = useMobile();
   const data   = liveModels ?? MODELS;
-  // Open by default — all answers rendered so crawlers index the content.
+  // All answers open by default — crawler-friendly + immediately useful.
   const [openSet, setOpenSet]   = useState(() => new Set(FAQ.map((_, i) => i)));
   const [activeCat, setActiveCat] = useState('All');
 
@@ -250,45 +260,58 @@ export default function FAQPage({ onNavigate, liveModels }) {
 
   return (
     <div className="page-enter" style={{ background: 'var(--bg)', fontFamily: SF, minHeight: '100vh' }}>
-      <div style={{ maxWidth: 760, margin: '0 auto', padding: mobile ? '0 18px 80px' : '0 24px 80px' }}>
+      <GlobalMotion />
 
-        {/* Header */}
-        <header style={{ paddingTop: mobile ? 32 : 48, paddingBottom: 22 }}>
-          <div style={{ fontSize: 12, fontWeight: 700, color: '#FF3B30', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 14 }}>
-            FAQ
+      <div style={{ maxWidth: 760, margin: '0 auto', padding: mobile ? '40px 18px 96px' : '72px 24px 112px' }}>
+
+        {/* ── Header ─────────────────────────────────────────────── */}
+        <header style={{ marginBottom: 36 }}>
+          <div style={{ opacity: 0, animation: `aiwar-fade-up 700ms ${EASE} both` }}>
+            <Eyebrow>FAQ</Eyebrow>
           </div>
           <h1 style={{
-            fontSize: mobile ? 'clamp(30px,8vw,40px)' : 'clamp(38px,5vw,54px)',
-            fontWeight: 700, letterSpacing: '-0.04em', lineHeight: 1.05,
-            color: 'var(--text)', margin: '0 0 14px',
+            fontSize: mobile ? 'clamp(36px,9vw,48px)' : 'clamp(52px,5.8vw,76px)',
+            fontWeight: 700, letterSpacing: '-0.05em', lineHeight: 0.98,
+            color: 'var(--text)', margin: '10px 0 18px',
+            opacity: 0, animation: `aiwar-fade-up 800ms ${EASE} 80ms both`,
           }}>
-            Frequently asked questions
+            Honest answers.<br />No marketing.
           </h1>
-          <p style={{ fontSize: 17, lineHeight: 1.55, color: 'var(--muted)', letterSpacing: '-0.018em', margin: 0 }}>
-            Honest answers to the questions we get most often about ELO, arena battles, picking a
+          <p style={{
+            fontSize: mobile ? 17 : 21, lineHeight: 1.45,
+            color: 'var(--muted)', letterSpacing: '-0.02em',
+            margin: 0,
+            opacity: 0, animation: `aiwar-fade-up 800ms ${EASE} 160ms both`,
+          }}>
+            The questions we get most often about ELO, arena battles, picking a
             model, pricing, and how the leaderboard works.
           </p>
         </header>
 
-        {/* Category pills */}
-        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 18 }}>
-          {['All', ...CATEGORIES].map(cat => {
-            const on = cat === activeCat;
-            return (
-              <button key={cat} onClick={() => setActiveCat(cat)} style={{
-                height: 30, paddingInline: 13, borderRadius: 980,
-                background: on ? 'var(--text)' : 'var(--pill)',
-                color: on ? 'var(--bg)' : 'var(--pill-text)',
-                fontSize: 12, fontWeight: on ? 600 : 500, border: 'none', cursor: 'pointer',
-                letterSpacing: '-0.01em',
-              }}>{cat}</button>
-            );
-          })}
-        </div>
+        {/* ── Category pills ─────────────────────────────────────── */}
+        <Reveal>
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 28 }}>
+            {['All', ...CATEGORIES].map(cat => {
+              const on = cat === activeCat;
+              return (
+                <button key={cat} onClick={() => setActiveCat(cat)}
+                  className="aiwar-press-btn"
+                  style={{
+                    height: 32, paddingInline: 14, borderRadius: 980,
+                    background: on ? 'var(--text)' : 'transparent',
+                    color: on ? 'var(--bg)' : 'var(--text)',
+                    fontSize: 13, fontWeight: on ? 600 : 500,
+                    border: '0.5px solid', borderColor: on ? 'var(--text)' : 'var(--sep)',
+                    cursor: 'pointer', letterSpacing: '-0.01em',
+                  }}>{cat}</button>
+              );
+            })}
+          </div>
+        </Reveal>
 
-        {/* Q&A list */}
+        {/* ── Q&A list ───────────────────────────────────────────── */}
         <div>
-          {filtered.map((item) => {
+          {filtered.map((item, i) => {
             const realIndex = FAQ.indexOf(item);
             return (
               <QA
@@ -296,35 +319,49 @@ export default function FAQPage({ onNavigate, liveModels }) {
                 item={item}
                 isOpen={openSet.has(realIndex)}
                 onToggle={() => toggle(realIndex)}
+                delay={Math.min(i * 40, 320)}
               />
             );
           })}
         </div>
 
-        {/* Still have questions? */}
-        <div style={{
-          background: 'var(--card)', borderRadius: 16, padding: '22px 22px',
-          marginTop: 32, boxShadow: 'var(--shadow)',
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 14, flexWrap: 'wrap',
-        }}>
-          <div>
-            <div style={{ fontSize: 17, fontWeight: 700, color: 'var(--text)', letterSpacing: '-0.025em', marginBottom: 4 }}>
-              Want to go deeper?
-            </div>
-            <div style={{ fontSize: 13, color: 'var(--muted)', letterSpacing: '-0.01em' }}>
-              The Guide explains how to read the leaderboard end-to-end.
-            </div>
-          </div>
-          <button onClick={() => onNavigate('guide')} style={{
-            height: 38, paddingInline: 16, borderRadius: 980,
-            background: 'var(--text)', color: 'var(--bg)',
-            fontSize: 13, fontWeight: 600, border: 'none', cursor: 'pointer', flexShrink: 0,
+        {/* ── Want to go deeper card ─────────────────────────────── */}
+        <Reveal>
+          <div style={{
+            background: 'var(--card)', borderRadius: 18,
+            padding: mobile ? '24px 22px' : '28px 28px',
+            marginTop: 44, border: '0.5px solid var(--sep)',
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            gap: 16, flexWrap: 'wrap',
           }}>
-            Read the Guide →
-          </button>
-        </div>
+            <div>
+              <div style={{ fontSize: 19, fontWeight: 600, color: 'var(--text)', letterSpacing: '-0.028em', marginBottom: 6, lineHeight: 1.2 }}>
+                Want to go deeper?
+              </div>
+              <div style={{ fontSize: 14, color: 'var(--muted)', letterSpacing: '-0.01em', lineHeight: 1.5 }}>
+                The Guide walks through how to read the leaderboard end-to-end.
+              </div>
+            </div>
+            <button onClick={() => onNavigate('guide')}
+              className="aiwar-press-btn"
+              style={{
+                height: 42, paddingInline: 18, borderRadius: 980,
+                background: 'var(--text)', color: 'var(--bg)',
+                fontSize: 14, fontWeight: 600, border: 'none', cursor: 'pointer', flexShrink: 0,
+                display: 'inline-flex', alignItems: 'center', gap: 6,
+              }}>
+              Read the Guide
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                <path d="M2 6h8M6 2l4 4-4 4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </button>
+          </div>
+        </Reveal>
 
-        <p style={{ fontSize: 12, color: 'var(--muted2)', textAlign: 'center', marginTop: 40, letterSpacing: '-0.01em' }}>
+        <p style={{
+          fontSize: 12, color: 'var(--muted2)', textAlign: 'center',
+          marginTop: 48, letterSpacing: '-0.005em', fontFamily: MONO,
+        }}>
           AI WAR ROOM · {data.length}+ models tracked · {RELEASE}
         </p>
       </div>
