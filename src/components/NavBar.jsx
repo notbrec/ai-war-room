@@ -1,6 +1,8 @@
+import { useEffect, useState } from 'react';
 import Logo from './Logo.jsx';
 
 const SF = "-apple-system,'SF Pro Display','SF Pro Text',BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif";
+const EASE = 'cubic-bezier(0.16,1,0.3,1)';
 
 const LINKS = [
   { id: 'leaderboard', label: 'Leaderboard' },
@@ -9,6 +11,17 @@ const LINKS = [
   { id: 'blog',        label: 'Blog'        },
   { id: 'about',       label: 'About'       },
 ];
+
+function useScrolled(threshold = 16) {
+  const [scrolled, setScrolled] = useState(false);
+  useEffect(() => {
+    const handler = () => setScrolled((window.scrollY || 0) > threshold);
+    handler();
+    window.addEventListener('scroll', handler, { passive: true });
+    return () => window.removeEventListener('scroll', handler);
+  }, [threshold]);
+  return scrolled;
+}
 
 function SunIcon() {
   return (
@@ -36,19 +49,24 @@ function MoonIcon() {
 }
 
 export default function NavBar({ page, onNavigate, dark, onToggleTheme }) {
+  const scrolled = useScrolled(20);
   return (
     <div style={{
       position: 'sticky', top: 0, zIndex: 100,
-      background: 'var(--nav)',
-      backdropFilter: 'saturate(180%) blur(20px)',
-      WebkitBackdropFilter: 'saturate(180%) blur(20px)',
-      borderBottom: '0.5px solid var(--sep)',
+      background: scrolled
+        ? (dark ? 'rgba(17,17,19,0.72)' : 'rgba(242,242,247,0.72)')
+        : 'var(--nav)',
+      backdropFilter: `saturate(180%) blur(${scrolled ? 28 : 20}px)`,
+      WebkitBackdropFilter: `saturate(180%) blur(${scrolled ? 28 : 20}px)`,
+      borderBottom: scrolled ? '0.5px solid var(--sep)' : '0.5px solid transparent',
       fontFamily: SF,
+      transition: `background 350ms ${EASE}, backdrop-filter 350ms ${EASE}, border-color 350ms ${EASE}`,
     }}>
       <div style={{
         maxWidth: 1100, margin: '0 auto', padding: '0 24px',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        height: 48,
+        height: scrolled ? 44 : 52,
+        transition: `height 350ms ${EASE}`,
       }}>
 
         {/* Brand */}

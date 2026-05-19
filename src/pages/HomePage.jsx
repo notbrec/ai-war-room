@@ -4,7 +4,7 @@ import { useDark, useMobile } from '../hooks/useTheme.js';
 import {
   SF, MONO, EASE,
   Reveal, AnimatedNumber, LivePulse, WordReveal,
-  Tilt, Magnetic, AmbientDots, TrendArrow,
+  Tilt, Magnetic, AmbientDots, TrendArrow, Marquee3D,
 } from '../components/design.jsx';
 
 const MEDALS = [
@@ -207,44 +207,54 @@ function StepCard({ num, title, body, mobile, delay }) {
   );
 }
 
-/* ─── LiveTicker — pausable marquee ──────────────────────────────────────── */
-function LiveTicker({ models }) {
+/* ─── LiveTicker — 3D perspective carousel via Marquee3D ────────────────── */
+function LiveTicker({ models, dark }) {
   if (!models || models.length === 0) return null;
   const items = models.slice(0, 16);
-  const doubled = [...items, ...items];
+
+  const renderItem = (m) => (
+    <div style={{
+      display: 'inline-flex', alignItems: 'center', gap: 12, flexShrink: 0,
+      background: 'var(--card)', border: '0.5px solid var(--sep)',
+      borderRadius: 980, padding: '10px 16px 10px 14px',
+      boxShadow: dark
+        ? '0 4px 14px rgba(0,0,0,0.30)'
+        : '0 4px 14px rgba(0,0,0,0.04)',
+    }}>
+      <span style={{
+        width: 7, height: 7, borderRadius: 4, background: eloColor(m.elo),
+        boxShadow: `0 0 6px ${eloColor(m.elo)}`,
+      }} />
+      <span style={{
+        fontSize: 13.5, color: 'var(--text)', letterSpacing: '-0.018em',
+        fontWeight: 600,
+      }}>
+        {m.name}
+      </span>
+      <span style={{
+        fontSize: 12, color: 'var(--muted)', letterSpacing: '-0.005em',
+        fontFamily: MONO, fontVariantNumeric: 'tabular-nums', fontWeight: 500,
+      }}>
+        {m.elo}
+      </span>
+    </div>
+  );
 
   return (
     <div style={{
       position: 'relative',
-      maskImage: 'linear-gradient(90deg, transparent 0%, black 8%, black 92%, transparent 100%)',
-      WebkitMaskImage: 'linear-gradient(90deg, transparent 0%, black 8%, black 92%, transparent 100%)',
-      overflow: 'hidden',
-      padding: '14px 0',
       borderTop: '0.5px solid var(--sep)',
       borderBottom: '0.5px solid var(--sep)',
+      padding: '6px 0',
     }}>
-      <div
-        className="aiwar-marquee-pausable"
-        style={{
-          display: 'flex', gap: 36, whiteSpace: 'nowrap',
-          animation: 'aiwar-marquee 60s linear infinite',
-          width: 'max-content',
-        }}>
-        {doubled.map((m, i) => (
-          <div key={`${m.slug}-${i}`} style={{ display: 'inline-flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
-            <span style={{ width: 6, height: 6, borderRadius: 3, background: eloColor(m.elo) }} />
-            <span style={{ fontSize: 13, color: 'var(--text)', letterSpacing: '-0.015em', fontWeight: 500 }}>
-              {m.name}
-            </span>
-            <span style={{
-              fontSize: 12, color: 'var(--muted)', letterSpacing: '-0.01em',
-              fontFamily: MONO, fontVariantNumeric: 'tabular-nums',
-            }}>
-              {m.elo}
-            </span>
-          </div>
-        ))}
-      </div>
+      <Marquee3D
+        items={items}
+        renderItem={renderItem}
+        speed={40}
+        gap={28}
+        height={56}
+        dark={dark}
+      />
     </div>
   );
 }
@@ -305,8 +315,8 @@ export default function HomePage({ onNavigate, liveModels, countSnapshot }) {
           paddingBottom: mobile ? 48 : 80,
           textAlign: mobile ? 'left' : 'center',
         }}>
-          {/* Ambient floating dots (decorative) */}
-          {!mobile && <AmbientDots count={18} opacity={0.30} />}
+          {/* Ambient floating dots (decorative) with scroll parallax */}
+          {!mobile && <AmbientDots count={18} opacity={0.30} parallax />}
 
           {/* Live badge */}
           <div style={{
@@ -434,7 +444,7 @@ export default function HomePage({ onNavigate, liveModels, countSnapshot }) {
         {isLoaded && (
           <Reveal>
             <div style={{ marginBottom: mobile ? 56 : 88 }}>
-              <LiveTicker models={data} />
+              <LiveTicker models={data} dark={dark} />
             </div>
           </Reveal>
         )}

@@ -3,12 +3,54 @@ import { useEffect, useRef, useState } from 'react';
 /* ─── Design tokens ───────────────────────────────────────────────────────── */
 export const SF   = "-apple-system,'SF Pro Display','SF Pro Text',BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif";
 export const MONO = "'SF Mono','JetBrains Mono',ui-monospace,'Menlo',monospace";
-export const EASE = 'cubic-bezier(0.16,1,0.3,1)'; // Apple's signature out-expo-like curve
+export const EASE = 'cubic-bezier(0.16,1,0.3,1)'; // Apple-style out-expo curve
 
 /* ─── prefers-reduced-motion helper ─────────────────────────────────────── */
 function prefersReducedMotion() {
   if (typeof window === 'undefined') return false;
   return window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   useSpring — damped spring interpolation per axis (rAF driven).
+   Returns [value, setTarget]. Smoother than CSS transitions for hovers.
+   ────────────────────────────────────────────────────────────────────── */
+export function useSpring(initial, { stiffness = 120, damping = 18, mass = 1 } = {}) {
+  const [value, setValue] = useState(initial);
+  const stateRef = useRef({ value: initial, velocity: 0, target: initial });
+  const rafRef   = useRef(null);
+
+  const tick = () => {
+    const s = stateRef.current;
+    const dt = 1 / 60;
+    const spring = -stiffness * (s.value - s.target);
+    const damper = -damping * s.velocity;
+    const accel  = (spring + damper) / mass;
+    s.velocity  += accel * dt;
+    s.value     += s.velocity * dt;
+    setValue(s.value);
+    if (Math.abs(s.value - s.target) < 0.001 && Math.abs(s.velocity) < 0.001) {
+      s.value = s.target; s.velocity = 0;
+      setValue(s.value);
+      rafRef.current = null;
+      return;
+    }
+    rafRef.current = requestAnimationFrame(tick);
+  };
+
+  const setTarget = (t) => {
+    stateRef.current.target = t;
+    if (prefersReducedMotion()) {
+      stateRef.current.value = t; stateRef.current.velocity = 0;
+      setValue(t);
+      return;
+    }
+    if (rafRef.current == null) rafRef.current = requestAnimationFrame(tick);
+  };
+
+  useEffect(() => () => { if (rafRef.current) cancelAnimationFrame(rafRef.current); }, []);
+
+  return [value, setTarget];
 }
 
 /* ─── useReveal — IntersectionObserver hook ──────────────────────────────── */
@@ -34,7 +76,7 @@ export function Reveal({ children, delay = 0, y = 16, as: Tag = 'div', style, ..
     <Tag ref={ref} style={{
       opacity: shown ? 1 : 0,
       transform: shown ? 'translateY(0)' : `translateY(${y}px)`,
-      transition: `opacity 700ms ${EASE} ${delay}ms, transform 700ms ${EASE} ${delay}ms`,
+      transition: `opacity 800ms ${EASE} ${delay}ms, transform 900ms ${EASE} ${delay}ms`,
       willChange: 'opacity, transform',
       ...style,
     }} {...rest}>
@@ -103,12 +145,9 @@ export function Eyebrow({ children, color = 'var(--muted2)' }) {
   );
 }
 
-/* ─────────────────────────────────────────────────────────────────────────
-   NEW — WordReveal: stagger each word of a headline on entry
-   ────────────────────────────────────────────────────────────────────── */
+/* ─── WordReveal: stagger each word of a headline on entry ──────────────── */
 export function WordReveal({ children, baseDelay = 0, perWord = 80, style, as: Tag = 'span' }) {
   const text = typeof children === 'string' ? children : '';
-  // Split by spaces but keep <br/> markers as-is via explicit \n handling
   const words = text.split(/(\s+)/);
   return (
     <Tag style={style}>
@@ -120,7 +159,7 @@ export function WordReveal({ children, baseDelay = 0, perWord = 80, style, as: T
             style={{
               display: 'inline-block',
               opacity: 0,
-              animation: `aiwar-word-up 800ms ${EASE} ${baseDelay + i * perWord}ms both`,
+              animation: `aiwar-word-up 900ms ${EASE} ${baseDelay + i * perWord}ms both`,
               willChange: 'opacity, transform',
             }}
           >{w}</span>
@@ -130,9 +169,7 @@ export function WordReveal({ children, baseDelay = 0, perWord = 80, style, as: T
   );
 }
 
-/* ─────────────────────────────────────────────────────────────────────────
-   NEW — <ScrollProgress/> 2px progress bar fixed to top of viewport
-   ────────────────────────────────────────────────────────────────────── */
+/* ─── <ScrollProgress/> 2px progress bar fixed to top ───────────────────── */
 export function ScrollProgress({ color = 'var(--text)' }) {
   const [progress, setProgress] = useState(0);
   useEffect(() => {
@@ -157,7 +194,7 @@ export function ScrollProgress({ color = 'var(--text)' }) {
       <div style={{
         height: '100%', width: `${progress * 100}%`,
         background: color, transformOrigin: 'left',
-        transition: 'width 60ms linear',
+        transition: 'width 80ms linear',
         boxShadow: `0 0 8px ${color === 'var(--text)' ? 'rgba(255,255,255,0.3)' : color}`,
       }} />
     </div>
@@ -165,13 +202,16 @@ export function ScrollProgress({ color = 'var(--text)' }) {
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
-   NEW — <Tilt/> 3D mouse-tilt wrapper.
-   Wraps a card. On mousemove, applies a subtle perspective rotation
-   towards the cursor. Adds a moving radial spotlight if `spotlight` is on.
+   <Tilt/> — spring-physics 3D mouse tilt with optional spotlight
    ────────────────────────────────────────────────────────────────────── */
 export function Tilt({ children, max = 6, scale = 1.01, spotlight = true, spotlightColor = 'rgba(255,255,255,0.10)', style, ...rest }) {
   const ref = useRef(null);
-  const [rot, setRot] = useState({ rx: 0, ry: 0, mx: 50, my: 50, active: false });
+  const [rx, setRx] = useSpring(0, { stiffness: 140, damping: 18, mass: 1 });
+  const [ry, setRy] = useSpring(0, { stiffness: 140, damping: 18, mass: 1 });
+  const [sc, setSc] = useSpring(1, { stiffness: 160, damping: 22, mass: 1 });
+  const [mx, setMx] = useState(50);
+  const [my, setMy] = useState(50);
+  const [active, setActive] = useState(false);
 
   const onMove = (e) => {
     if (prefersReducedMotion()) return;
@@ -180,13 +220,19 @@ export function Tilt({ children, max = 6, scale = 1.01, spotlight = true, spotli
     const rect = el.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
-    const px = x / rect.width;   // 0..1
+    const px = x / rect.width;
     const py = y / rect.height;
-    const ry = (px - 0.5) * 2 * max;   // tilt around Y axis
-    const rx = -(py - 0.5) * 2 * max;  // tilt around X axis (negative so cursor "pulls" surface)
-    setRot({ rx, ry, mx: px * 100, my: py * 100, active: true });
+    setRy((px - 0.5) * 2 * max);
+    setRx(-(py - 0.5) * 2 * max);
+    setSc(scale);
+    setMx(px * 100);
+    setMy(py * 100);
+    if (!active) setActive(true);
   };
-  const onLeave = () => setRot(r => ({ ...r, rx: 0, ry: 0, active: false }));
+  const onLeave = () => {
+    setRx(0); setRy(0); setSc(1);
+    setActive(false);
+  };
 
   return (
     <div
@@ -196,12 +242,7 @@ export function Tilt({ children, max = 6, scale = 1.01, spotlight = true, spotli
       style={{
         position: 'relative',
         transformStyle: 'preserve-3d',
-        transform: rot.active
-          ? `perspective(900px) rotateX(${rot.rx}deg) rotateY(${rot.ry}deg) scale(${scale})`
-          : 'perspective(900px) rotateX(0deg) rotateY(0deg) scale(1)',
-        transition: rot.active
-          ? 'transform 120ms ease-out'
-          : `transform 600ms ${EASE}`,
+        transform: `perspective(1000px) rotateX(${rx.toFixed(3)}deg) rotateY(${ry.toFixed(3)}deg) scale(${sc.toFixed(4)})`,
         willChange: 'transform',
         ...style,
       }}
@@ -212,9 +253,9 @@ export function Tilt({ children, max = 6, scale = 1.01, spotlight = true, spotli
         <div aria-hidden style={{
           position: 'absolute', inset: 0, pointerEvents: 'none',
           borderRadius: 'inherit',
-          background: `radial-gradient(circle at ${rot.mx}% ${rot.my}%, ${spotlightColor} 0%, transparent 45%)`,
-          opacity: rot.active ? 1 : 0,
-          transition: 'opacity 300ms',
+          background: `radial-gradient(circle at ${mx}% ${my}%, ${spotlightColor} 0%, transparent 50%)`,
+          opacity: active ? 1 : 0,
+          transition: 'opacity 400ms ease',
           mixBlendMode: 'screen',
         }} />
       )}
@@ -223,21 +264,23 @@ export function Tilt({ children, max = 6, scale = 1.01, spotlight = true, spotli
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
-   NEW — <Magnetic/> button wrapper that subtly follows the cursor
+   <Magnetic/> — spring-physics magnetic button
    ────────────────────────────────────────────────────────────────────── */
-export function Magnetic({ children, strength = 0.25, style, ...rest }) {
+export function Magnetic({ children, strength = 0.22, style, ...rest }) {
   const ref = useRef(null);
-  const [pos, setPos] = useState({ x: 0, y: 0 });
+  const [x, setX] = useSpring(0, { stiffness: 180, damping: 22 });
+  const [y, setY] = useSpring(0, { stiffness: 180, damping: 22 });
+
   const onMove = (e) => {
     if (prefersReducedMotion()) return;
     const el = ref.current;
     if (!el) return;
     const rect = el.getBoundingClientRect();
-    const x = (e.clientX - (rect.left + rect.width / 2)) * strength;
-    const y = (e.clientY - (rect.top + rect.height / 2)) * strength;
-    setPos({ x, y });
+    setX((e.clientX - (rect.left + rect.width / 2)) * strength);
+    setY((e.clientY - (rect.top + rect.height / 2)) * strength);
   };
-  const onLeave = () => setPos({ x: 0, y: 0 });
+  const onLeave = () => { setX(0); setY(0); };
+
   return (
     <div
       ref={ref}
@@ -245,8 +288,7 @@ export function Magnetic({ children, strength = 0.25, style, ...rest }) {
       onMouseLeave={onLeave}
       style={{
         display: 'inline-flex',
-        transform: `translate(${pos.x}px, ${pos.y}px)`,
-        transition: `transform 400ms ${EASE}`,
+        transform: `translate(${x.toFixed(3)}px, ${y.toFixed(3)}px)`,
         willChange: 'transform',
         ...style,
       }}
@@ -258,10 +300,9 @@ export function Magnetic({ children, strength = 0.25, style, ...rest }) {
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
-   NEW — <AmbientDots/> slowly drifting dots in a section background
+   <AmbientDots/> drifting decorative dots with scroll parallax option
    ────────────────────────────────────────────────────────────────────── */
-export function AmbientDots({ count = 14, color = 'var(--muted2)', opacity = 0.35 }) {
-  // Generate stable positions once on mount
+export function AmbientDots({ count = 14, color = 'var(--muted2)', opacity = 0.35, parallax = false }) {
   const [dots] = useState(() => Array.from({ length: count }).map((_, i) => ({
     id: i,
     left: Math.random() * 100,
@@ -269,7 +310,16 @@ export function AmbientDots({ count = 14, color = 'var(--muted2)', opacity = 0.3
     size: 2 + Math.random() * 4,
     delay: -Math.random() * 14,
     duration: 14 + Math.random() * 10,
+    pSpeed: 0.1 + Math.random() * 0.3,
   })));
+  const [scrollY, setScrollY] = useState(0);
+
+  useEffect(() => {
+    if (!parallax) return;
+    const handler = () => setScrollY(window.scrollY);
+    window.addEventListener('scroll', handler, { passive: true });
+    return () => window.removeEventListener('scroll', handler);
+  }, [parallax]);
 
   return (
     <div aria-hidden style={{
@@ -282,6 +332,8 @@ export function AmbientDots({ count = 14, color = 'var(--muted2)', opacity = 0.3
           width: d.size, height: d.size, borderRadius: d.size / 2,
           background: color, opacity,
           animation: `aiwar-drift ${d.duration}s linear ${d.delay}s infinite`,
+          willChange: 'transform',
+          ...(parallax && { marginTop: `${-scrollY * d.pSpeed}px` }),
         }} />
       ))}
     </div>
@@ -289,11 +341,9 @@ export function AmbientDots({ count = 14, color = 'var(--muted2)', opacity = 0.3
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
-   NEW — <TrendArrow/> small ↑/↓ for ELO changes (decorative — uses
-   deterministic pseudo-randomness so it doesn't flicker)
+   <TrendArrow/> seeded ↑/↓
    ────────────────────────────────────────────────────────────────────── */
 export function TrendArrow({ seed = 0, size = 10 }) {
-  // Deterministic up/down based on seed
   const up = ((seed * 9301 + 49297) % 233280) / 233280 > 0.5;
   const color = up ? '#34C759' : '#FF3B30';
   return (
@@ -304,6 +354,147 @@ export function TrendArrow({ seed = 0, size = 10 }) {
     }}>
       {up ? '↑' : '↓'}
     </span>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   <Marquee3D/> — smooth perspective carousel.
+   Items closer to viewport center grow + sharpen, edges shrink + fade +
+   soft-blur. Hover the strip → it slows to a halt; hover an item → it
+   gently lifts forward in Z.
+   Imperative DOM-driven (no React state per frame) for buttery 60fps.
+   ────────────────────────────────────────────────────────────────────── */
+export function Marquee3D({ items, renderItem, speed = 60, gap = 32, height = 64 }) {
+  const trackRef     = useRef(null);
+  const containerRef = useRef(null);
+  const itemRefs     = useRef([]);
+  const xRef         = useRef(0);
+  const widthRef     = useRef(0);
+  const lastTRef     = useRef(null);
+  const hoverRef     = useRef(false);
+  const hoverIdxRef  = useRef(-1);
+  const speedFactor  = useRef(1);
+
+  const doubled = [...items, ...items];
+
+  useEffect(() => {
+    let raf;
+    const tick = (t) => {
+      if (lastTRef.current == null) lastTRef.current = t;
+      const dt = Math.min(0.05, (t - lastTRef.current) / 1000);
+      lastTRef.current = t;
+
+      // Smoothly ease towards hover state (full → near-stop)
+      const targetFactor = hoverRef.current ? 0.04 : 1;
+      speedFactor.current += (targetFactor - speedFactor.current) * Math.min(1, dt * 5);
+
+      if (!prefersReducedMotion()) {
+        xRef.current -= speed * speedFactor.current * dt;
+      }
+      // Seamless loop
+      if (widthRef.current > 0 && -xRef.current >= widthRef.current / 2) {
+        xRef.current += widthRef.current / 2;
+      }
+
+      if (trackRef.current) {
+        trackRef.current.style.transform = `translate3d(${xRef.current.toFixed(2)}px, 0, 0)`;
+      }
+
+      // Per-item depth update — pure imperative DOM writes
+      if (containerRef.current) {
+        const cRect = containerRef.current.getBoundingClientRect();
+        const center = cRect.left + cRect.width / 2;
+        const half = cRect.width / 2 || 1;
+        const hoverIdx = hoverIdxRef.current;
+
+        for (let i = 0; i < itemRefs.current.length; i++) {
+          const el = itemRefs.current[i];
+          if (!el) continue;
+          const r = el.getBoundingClientRect();
+          const itemCenter = r.left + r.width / 2;
+          const norm = Math.min(1, Math.abs(itemCenter - center) / half);
+
+          const z        = (1 - norm) * 30 - 8;
+          const scale    = 0.82 + (1 - norm) * 0.24;
+          const liftY    = (1 - norm) * -4;
+          const blur     = norm * 1.4;
+          const opacity  = 0.40 + (1 - norm) * 0.60;
+
+          const isHover  = hoverIdx === i;
+          const hoverZ   = isHover ? 40 : 0;
+          const hoverY   = isHover ? -8 : 0;
+          const hoverSc  = isHover ? 1.08 : 1;
+          const hoverBlur = isHover ? 0 : blur;
+          const hoverOp   = isHover ? 1 : opacity;
+
+          el.style.transform = `translate3d(0, ${(liftY + hoverY).toFixed(2)}px, ${(z + hoverZ).toFixed(2)}px) scale(${(scale * hoverSc).toFixed(4)})`;
+          el.style.filter    = `blur(${hoverBlur.toFixed(2)}px)`;
+          el.style.opacity   = hoverOp.toFixed(3);
+        }
+      }
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [speed]);
+
+  // Measure for loop point
+  useEffect(() => {
+    const update = () => {
+      if (!trackRef.current) return;
+      widthRef.current = trackRef.current.scrollWidth;
+    };
+    update();
+    const ro = new ResizeObserver(update);
+    if (trackRef.current) ro.observe(trackRef.current);
+    window.addEventListener('resize', update);
+    return () => { ro.disconnect(); window.removeEventListener('resize', update); };
+  }, [items]);
+
+  return (
+    <div
+      ref={containerRef}
+      onMouseEnter={() => { hoverRef.current = true; }}
+      onMouseLeave={() => { hoverRef.current = false; hoverIdxRef.current = -1; }}
+      style={{
+        position: 'relative',
+        perspective: 1400,
+        perspectiveOrigin: '50% 50%',
+        height: height + 40,
+        overflow: 'hidden',
+        maskImage: 'linear-gradient(90deg, transparent 0%, black 12%, black 88%, transparent 100%)',
+        WebkitMaskImage: 'linear-gradient(90deg, transparent 0%, black 12%, black 88%, transparent 100%)',
+        cursor: 'default',
+      }}
+    >
+      <div
+        ref={trackRef}
+        style={{
+          display: 'flex', gap, alignItems: 'center', height: '100%',
+          whiteSpace: 'nowrap', width: 'max-content',
+          transformStyle: 'preserve-3d', willChange: 'transform',
+          paddingInline: gap,
+        }}
+      >
+        {doubled.map((item, i) => (
+          <div
+            key={i}
+            ref={(el) => { itemRefs.current[i] = el; }}
+            onMouseEnter={() => { hoverIdxRef.current = i; }}
+            onMouseLeave={() => { if (hoverIdxRef.current === i) hoverIdxRef.current = -1; }}
+            style={{
+              flexShrink: 0,
+              transformStyle: 'preserve-3d',
+              willChange: 'transform, filter, opacity',
+              cursor: 'pointer',
+              transition: 'filter 350ms cubic-bezier(0.16,1,0.3,1), opacity 350ms cubic-bezier(0.16,1,0.3,1)',
+            }}
+          >
+            {renderItem(item, i)}
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }
 
@@ -329,7 +520,7 @@ export function SectionTitle({ eyebrow, title, mobile, action }) {
   );
 }
 
-/* ─── PageHeader — eyebrow + huge H1 + subtitle (shared shell) ──────────── */
+/* ─── PageHeader ─────────────────────────────────────────────────────────── */
 export function PageHeader({ eyebrow, title, subtitle, meta, mobile, align = 'left' }) {
   return (
     <header style={{ marginBottom: mobile ? 32 : 48, textAlign: align }}>
@@ -360,7 +551,7 @@ export function PageHeader({ eyebrow, title, subtitle, meta, mobile, align = 'le
   );
 }
 
-/* ─── Global animation CSS — inject once via <GlobalMotion/> ────────────── */
+/* ─── Global animation CSS ──────────────────────────────────────────────── */
 export function GlobalMotion() {
   return (
     <style>{`
@@ -404,12 +595,12 @@ export function GlobalMotion() {
         50%      { box-shadow: 0 0 0 6px rgba(52,199,89,0.12); }
       }
       .aiwar-press-btn {
-        transition: transform 200ms cubic-bezier(0.16,1,0.3,1), background 200ms, color 200ms, border-color 200ms, box-shadow 200ms;
+        transition: transform 250ms cubic-bezier(0.16,1,0.3,1), background 250ms, color 250ms, border-color 250ms, box-shadow 250ms;
       }
       .aiwar-press-btn:hover  { transform: translateY(-1px); }
       .aiwar-press-btn:active { transform: translateY(0) scale(0.98); }
       .aiwar-card-hover {
-        transition: transform 500ms cubic-bezier(0.16,1,0.3,1), border-color 300ms, box-shadow 500ms cubic-bezier(0.16,1,0.3,1);
+        transition: transform 600ms cubic-bezier(0.16,1,0.3,1), border-color 350ms, box-shadow 600ms cubic-bezier(0.16,1,0.3,1);
       }
       .aiwar-card-hover:hover {
         transform: translateY(-4px);
@@ -422,16 +613,10 @@ export function GlobalMotion() {
         content: ''; position: absolute; left: 0; right: 0; bottom: -2px;
         height: 1px; background: currentColor;
         transform: scaleX(0); transform-origin: right;
-        transition: transform 400ms cubic-bezier(0.16,1,0.3,1);
+        transition: transform 500ms cubic-bezier(0.16,1,0.3,1);
       }
       .aiwar-link-underline:hover::after {
         transform: scaleX(1); transform-origin: left;
-      }
-      .aiwar-marquee-pausable {
-        animation-play-state: running;
-      }
-      .aiwar-marquee-pausable:hover {
-        animation-play-state: paused;
       }
       .aiwar-shimmer {
         background: linear-gradient(90deg, var(--card) 0%, var(--hover) 50%, var(--card) 100%);
@@ -439,7 +624,7 @@ export function GlobalMotion() {
         animation: aiwar-shimmer 2.4s linear infinite;
       }
       .aiwar-page-enter {
-        animation: aiwar-fade-up 500ms cubic-bezier(0.16,1,0.3,1) both;
+        animation: aiwar-fade-up 600ms cubic-bezier(0.16,1,0.3,1) both;
       }
       @media (prefers-reduced-motion: reduce) {
         *, *::before, *::after {
