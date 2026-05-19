@@ -269,15 +269,11 @@ export default function LeaderboardPage({ liveModels }) {
 
         {/* ── Featured top models with descriptions (visible without clicks) ── */}
         {models.length > 0 && !q && activeFilters === 0 && sort === 'elo' && (
-          <section style={{ marginBottom: 18 }}>
-            <p style={{ fontSize: 11, fontWeight: 600, color: 'var(--muted2)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 8, paddingLeft: 2 }}>
+          <section style={{ marginBottom: 22 }}>
+            <p style={{ fontSize: 11, fontWeight: 600, color: 'var(--muted2)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 10, paddingLeft: 2 }}>
               Featured — top 5 by ELO
             </p>
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: mobile ? '1fr' : 'repeat(auto-fit, minmax(320px, 1fr))',
-              gap: 10,
-            }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {filtered.slice(0, 5).map((m) => {
                 const org      = ORG_CONFIG[m.org] ?? { color: '#8E8E93', bg: '#F2F2F7', bgDark: '#2C2C2E' };
                 const iconBg   = dark ? (org.bgDark ?? '#2C2C2E') : org.bg;
@@ -285,30 +281,51 @@ export default function LeaderboardPage({ liveModels }) {
                 const desc     = getDescription(m.name);
                 return (
                   <article key={m.slug} style={{
-                    background: 'var(--card)', borderRadius: 14, padding: '14px 14px 12px',
-                    boxShadow: 'var(--shadow)', borderTop: `2px solid ${tColor}`,
+                    background: 'var(--card)', borderRadius: 14,
+                    padding: mobile ? '14px 14px 14px' : '16px 20px',
+                    boxShadow: 'var(--shadow)',
+                    borderLeft: `3px solid ${tColor}`,
+                    display: 'grid',
+                    gridTemplateColumns: mobile ? '1fr' : '40px 1fr auto',
+                    gap: mobile ? 10 : 16,
+                    alignItems: 'start',
                   }}>
-                    <header style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+                    {/* Icon */}
+                    <div style={{
+                      width: 40, height: 40, borderRadius: 10, background: iconBg,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: 12, fontWeight: 700, color: org.color, flexShrink: 0,
+                    }}>{m.initials}</div>
+
+                    {/* Title + description */}
+                    <div style={{ minWidth: 0 }}>
+                      <h3 style={{ fontSize: 15, fontWeight: 600, color: 'var(--text)', letterSpacing: '-0.02em', margin: '0 0 4px', lineHeight: 1.3 }}>
+                        #{m.displayRank} · {m.name}
+                      </h3>
+                      <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 8, letterSpacing: '-0.01em' }}>
+                        {m.org} · ELO <span style={{ color: tColor, fontWeight: 700 }}>{m.elo}</span> · {m.votesLabel} votes
+                      </div>
+                      <p style={{
+                        fontSize: 13.5, lineHeight: 1.6, color: 'var(--text)', opacity: 0.78,
+                        letterSpacing: '-0.005em', margin: 0,
+                      }}>
+                        {desc ?? `${m.name} from ${m.org}. ELO ${m.elo} from ${m.votesLabel} arena battles. Tier ${eloTier(m.elo)}.`}
+                      </p>
+                    </div>
+
+                    {/* ELO badge (desktop only) */}
+                    {!mobile && (
                       <div style={{
-                        width: 34, height: 34, borderRadius: 9, background: iconBg,
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontSize: 11, fontWeight: 700, color: org.color, flexShrink: 0,
-                      }}>{m.initials}</div>
-                      <div style={{ minWidth: 0, flex: 1 }}>
-                        <h3 style={{ fontSize: 14, fontWeight: 600, color: 'var(--text)', letterSpacing: '-0.02em', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                          #{m.displayRank} {m.name}
-                        </h3>
-                        <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 1 }}>
-                          {m.org} · ELO <span style={{ color: tColor, fontWeight: 700 }}>{m.elo}</span> · {m.votesLabel} votes
+                        textAlign: 'right', minWidth: 72,
+                      }}>
+                        <div style={{ fontSize: 22, fontWeight: 700, color: tColor, letterSpacing: '-0.04em', fontVariantNumeric: 'tabular-nums', lineHeight: 1 }}>
+                          {m.elo}
+                        </div>
+                        <div style={{ fontSize: 10, color: 'var(--muted2)', marginTop: 3, letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+                          Tier {eloTier(m.elo)}
                         </div>
                       </div>
-                    </header>
-                    <p style={{
-                      fontSize: 12.5, lineHeight: 1.55, color: 'var(--text)', opacity: 0.82,
-                      letterSpacing: '-0.005em', margin: 0,
-                    }}>
-                      {desc ?? `${m.name} from ${m.org}. ELO ${m.elo} from ${m.votesLabel} arena battles. Tier ${eloTier(m.elo)}.`}
-                    </p>
+                    )}
                   </article>
                 );
               })}
