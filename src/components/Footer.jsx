@@ -31,6 +31,8 @@ export default function Footer({ onNavigate }) {
           <Column title="Site">
             <FooterLink onClick={() => onNavigate('home')}>Home</FooterLink>
             <FooterLink onClick={() => onNavigate('leaderboard')}>Leaderboard</FooterLink>
+            <FooterLink onClick={() => onNavigate('guide')}>Guide</FooterLink>
+            <FooterLink onClick={() => onNavigate('faq')}>FAQ</FooterLink>
             <FooterLink onClick={() => onNavigate('methodology')}>Methodology</FooterLink>
             <FooterLink onClick={() => onNavigate('blog')}>Blog</FooterLink>
           </Column>

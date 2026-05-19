@@ -12,12 +12,14 @@ import TermsPage                 from './pages/TermsPage.jsx';
 import ContactPage               from './pages/ContactPage.jsx';
 import ModelPage                 from './pages/ModelPage.jsx';
 import LabPage                   from './pages/LabPage.jsx';
+import GuidePage                  from './pages/GuidePage.jsx';
+import FAQPage                    from './pages/FAQPage.jsx';
 import { BlogIndexPage, BlogPostPage } from './pages/BlogPage.jsx';
 import { MODELS, fetchLeaderboard, readModelCountSnapshot, writeModelCountSnapshot } from './models-data.js';
 
 const CACHE_KEY = 'aiwar-models-v1';
 
-// Route shape: { type: 'home' | 'leaderboard' | 'methodology' | 'about' | 'privacy' | 'terms' | 'contact' | 'blog' | 'blog-post' | 'model' | 'lab', slug?: string }
+// Route shape: { type: 'home' | 'leaderboard' | 'methodology' | 'guide' | 'faq' | 'about' | 'privacy' | 'terms' | 'contact' | 'blog' | 'blog-post' | 'model' | 'lab', slug?: string }
 function routeFromHash() {
   const raw = (window.location.hash ?? '').replace(/^#\/?/, '');
   if (!raw) return { type: 'home' };
@@ -26,6 +28,8 @@ function routeFromHash() {
   switch (seg) {
     case 'leaderboard': return { type: 'leaderboard' };
     case 'methodology': return { type: 'methodology' };
+    case 'guide':       return { type: 'guide' };
+    case 'faq':         return { type: 'faq' };
     case 'about':       return { type: 'about' };
     case 'privacy':     return { type: 'privacy' };
     case 'terms':       return { type: 'terms' };
@@ -42,6 +46,8 @@ function hashForRoute(route) {
     case 'home':        return '';
     case 'leaderboard': return '#leaderboard';
     case 'methodology': return '#methodology';
+    case 'guide':       return '#guide';
+    case 'faq':         return '#faq';
     case 'about':       return '#/about';
     case 'privacy':     return '#/privacy';
     case 'terms':       return '#/terms';
@@ -125,6 +131,8 @@ export default function App() {
   switch (route.type) {
     case 'leaderboard':  body = <LeaderboardPage onNavigate={navigate} liveModels={liveModels} countSnapshot={countSnapshot} />; break;
     case 'methodology':  body = <MethodologyPage onNavigate={navigate} liveModels={liveModels} countSnapshot={countSnapshot} />; break;
+    case 'guide':        body = <GuidePage        onNavigate={navigate} liveModels={liveModels} />; break;
+    case 'faq':          body = <FAQPage          onNavigate={navigate} liveModels={liveModels} />; break;
     case 'about':        body = <AboutPage        onNavigate={navigate} />; break;
     case 'privacy':      body = <PrivacyPage      onNavigate={navigate} />; break;
     case 'terms':        body = <TermsPage        onNavigate={navigate} />; break;
@@ -167,6 +175,8 @@ function titleForRoute(r) {
     case 'home':         return base;
     case 'leaderboard':  return `Leaderboard — ${base}`;
     case 'methodology':  return `Methodology — ${base}`;
+    case 'guide':        return `Guide — ${base}`;
+    case 'faq':          return `FAQ — ${base}`;
     case 'about':        return `About — ${base}`;
     case 'privacy':      return `Privacy Policy — ${base}`;
     case 'terms':        return `Terms of Use — ${base}`;

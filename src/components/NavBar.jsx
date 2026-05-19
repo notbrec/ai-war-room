@@ -4,7 +4,8 @@ const SF = "-apple-system,'SF Pro Display','SF Pro Text',BlinkMacSystemFont,'Seg
 
 const LINKS = [
   { id: 'leaderboard', label: 'Leaderboard' },
-  { id: 'methodology', label: 'Methodology' },
+  { id: 'guide',       label: 'Guide'       },
+  { id: 'faq',         label: 'FAQ'         },
   { id: 'blog',        label: 'Blog'        },
   { id: 'about',       label: 'About'       },
 ];
