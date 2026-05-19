@@ -76,8 +76,8 @@ function LeaderboardPreview({ models, onNavigate, dark, mobile, isLoaded }) {
       {!mobile && (
         <div style={{
           display: 'grid',
-          gridTemplateColumns: '38px 1fr 220px 84px',
-          gap: 18, padding: '8px 22px',
+          gridTemplateColumns: '34px minmax(0, 1.4fr) minmax(0, 1fr) 84px',
+          gap: 16, padding: '8px 22px',
           fontSize: 10, fontWeight: 600, color: 'var(--muted2)',
           textTransform: 'uppercase', letterSpacing: '0.08em', fontFamily: MONO,
           borderBottom: '0.5px solid var(--sep2)',
@@ -107,8 +107,8 @@ function LeaderboardPreview({ models, onNavigate, dark, mobile, isLoaded }) {
                   className={i === 0 ? 'aiwar-leader-pulse' : ''}
                   style={{
                     display: 'grid',
-                    gridTemplateColumns: mobile ? '32px 1fr 60px' : '38px 1fr 220px 84px',
-                    gap: mobile ? 12 : 18,
+                    gridTemplateColumns: mobile ? '32px minmax(0, 1fr) 60px' : '34px minmax(0, 1.4fr) minmax(0, 1fr) 84px',
+                    gap: mobile ? 12 : 16,
                     alignItems: 'center',
                     padding: mobile ? '12px 16px' : '14px 22px',
                     borderBottom: i < top.length - 1 ? '0.5px solid var(--sep2)' : 'none',
@@ -129,15 +129,17 @@ function LeaderboardPreview({ models, onNavigate, dark, mobile, isLoaded }) {
                   {/* Model name + lab */}
                   <div style={{ minWidth: 0 }}>
                     <div style={{
-                      fontSize: 14, fontWeight: 600, color: 'var(--text)',
+                      fontSize: 13.5, fontWeight: 600, color: 'var(--text)',
                       letterSpacing: '-0.022em',
-                      whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
-                      marginBottom: 2,
+                      lineHeight: 1.25,
+                      marginBottom: 3,
+                      overflowWrap: 'anywhere',
+                      wordBreak: 'break-word',
                     }}>
                       {m.name}
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                      <span style={{ width: 5, height: 5, borderRadius: 3, background: org.color }} />
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                      <span style={{ width: 5, height: 5, borderRadius: 3, background: org.color, flexShrink: 0 }} />
                       <span style={{ fontSize: 11, color: 'var(--muted)', letterSpacing: '-0.005em' }}>
                         {m.org}
                       </span>
