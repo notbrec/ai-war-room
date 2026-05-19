@@ -104,6 +104,7 @@ function LeaderboardPreview({ models, onNavigate, dark, mobile, isLoaded }) {
               return (
                 <div key={m.slug}
                   onClick={() => onNavigate('leaderboard')}
+                  className={i === 0 ? 'aiwar-leader-pulse' : ''}
                   style={{
                     display: 'grid',
                     gridTemplateColumns: mobile ? '32px 1fr 60px' : '38px 1fr 220px 84px',
@@ -113,7 +114,7 @@ function LeaderboardPreview({ models, onNavigate, dark, mobile, isLoaded }) {
                     borderBottom: i < top.length - 1 ? '0.5px solid var(--sep2)' : 'none',
                     cursor: 'pointer',
                     opacity: 0,
-                    animation: `aiwar-fade-up 700ms ${EASE} ${100 + i * 60}ms both`,
+                    animation: `aiwar-fade-up 700ms ${EASE} ${100 + i * 60}ms both${i === 0 ? ', aiwar-leader-pulse 4s ease-in-out infinite' : ''}`,
                     transition: 'background 200ms',
                   }}
                   onMouseEnter={e => e.currentTarget.style.background = 'var(--hover)'}

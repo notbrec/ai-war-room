@@ -87,14 +87,18 @@ export default function NavBar({ page, onNavigate, dark, onToggleTheme }) {
               <button
                 key={link.id}
                 onClick={() => onNavigate(link.id)}
+                className="aiwar-nav-link"
+                data-active={page === link.id}
                 style={{
                   height: 32, paddingInline: 12, borderRadius: 8,
-                  background: page === link.id ? 'var(--pill)' : 'none',
+                  background: 'none',
                   color: page === link.id ? 'var(--text)' : 'var(--muted)',
-                  fontSize: 14, fontWeight: page === link.id ? 600 : 400,
+                  fontSize: 14, fontWeight: page === link.id ? 600 : 500,
                   border: 'none', cursor: 'pointer', letterSpacing: '-0.015em',
-                  transition: 'background 0.15s, color 0.15s',
+                  transition: `background 0.15s, color 0.15s`,
                 }}
+                onMouseEnter={e => { e.currentTarget.style.color = 'var(--text)'; }}
+                onMouseLeave={e => { if (page !== link.id) e.currentTarget.style.color = 'var(--muted)'; }}
               >
                 {link.label}
               </button>

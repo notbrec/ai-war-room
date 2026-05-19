@@ -84,53 +84,97 @@ button, input, a, .page-enter, .aiwar-marquee-track, .aiwar-marquee-track * {
     opacity          0.18s ease;
 }
 
-/* ─── Premium ambient background — noise + radial vignette + soft drift ── */
+/* ─── Premium ambient background — animated noise + grid drift + blobs ── */
 .aiwar-bg {
   position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden;
 }
 
-/* Subtle SVG noise grain — dark mode only */
+/* Breathing SVG noise grain — opacity gently pulses, dark mode only */
 html.dark .aiwar-bg::before {
   content: '';
   position: absolute; inset: 0;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.92' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.06 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  opacity: 0.55;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.92' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.08 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   mix-blend-mode: overlay;
+  animation: aiwar-bg-noise-breathe 14s ease-in-out infinite;
 }
 
-/* Hairline grid — barely visible, dark mode */
+/* Slow drifting hairline grid — barely visible, dark mode */
 html.dark .aiwar-bg::after {
   content: '';
-  position: absolute; inset: -2px;
+  position: absolute; inset: -100px;
   background-image:
-    linear-gradient(rgba(255,255,255,0.018) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255,255,255,0.018) 1px, transparent 1px);
+    linear-gradient(rgba(255,255,255,0.022) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.022) 1px, transparent 1px);
   background-size: 88px 88px;
-  mask-image: radial-gradient(ellipse at 50% 30%, black 40%, transparent 80%);
-  -webkit-mask-image: radial-gradient(ellipse at 50% 30%, black 40%, transparent 80%);
+  mask-image: radial-gradient(ellipse at 50% 30%, black 35%, transparent 80%);
+  -webkit-mask-image: radial-gradient(ellipse at 50% 30%, black 35%, transparent 80%);
+  animation: aiwar-bg-grid-drift 60s linear infinite;
 }
 
-/* Soft drifting light blob (no purple, no neon — neutral white) */
+@keyframes aiwar-bg-grid-drift {
+  from { transform: translate(0, 0); }
+  to   { transform: translate(88px, 88px); }
+}
+
+@keyframes aiwar-bg-noise-breathe {
+  0%, 100% { opacity: 0.42; }
+  50%      { opacity: 0.72; }
+}
+
+/* Three soft drifting light blobs (no purple, no neon — neutral white) */
+.aiwar-bg-light,
+.aiwar-bg-light-2,
+.aiwar-bg-light-3 {
+  position: absolute;
+  background: radial-gradient(ellipse at center, rgba(255,255,255,0.055) 0%, transparent 60%);
+  filter: blur(50px);
+  will-change: transform;
+}
+
 .aiwar-bg-light {
-  position: absolute; top: -300px; left: 50%; transform: translateX(-50%);
+  top: -300px; left: 50%; transform: translateX(-50%);
   width: 1200px; height: 900px;
-  background: radial-gradient(ellipse at center, rgba(255,255,255,0.05) 0%, transparent 60%);
-  animation: aiwar-bg-drift 22s ease-in-out infinite alternate;
-  filter: blur(40px);
+  animation: aiwar-bg-drift-a 22s ease-in-out infinite alternate;
 }
+.aiwar-bg-light-2 {
+  top: 30vh; left: -200px;
+  width: 700px; height: 700px;
+  opacity: 0.7;
+  background: radial-gradient(circle, rgba(255,255,255,0.035) 0%, transparent 65%);
+  animation: aiwar-bg-drift-b 36s ease-in-out infinite alternate;
+}
+.aiwar-bg-light-3 {
+  bottom: -200px; right: -100px;
+  width: 900px; height: 700px;
+  opacity: 0.6;
+  background: radial-gradient(ellipse, rgba(255,59,48,0.025) 0%, transparent 60%);
+  animation: aiwar-bg-drift-c 48s ease-in-out infinite alternate;
+}
+
+/* Light-mode blobs are subtle white only */
 html:not(.dark) .aiwar-bg-light {
-  background: radial-gradient(ellipse at center, rgba(255,255,255,0.85) 0%, transparent 60%);
+  background: radial-gradient(ellipse at center, rgba(255,255,255,0.9) 0%, transparent 60%);
 }
+html:not(.dark) .aiwar-bg-light-2,
+html:not(.dark) .aiwar-bg-light-3 { display: none; }
 
-@keyframes aiwar-bg-drift {
+@keyframes aiwar-bg-drift-a {
   from { transform: translate(-50%, 0)    rotate(0deg); }
-  to   { transform: translate(-50%, 40px) rotate(8deg); }
+  to   { transform: translate(-50%, 50px) rotate(10deg); }
+}
+@keyframes aiwar-bg-drift-b {
+  from { transform: translate(0,   0)    scale(1); }
+  to   { transform: translate(80px, -60px) scale(1.15); }
+}
+@keyframes aiwar-bg-drift-c {
+  from { transform: translate(0,   0)    scale(1); }
+  to   { transform: translate(-100px, -40px) scale(1.1); }
 }
 
-/* Subtle vignette darkening the very corners — anchors the eye */
+/* Subtle vignette darkening the very corners */
 .aiwar-bg-vignette {
   position: absolute; inset: 0;
-  background: radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.35) 100%);
+  background: radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.45) 100%);
   pointer-events: none;
 }
 html:not(.dark) .aiwar-bg-vignette { display: none; }

@@ -131,15 +131,17 @@ export function LivePulse({ color = '#34C759', size = 8 }) {
   );
 }
 
-/* ─── Eyebrow — MONO uppercase tag ──────────────────────────────────────── */
-export function Eyebrow({ children, color = 'var(--muted2)' }) {
+/* ─── Eyebrow — MONO uppercase tag with optional animated underline ─────── */
+export function Eyebrow({ children, color = 'var(--muted2)', line = false }) {
   return (
     <p style={{
       fontSize: 12, fontWeight: 600, color,
       textTransform: 'uppercase', letterSpacing: '0.08em',
       margin: '0 0 6px', fontFamily: MONO,
+      display: 'inline-flex', alignItems: 'center',
     }}>
       {children}
+      {line && <span className="aiwar-eyebrow-line" aria-hidden />}
     </p>
   );
 }
@@ -388,18 +390,33 @@ export function ComparisonBar({ width = 0.5, color = 'var(--text)', height = 4, 
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
-   <EditorialNote/> — analyst commentary card
+   <EditorialNote/> — analyst commentary card with hover lift
    ────────────────────────────────────────────────────────────────────── */
 export function EditorialNote({ author = 'Analyst', date, kicker, title, children }) {
   return (
-    <div style={{
-      background: 'var(--card)',
-      border: '0.5px solid var(--sep)',
-      borderRadius: 18,
-      padding: '22px 24px',
-      backdropFilter: 'saturate(180%) blur(20px)',
-      WebkitBackdropFilter: 'saturate(180%) blur(20px)',
-    }}>
+    <div
+      style={{
+        background: 'var(--card)',
+        border: '0.5px solid var(--sep)',
+        borderRadius: 18,
+        padding: '22px 24px',
+        backdropFilter: 'saturate(180%) blur(20px)',
+        WebkitBackdropFilter: 'saturate(180%) blur(20px)',
+        transition: `transform 500ms ${EASE}, border-color 350ms ${EASE}, box-shadow 500ms ${EASE}`,
+        cursor: 'default',
+        height: '100%',
+      }}
+      onMouseEnter={e => {
+        e.currentTarget.style.transform = 'translateY(-3px)';
+        e.currentTarget.style.borderColor = 'var(--text)';
+        e.currentTarget.style.boxShadow = '0 18px 40px rgba(0,0,0,0.18)';
+      }}
+      onMouseLeave={e => {
+        e.currentTarget.style.transform = 'translateY(0)';
+        e.currentTarget.style.borderColor = 'var(--sep)';
+        e.currentTarget.style.boxShadow = 'none';
+      }}
+    >
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
         <span style={{ width: 6, height: 6, borderRadius: 3, background: 'var(--accent)' }} />
         <span style={{
@@ -684,15 +701,68 @@ export function GlobalMotion() {
         0%, 100% { box-shadow: 0 0 0 0 rgba(52,199,89,0.0); }
         50%      { box-shadow: 0 0 0 6px rgba(52,199,89,0.12); }
       }
+      /* Soft pulse-glow for the #1 leader card / live signal cells */
+      @keyframes aiwar-leader-pulse {
+        0%, 100% {
+          box-shadow:
+            inset 0 0 0 0.5px rgba(255,255,255,0.06),
+            0 0 0 0 rgba(255,255,255,0.0);
+        }
+        50% {
+          box-shadow:
+            inset 0 0 0 0.5px rgba(255,255,255,0.16),
+            0 0 18px 0 rgba(255,255,255,0.06);
+        }
+      }
+      .aiwar-leader-pulse { animation: aiwar-leader-pulse 4s ease-in-out infinite; }
+
+      /* Slowly drawing eyebrow underline — for section titles */
+      @keyframes aiwar-eyebrow-underline {
+        from { transform: scaleX(0); }
+        to   { transform: scaleX(1); }
+      }
+      .aiwar-eyebrow-line {
+        display: inline-block; vertical-align: middle;
+        width: 32px; height: 1px; background: currentColor; opacity: 0.4;
+        transform-origin: left; margin-left: 10px;
+        animation: aiwar-eyebrow-underline 1200ms cubic-bezier(0.16,1,0.3,1) 400ms both;
+      }
+
+      /* Animated underline on nav links */
+      .aiwar-nav-link {
+        position: relative;
+      }
+      .aiwar-nav-link::after {
+        content: ''; position: absolute; left: 12px; right: 12px; bottom: 4px;
+        height: 1px; background: currentColor; opacity: 0.5;
+        transform: scaleX(0); transform-origin: right;
+        transition: transform 420ms cubic-bezier(0.16,1,0.3,1);
+      }
+      .aiwar-nav-link:hover::after,
+      .aiwar-nav-link[data-active="true"]::after {
+        transform: scaleX(1); transform-origin: left;
+      }
       .aiwar-press-btn {
-        transition: transform 220ms cubic-bezier(0.16,1,0.3,1), background 220ms, color 220ms, border-color 220ms, box-shadow 220ms, filter 200ms;
+        transition: transform 220ms cubic-bezier(0.16,1,0.3,1), background 220ms, color 220ms, border-color 220ms, box-shadow 220ms, filter 200ms, text-shadow 80ms;
         position: relative;
       }
       .aiwar-press-btn:hover  { transform: translateY(-1px); }
       .aiwar-press-btn:active {
-        transform: translateY(0) scale(0.94);
-        filter: brightness(0.9) saturate(1.3);
-        transition: transform 80ms cubic-bezier(0.16,1,0.3,1), filter 80ms;
+        transform: translateY(0) scale(0.93);
+        filter: brightness(1.18) saturate(1.4) contrast(1.08);
+        text-shadow:
+          1.5px 0 0 rgba(255,59,48,0.55),
+         -1.5px 0 0 rgba(52,199,89,0.55);
+        transition: transform 70ms cubic-bezier(0.16,1,0.3,1), filter 70ms, text-shadow 70ms;
+        animation: aiwar-glitch-shake 240ms cubic-bezier(0.36,0.07,0.19,0.97);
+      }
+      @keyframes aiwar-glitch-shake {
+        0%   { transform: translate(0, 0)   scale(0.93); }
+        20%  { transform: translate(-1px, 1px)  scale(0.93); }
+        40%  { transform: translate(1px, -1px)  scale(0.94); }
+        60%  { transform: translate(-1px, 0)    scale(0.93); }
+        80%  { transform: translate(1px, 0)     scale(0.94); }
+        100% { transform: translate(0, 0)   scale(0.93); }
       }
       .aiwar-card-hover {
         transition: transform 600ms cubic-bezier(0.16,1,0.3,1), border-color 350ms, box-shadow 600ms cubic-bezier(0.16,1,0.3,1);
@@ -721,16 +791,47 @@ export function GlobalMotion() {
       .aiwar-page-enter {
         animation: aiwar-fade-up 600ms cubic-bezier(0.16,1,0.3,1) both;
       }
-      /* Glitch / press flash for buttons */
+      /* Glitch / press flash for buttons — dual ring + brighten core */
       @keyframes aiwar-click-flash {
-        0%   { box-shadow: 0 0 0 0 rgba(255,255,255,0.35); }
-        100% { box-shadow: 0 0 0 14px rgba(255,255,255,0); }
+        0%   {
+          box-shadow:
+            0 0 0 0 rgba(255,255,255,0.55),
+            0 0 0 0 rgba(255,255,255,0.30);
+          background: rgba(255,255,255,0.18);
+        }
+        60%  {
+          box-shadow:
+            0 0 0 10px rgba(255,255,255,0.10),
+            0 0 0 22px rgba(255,255,255,0);
+          background: rgba(255,255,255,0.04);
+        }
+        100% {
+          box-shadow:
+            0 0 0 24px rgba(255,255,255,0),
+            0 0 0 36px rgba(255,255,255,0);
+          background: rgba(255,255,255,0);
+        }
       }
       .aiwar-press-btn:active::after {
         content: '';
         position: absolute; inset: 0; border-radius: inherit;
-        animation: aiwar-click-flash 350ms ease-out forwards;
+        animation: aiwar-click-flash 480ms cubic-bezier(0.16,1,0.3,1) forwards;
         pointer-events: none;
+        mix-blend-mode: screen;
+      }
+      /* Quick scan-bar sweep across the button on click */
+      @keyframes aiwar-click-sweep {
+        0%   { transform: translateX(-100%); opacity: 0.0; }
+        20%  { opacity: 0.65; }
+        100% { transform: translateX(120%); opacity: 0;   }
+      }
+      .aiwar-press-btn:active::before {
+        content: '';
+        position: absolute; inset: 0; border-radius: inherit;
+        background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.45) 50%, transparent 100%);
+        animation: aiwar-click-sweep 380ms ease-out forwards;
+        pointer-events: none;
+        mix-blend-mode: screen;
       }
     `}</style>
   );
