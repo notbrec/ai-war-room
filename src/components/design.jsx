@@ -170,6 +170,106 @@ export function WordReveal({ children, baseDelay = 0, perWord = 80, style, as: T
   );
 }
 
+/* ─────────────────────────────────────────────────────────────────────────
+   <ClickEffects/> — global JS-driven click glitch.
+   Listens to mousedown on the document. When it lands on any button/anchor,
+   adds .aiwar-clicked for 600ms so the full keyframe sequence completes
+   even on very quick clicks (where :active would end before animation).
+   ────────────────────────────────────────────────────────────────────── */
+export function ClickEffects() {
+  useEffect(() => {
+    const handler = (e) => {
+      const t = e.target instanceof Element ? e.target : null;
+      if (!t) return;
+      const btn = t.closest('button, a, [role="button"]');
+      if (!btn || btn.hasAttribute('disabled')) return;
+      btn.classList.remove('aiwar-clicked');
+      // Force reflow so the class re-trigger restarts the animation
+      void btn.offsetWidth;
+      btn.classList.add('aiwar-clicked');
+      window.setTimeout(() => btn.classList.remove('aiwar-clicked'), 620);
+    };
+    document.addEventListener('mousedown', handler, { passive: true });
+    document.addEventListener('touchstart', handler, { passive: true });
+    return () => {
+      document.removeEventListener('mousedown', handler);
+      document.removeEventListener('touchstart', handler);
+    };
+  }, []);
+  return null;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   <CursorSpotlight/> — soft radial light follows the mouse.
+   Pure DOM manipulation via rAF + damping. No React re-render on move.
+   Auto-disables on touch devices (no hover capability).
+   ────────────────────────────────────────────────────────────────────── */
+export function CursorSpotlight({ size = 440, color = 'rgba(255,255,255,0.10)' }) {
+  const ref       = useRef(null);
+  const targetRef = useRef({ x: -1000, y: -1000 });
+  const posRef    = useRef({ x: -1000, y: -1000 });
+  const visibleRef = useRef(false);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    // Skip on touch-primary devices
+    if (window.matchMedia('(hover: none)').matches) return;
+
+    const onMove = (e) => {
+      targetRef.current.x = e.clientX;
+      targetRef.current.y = e.clientY;
+      if (!visibleRef.current && ref.current) {
+        ref.current.style.opacity = '1';
+        visibleRef.current = true;
+      }
+    };
+    const onLeave = () => {
+      if (ref.current) ref.current.style.opacity = '0';
+      visibleRef.current = false;
+    };
+
+    let raf;
+    const tick = () => {
+      // Damping: ease pos towards target
+      posRef.current.x += (targetRef.current.x - posRef.current.x) * 0.18;
+      posRef.current.y += (targetRef.current.y - posRef.current.y) * 0.18;
+      if (ref.current) {
+        ref.current.style.transform = `translate3d(${(posRef.current.x - size/2).toFixed(2)}px, ${(posRef.current.y - size/2).toFixed(2)}px, 0)`;
+      }
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+
+    window.addEventListener('mousemove', onMove, { passive: true });
+    window.addEventListener('mouseleave', onLeave);
+    document.addEventListener('mouseleave', onLeave);
+    return () => {
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseleave', onLeave);
+      document.removeEventListener('mouseleave', onLeave);
+      cancelAnimationFrame(raf);
+    };
+  }, [size]);
+
+  return (
+    <div
+      ref={ref}
+      aria-hidden
+      style={{
+        position: 'fixed', top: 0, left: 0,
+        width: size, height: size,
+        pointerEvents: 'none',
+        zIndex: 1,
+        opacity: 0,
+        transition: 'opacity 400ms ease',
+        background: `radial-gradient(circle, ${color} 0%, transparent 60%)`,
+        mixBlendMode: 'screen',
+        willChange: 'transform, opacity',
+      }}
+    />
+  );
+}
+
 /* ─── <ScrollProgress/> 2px progress bar fixed to top ───────────────────── */
 export function ScrollProgress({ color = 'var(--text)' }) {
   const [progress, setProgress] = useState(0);
@@ -747,22 +847,52 @@ export function GlobalMotion() {
         position: relative;
       }
       .aiwar-press-btn:hover  { transform: translateY(-1px); }
+
+      /* Click glitch — fires on any button/anchor via .aiwar-clicked
+         (added by <ClickEffects/> JS) AND :active for instant fallback. */
+      .aiwar-clicked,
       .aiwar-press-btn:active {
-        transform: translateY(0) scale(0.93);
-        filter: brightness(1.18) saturate(1.4) contrast(1.08);
-        text-shadow:
-          1.5px 0 0 rgba(255,59,48,0.55),
-         -1.5px 0 0 rgba(52,199,89,0.55);
-        transition: transform 70ms cubic-bezier(0.16,1,0.3,1), filter 70ms, text-shadow 70ms;
-        animation: aiwar-glitch-shake 240ms cubic-bezier(0.36,0.07,0.19,0.97);
+        animation: aiwar-glitch-pulse 480ms cubic-bezier(0.16,1,0.3,1) both;
       }
-      @keyframes aiwar-glitch-shake {
-        0%   { transform: translate(0, 0)   scale(0.93); }
-        20%  { transform: translate(-1px, 1px)  scale(0.93); }
-        40%  { transform: translate(1px, -1px)  scale(0.94); }
-        60%  { transform: translate(-1px, 0)    scale(0.93); }
-        80%  { transform: translate(1px, 0)     scale(0.94); }
-        100% { transform: translate(0, 0)   scale(0.93); }
+      .aiwar-clicked {
+        position: relative;
+      }
+      @keyframes aiwar-glitch-pulse {
+        0% {
+          transform: translate(0, 0) scale(1);
+          filter: brightness(1) saturate(1);
+          text-shadow: none;
+        }
+        8% {
+          transform: translate(-2px, 1px) scale(0.93);
+          filter: brightness(1.25) saturate(1.5) contrast(1.1);
+          text-shadow:
+             2px 0 0 rgba(255,59,48,0.65),
+            -2px 0 0 rgba(52,199,89,0.65);
+        }
+        16% {
+          transform: translate(2px, -1px) scale(0.94);
+          filter: brightness(1.20) saturate(1.4) contrast(1.06);
+          text-shadow:
+            -1.5px 0 0 rgba(255,59,48,0.55),
+             1.5px 0 0 rgba(52,199,89,0.55);
+        }
+        24% {
+          transform: translate(-1px, 0) scale(0.94);
+          text-shadow:
+             1px 0 0 rgba(255,59,48,0.35),
+            -1px 0 0 rgba(52,199,89,0.35);
+        }
+        40% {
+          transform: translate(0, 0) scale(0.96);
+          filter: brightness(1.08) saturate(1.2);
+          text-shadow: none;
+        }
+        100% {
+          transform: translate(0, 0) scale(1);
+          filter: brightness(1) saturate(1);
+          text-shadow: none;
+        }
       }
       .aiwar-card-hover {
         transition: transform 600ms cubic-bezier(0.16,1,0.3,1), border-color 350ms, box-shadow 600ms cubic-bezier(0.16,1,0.3,1);
@@ -791,47 +921,50 @@ export function GlobalMotion() {
       .aiwar-page-enter {
         animation: aiwar-fade-up 600ms cubic-bezier(0.16,1,0.3,1) both;
       }
-      /* Glitch / press flash for buttons — dual ring + brighten core */
+      /* Glitch / press flash — dual expanding ring + brighten core */
       @keyframes aiwar-click-flash {
-        0%   {
+        0% {
           box-shadow:
             0 0 0 0 rgba(255,255,255,0.55),
             0 0 0 0 rgba(255,255,255,0.30);
-          background: rgba(255,255,255,0.18);
+          background: rgba(255,255,255,0.20);
         }
-        60%  {
+        60% {
           box-shadow:
-            0 0 0 10px rgba(255,255,255,0.10),
-            0 0 0 22px rgba(255,255,255,0);
+            0 0 0 12px rgba(255,255,255,0.10),
+            0 0 0 24px rgba(255,255,255,0);
           background: rgba(255,255,255,0.04);
         }
         100% {
           box-shadow:
-            0 0 0 24px rgba(255,255,255,0),
-            0 0 0 36px rgba(255,255,255,0);
+            0 0 0 28px rgba(255,255,255,0),
+            0 0 0 40px rgba(255,255,255,0);
           background: rgba(255,255,255,0);
         }
       }
-      .aiwar-press-btn:active::after {
+      .aiwar-press-btn:active::after,
+      .aiwar-clicked::after {
         content: '';
         position: absolute; inset: 0; border-radius: inherit;
-        animation: aiwar-click-flash 480ms cubic-bezier(0.16,1,0.3,1) forwards;
+        animation: aiwar-click-flash 540ms cubic-bezier(0.16,1,0.3,1) both;
         pointer-events: none;
         mix-blend-mode: screen;
       }
-      /* Quick scan-bar sweep across the button on click */
+      /* Highlight sweep left → right */
       @keyframes aiwar-click-sweep {
-        0%   { transform: translateX(-100%); opacity: 0.0; }
-        20%  { opacity: 0.65; }
-        100% { transform: translateX(120%); opacity: 0;   }
+        0%   { transform: translateX(-110%); opacity: 0.0; }
+        25%  { opacity: 0.75; }
+        100% { transform: translateX(120%);  opacity: 0;   }
       }
-      .aiwar-press-btn:active::before {
+      .aiwar-press-btn:active::before,
+      .aiwar-clicked::before {
         content: '';
         position: absolute; inset: 0; border-radius: inherit;
-        background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.45) 50%, transparent 100%);
-        animation: aiwar-click-sweep 380ms ease-out forwards;
+        background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.55) 50%, transparent 100%);
+        animation: aiwar-click-sweep 460ms cubic-bezier(0.16,1,0.3,1) both;
         pointer-events: none;
         mix-blend-mode: screen;
+        overflow: hidden;
       }
     `}</style>
   );
