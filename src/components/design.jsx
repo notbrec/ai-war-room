@@ -200,6 +200,42 @@ export function ClickEffects() {
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
+   <ScreenGlitch/> — full-screen scan band sweep + brief chromatic flash
+   fires on every mousedown anywhere on the page. Premium, not neon.
+   ────────────────────────────────────────────────────────────────────── */
+export function ScreenGlitch() {
+  const overlayRef = useRef(null);
+
+  useEffect(() => {
+    const fire = () => {
+      const el = overlayRef.current;
+      if (!el) return;
+      el.classList.remove('aiwar-screen-glitch-active');
+      // Force reflow so the animation restarts on rapid clicks
+      void el.offsetWidth;
+      el.classList.add('aiwar-screen-glitch-active');
+    };
+    document.addEventListener('mousedown', fire, { passive: true });
+    document.addEventListener('touchstart', fire, { passive: true });
+    return () => {
+      document.removeEventListener('mousedown', fire);
+      document.removeEventListener('touchstart', fire);
+    };
+  }, []);
+
+  return (
+    <div
+      ref={overlayRef}
+      aria-hidden
+      className="aiwar-screen-glitch"
+    >
+      <div className="aiwar-screen-glitch-line" />
+      <div className="aiwar-screen-glitch-line aiwar-screen-glitch-line--lag" />
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
    <CursorSpotlight/> — invert-lens cursor.
    • Tiny dot (5px) at exact cursor position, always visible.
    • Invert lens: a solid white disc with mix-blend-mode: difference
