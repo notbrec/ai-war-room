@@ -200,28 +200,37 @@ export function ClickEffects() {
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
-   <ScreenGlitch/> — full-screen scan band sweep + brief chromatic flash
-   fires on every mousedown anywhere on the page. Premium, not neon.
+   <ScreenGlitch/> — random ambient scan-band sweep, scoped to NavBar.
+   No longer fires on click (too aggressive site-wide). Instead it
+   self-triggers at a random 6-18s interval and runs only over the
+   top navigation strip, giving the nav a quiet "bad signal" pulse
+   without interfering with content.
    ────────────────────────────────────────────────────────────────────── */
-export function ScreenGlitch() {
+export function ScreenGlitch({ minDelay = 6000, maxDelay = 18000 }) {
   const overlayRef = useRef(null);
 
   useEffect(() => {
+    let timeoutId;
     const fire = () => {
       const el = overlayRef.current;
-      if (!el) return;
-      el.classList.remove('aiwar-screen-glitch-active');
-      // Force reflow so the animation restarts on rapid clicks
-      void el.offsetWidth;
-      el.classList.add('aiwar-screen-glitch-active');
+      if (el) {
+        el.classList.remove('aiwar-screen-glitch-active');
+        // Force reflow so the animation restarts cleanly
+        void el.offsetWidth;
+        el.classList.add('aiwar-screen-glitch-active');
+      }
     };
-    document.addEventListener('mousedown', fire, { passive: true });
-    document.addEventListener('touchstart', fire, { passive: true });
-    return () => {
-      document.removeEventListener('mousedown', fire);
-      document.removeEventListener('touchstart', fire);
+    const schedule = () => {
+      const delay = minDelay + Math.random() * (maxDelay - minDelay);
+      timeoutId = window.setTimeout(() => {
+        fire();
+        schedule();
+      }, delay);
     };
-  }, []);
+    // First fire kicks in 1–3s after mount so the page settles first
+    timeoutId = window.setTimeout(() => { fire(); schedule(); }, 1000 + Math.random() * 2000);
+    return () => clearTimeout(timeoutId);
+  }, [minDelay, maxDelay]);
 
   return (
     <div
