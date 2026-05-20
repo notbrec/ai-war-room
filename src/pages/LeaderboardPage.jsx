@@ -164,7 +164,7 @@ export default function LeaderboardPage({ liveModels }) {
   const COL = { rank: 52, icon: 44, name: 'auto', badges: 120, elo: 88, votes: 72, price: 96, ctx: 64, chev: 26 };
 
   return (
-    <div className="page-enter" style={{ background: 'var(--bg)', fontFamily: SF, minHeight: '100vh' }}>
+    <div className="page-enter" style={{ background: 'transparent', fontFamily: SF, minHeight: '100vh' }}>
       <GlobalMotion />
       <div style={{ maxWidth: 1100, margin: '0 auto', padding: mobile ? '40px 16px 96px' : '64px 24px 112px' }}>
 

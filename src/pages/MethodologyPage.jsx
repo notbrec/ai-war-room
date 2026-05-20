@@ -63,7 +63,7 @@ export default function MethodologyPage({ liveModels, countSnapshot }) {
   const modelSuffix   = snap.exact ? '' : '+';
 
   return (
-    <div className="page-enter" style={{ background: 'var(--bg)', fontFamily: SF, minHeight: '100vh' }}>
+    <div className="page-enter" style={{ background: 'transparent', fontFamily: SF, minHeight: '100vh' }}>
       <GlobalMotion />
 
       <div style={{ maxWidth: 1000, margin: '0 auto', padding: mobile ? '40px 18px 96px' : '72px 24px 112px' }}>

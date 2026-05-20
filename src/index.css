@@ -66,6 +66,12 @@ input, button, select, textarea { font-family: inherit; }
 }
 .page-enter {
   animation: pageEnter 0.20s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+  position: relative;
+  z-index: 2;
+}
+.aiwar-page-enter {
+  position: relative;
+  z-index: 2;
 }
 
 /* ─── Smooth theme transitions ─────────────────────────────────────────── */

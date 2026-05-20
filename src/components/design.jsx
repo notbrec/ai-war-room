@@ -204,7 +204,7 @@ export function ClickEffects() {
    Pure DOM manipulation via rAF + damping. No React re-render on move.
    Auto-disables on touch devices (no hover capability).
    ────────────────────────────────────────────────────────────────────── */
-export function CursorSpotlight({ size = 440, color = 'rgba(255,255,255,0.10)' }) {
+export function CursorSpotlight({ size = 260, color = 'rgba(255,255,255,0.085)' }) {
   const ref       = useRef(null);
   const targetRef = useRef({ x: -1000, y: -1000 });
   const posRef    = useRef({ x: -1000, y: -1000 });
