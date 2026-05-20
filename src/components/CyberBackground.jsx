@@ -1,46 +1,103 @@
-import { useMemo } from 'react';
+import { useMemo, useEffect, useRef } from 'react';
 
 /**
- * Clean premium ambient background:
- *  - very subtle static grain (texture only, no motion)
- *  - one giant soft glow at top breathing slowly
- *  - ~22 small floating particles that drift upward + twinkle
- *  - corner vignette
+ * Premium AI ambient background:
+ *  - one giant soft glow at top, slowly breathing
+ *  - ~26 floating "nodes" that drift up + twinkle
+ *  - random "neurons" fire periodically (rapid brighten + scale pulse)
+ *  - a few faint connecting lines between near neighbours, fading in/out
+ *    on staggered intervals (looks like an idle neural network)
+ *  - very subtle static grain + corner vignette
  * No grid, no neon, no purple, no military feel.
  */
 export default function CyberBackground({ dark }) {
-  const particles = useMemo(() => {
-    const N = 22;
+  // Stable random layout
+  const nodes = useMemo(() => {
+    const N = 26;
     return Array.from({ length: N }, (_, i) => ({
       id: i,
-      left: Math.random() * 100,            // %
-      top:  10 + Math.random() * 80,         // % (avoid extreme edges)
-      size: 1.5 + Math.random() * 2.5,       // px
-      max:  0.22 + Math.random() * 0.36,     // peak opacity
-      dur:  18 + Math.random() * 22,         // s
-      delay: -Math.random() * 30,            // s (negative so they start mid-cycle)
+      // Position in % of viewport
+      x: Math.random() * 100,
+      y: 8 + Math.random() * 84,
+      size: 1.5 + Math.random() * 2.5,
+      max:  0.25 + Math.random() * 0.40,
+      dur:  20 + Math.random() * 24,
+      delay: -Math.random() * 30,
+      // Per-node firing cadence (sec)
+      firePeriod: 6 + Math.random() * 14,
+      fireDelay:  Math.random() * 12,
     }));
   }, []);
+
+  // Build a small set of "connections" between nearby nodes
+  const connections = useMemo(() => {
+    const out = [];
+    for (let i = 0; i < nodes.length; i++) {
+      for (let j = i + 1; j < nodes.length; j++) {
+        const dx = nodes[i].x - nodes[j].x;
+        const dy = nodes[i].y - nodes[j].y;
+        const d  = Math.sqrt(dx*dx + dy*dy);
+        if (d < 18) {
+          out.push({
+            id: `${i}-${j}`,
+            x1: nodes[i].x, y1: nodes[i].y,
+            x2: nodes[j].x, y2: nodes[j].y,
+            // Reveal cadence per line
+            dur:   18 + Math.random() * 24,
+            delay: -Math.random() * 20,
+          });
+          if (out.length >= 14) return out;
+        }
+      }
+    }
+    return out;
+  }, [nodes]);
+
+  // SVG re-measure when viewport resizes (lines positioned in %)
+  const svgRef = useRef(null);
 
   return (
     <div className="aiwar-bg" aria-hidden>
       <div className="aiwar-bg-glow" />
+
+      {/* Neural-net connections — faint lines between near-by nodes */}
+      <svg
+        ref={svgRef}
+        className="aiwar-bg-net"
+        viewBox="0 0 100 100"
+        preserveAspectRatio="none"
+      >
+        {connections.map(c => (
+          <line
+            key={c.id}
+            x1={c.x1} y1={c.y1} x2={c.x2} y2={c.y2}
+            className="aiwar-bg-net-line"
+            style={{
+              animation: `aiwar-net-pulse ${c.dur}s ease-in-out ${c.delay}s infinite`,
+            }}
+          />
+        ))}
+      </svg>
+
       <div className="aiwar-bg-particles">
-        {particles.map(p => (
+        {nodes.map(n => (
           <span
-            key={p.id}
+            key={n.id}
             className="aiwar-bg-particle"
             style={{
-              left:  `${p.left}%`,
-              top:   `${p.top}%`,
-              width:  `${p.size}px`,
-              height: `${p.size}px`,
-              animation: `aiwar-particle-rise ${p.dur}s ease-in-out ${p.delay}s infinite`,
-              ['--p-max']: p.max,
+              left:  `${n.x}%`,
+              top:   `${n.y}%`,
+              width:  `${n.size}px`,
+              height: `${n.size}px`,
+              animation:
+                `aiwar-particle-rise ${n.dur}s ease-in-out ${n.delay}s infinite,
+                 aiwar-particle-fire ${n.firePeriod}s ease-in-out ${n.fireDelay}s infinite`,
+              ['--p-max']: n.max,
             }}
           />
         ))}
       </div>
+
       <div className="aiwar-bg-vignette" />
     </div>
   );

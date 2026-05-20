@@ -200,106 +200,77 @@ export function ClickEffects() {
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
-   <CursorSpotlight/> — premium 3-layer cursor:
-   • leading dot (instant follow)
-   • hollow ring with damped lag (~0.18)
-   • soft halo with more lag (~0.10) — ambient additive light
-   On hover over button/a/[role=button] the ring scales up + brightens
-   and the dot shrinks (Apple Vision-style focus). On mousedown the
-   ring briefly compresses.
-   Auto-disables on touch devices.
+   <CursorSpotlight/> — invert-lens cursor.
+   • Tiny dot (5px) at exact cursor position, always visible.
+   • Invert lens: a solid white disc with mix-blend-mode: difference
+     that's COLLAPSED to 0 by default. When you hover over an
+     interactive element it springs out to ~140px → everything
+     under it visually inverts, creating a clean colour-flip
+     spotlight that follows the cursor.
+   • mousedown briefly squeezes the lens 0.86×.
+   Auto-disabled on touch devices.
    ────────────────────────────────────────────────────────────────────── */
 export function CursorSpotlight({
-  haloSize = 260,
-  haloColor = 'rgba(255,255,255,0.085)',
-  ringSize = 36,
-  ringHoverSize = 56,
-  dotSize = 5,
-  dotHoverSize = 3,
+  lensSize = 140,
+  dotSize  = 5,
 }) {
-  const haloRef = useRef(null);
-  const ringRef = useRef(null);
+  const lensRef = useRef(null);
   const dotRef  = useRef(null);
 
   const targetRef = useRef({ x: -1000, y: -1000 });
-  // separate damped positions per layer
-  const haloPos   = useRef({ x: -1000, y: -1000 });
-  const ringPos   = useRef({ x: -1000, y: -1000 });
-  const dotPos    = useRef({ x: -1000, y: -1000 });
+  const lensPos   = useRef({ x: -1000, y: -1000 });
 
-  // Animated scale & opacity (driven by rAF, not React state)
-  const ringSc   = useRef(1);
-  const dotSc    = useRef(1);
-  const ringBright = useRef(1);
-
-  const hoveringIface = useRef(false);
-  const pressed       = useRef(false);
-  const visible       = useRef(false);
+  const lensSc    = useRef(0);  // animated 0 → 1 on hover
+  const pressed   = useRef(false);
+  const hovering  = useRef(false);
+  const visible   = useRef(false);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
     if (window.matchMedia('(hover: none)').matches) return;
 
-    const showAll = () => {
+    const show = () => {
       if (visible.current) return;
       visible.current = true;
-      if (haloRef.current) haloRef.current.style.opacity = '1';
-      if (ringRef.current) ringRef.current.style.opacity = '1';
       if (dotRef.current)  dotRef.current.style.opacity  = '1';
+      if (lensRef.current) lensRef.current.style.opacity = '1';
     };
-    const hideAll = () => {
+    const hide = () => {
       visible.current = false;
-      if (haloRef.current) haloRef.current.style.opacity = '0';
-      if (ringRef.current) ringRef.current.style.opacity = '0';
       if (dotRef.current)  dotRef.current.style.opacity  = '0';
+      if (lensRef.current) lensRef.current.style.opacity = '0';
     };
 
     const onMove = (e) => {
       targetRef.current.x = e.clientX;
       targetRef.current.y = e.clientY;
-      // Detect whether the element under cursor is interactive
       const el = e.target instanceof Element ? e.target : null;
-      hoveringIface.current = !!(el && el.closest('button, a, [role="button"], input, textarea, select, [data-cursor="hover"]'));
-      showAll();
+      hovering.current = !!(el && el.closest('button, a, [role="button"], input, textarea, select, [data-cursor="hover"]'));
+      show();
     };
-    const onLeave = () => hideAll();
+    const onLeave = () => hide();
     const onDown  = () => { pressed.current = true; };
     const onUp    = () => { pressed.current = false; };
 
     let raf;
     const tick = () => {
-      // Lerp positions with different speeds per layer
       const t = targetRef.current;
-      // Halo: slowest (0.10) for the most lag — feels like ambient drift
-      haloPos.current.x += (t.x - haloPos.current.x) * 0.10;
-      haloPos.current.y += (t.y - haloPos.current.y) * 0.10;
-      // Ring: medium (0.22)
-      ringPos.current.x += (t.x - ringPos.current.x) * 0.22;
-      ringPos.current.y += (t.y - ringPos.current.y) * 0.22;
-      // Dot: instant (1.0)
-      dotPos.current.x = t.x;
-      dotPos.current.y = t.y;
+      // Lens lags ~0.20 for smooth feel
+      lensPos.current.x += (t.x - lensPos.current.x) * 0.20;
+      lensPos.current.y += (t.y - lensPos.current.y) * 0.20;
 
-      // Scale animation toward hover / press state
-      const ringTargetSc  = pressed.current ? 0.86 : (hoveringIface.current ? (ringHoverSize / ringSize) : 1);
-      const dotTargetSc   = hoveringIface.current ? (dotHoverSize / dotSize) : 1;
-      const ringTargetBri = hoveringIface.current ? 1.45 : 1;
-      ringSc.current     += (ringTargetSc - ringSc.current) * 0.18;
-      dotSc.current      += (dotTargetSc - dotSc.current) * 0.18;
-      ringBright.current += (ringTargetBri - ringBright.current) * 0.18;
+      const target = hovering.current
+        ? (pressed.current ? 0.86 : 1)
+        : 0;
+      lensSc.current += (target - lensSc.current) * 0.18;
 
-      if (haloRef.current) {
-        haloRef.current.style.transform =
-          `translate3d(${(haloPos.current.x - haloSize/2).toFixed(2)}px, ${(haloPos.current.y - haloSize/2).toFixed(2)}px, 0)`;
-      }
-      if (ringRef.current) {
-        ringRef.current.style.transform =
-          `translate3d(${(ringPos.current.x - ringSize/2).toFixed(2)}px, ${(ringPos.current.y - ringSize/2).toFixed(2)}px, 0) scale(${ringSc.current.toFixed(4)})`;
-        ringRef.current.style.borderColor = `rgba(255,255,255,${(0.55 * ringBright.current).toFixed(3)})`;
-      }
       if (dotRef.current) {
         dotRef.current.style.transform =
-          `translate3d(${(dotPos.current.x - dotSize/2).toFixed(2)}px, ${(dotPos.current.y - dotSize/2).toFixed(2)}px, 0) scale(${dotSc.current.toFixed(4)})`;
+          `translate3d(${(t.x - dotSize/2).toFixed(2)}px, ${(t.y - dotSize/2).toFixed(2)}px, 0)`;
+      }
+      if (lensRef.current) {
+        lensRef.current.style.transform =
+          `translate3d(${(lensPos.current.x - lensSize/2).toFixed(2)}px, ${(lensPos.current.y - lensSize/2).toFixed(2)}px, 0) scale(${lensSc.current.toFixed(4)})`;
       }
       raf = requestAnimationFrame(tick);
     };
@@ -316,46 +287,32 @@ export function CursorSpotlight({
       document.removeEventListener('mouseleave', onLeave);
       cancelAnimationFrame(raf);
     };
-  }, [haloSize, ringSize, ringHoverSize, dotSize, dotHoverSize]);
+  }, [lensSize, dotSize]);
 
   const layerStyle = {
     position: 'fixed', top: 0, left: 0,
     pointerEvents: 'none',
     opacity: 0,
-    transition: 'opacity 400ms ease',
+    transition: 'opacity 320ms ease',
     willChange: 'transform, opacity',
   };
 
   return (
     <>
-      {/* Layer 1 — soft halo (lazy follower, mix-blend additive) */}
+      {/* Invert lens — solid white + difference blend inverts whatever's under it */}
       <div
-        ref={haloRef}
+        ref={lensRef}
         aria-hidden
         style={{
           ...layerStyle,
-          width: haloSize, height: haloSize,
-          zIndex: 1,
-          background: `radial-gradient(circle, ${haloColor} 0%, transparent 60%)`,
-          mixBlendMode: 'screen',
-        }}
-      />
-      {/* Layer 2 — hollow ring (medium lag, scales on hover/press) */}
-      <div
-        ref={ringRef}
-        aria-hidden
-        style={{
-          ...layerStyle,
-          width: ringSize, height: ringSize,
+          width: lensSize, height: lensSize,
           zIndex: 9998,
           borderRadius: '50%',
-          border: '1px solid rgba(255,255,255,0.55)',
-          backdropFilter: 'invert(8%)',
-          WebkitBackdropFilter: 'invert(8%)',
+          background: '#ffffff',
           mixBlendMode: 'difference',
         }}
       />
-      {/* Layer 3 — leading dot (instant follow, exact cursor position) */}
+      {/* Leading dot — always exact cursor position */}
       <div
         ref={dotRef}
         aria-hidden
