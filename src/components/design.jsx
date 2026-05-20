@@ -200,73 +200,175 @@ export function ClickEffects() {
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
-   <CursorSpotlight/> — soft radial light follows the mouse.
-   Pure DOM manipulation via rAF + damping. No React re-render on move.
-   Auto-disables on touch devices (no hover capability).
+   <CursorSpotlight/> — premium 3-layer cursor:
+   • leading dot (instant follow)
+   • hollow ring with damped lag (~0.18)
+   • soft halo with more lag (~0.10) — ambient additive light
+   On hover over button/a/[role=button] the ring scales up + brightens
+   and the dot shrinks (Apple Vision-style focus). On mousedown the
+   ring briefly compresses.
+   Auto-disables on touch devices.
    ────────────────────────────────────────────────────────────────────── */
-export function CursorSpotlight({ size = 260, color = 'rgba(255,255,255,0.085)' }) {
-  const ref       = useRef(null);
+export function CursorSpotlight({
+  haloSize = 260,
+  haloColor = 'rgba(255,255,255,0.085)',
+  ringSize = 36,
+  ringHoverSize = 56,
+  dotSize = 5,
+  dotHoverSize = 3,
+}) {
+  const haloRef = useRef(null);
+  const ringRef = useRef(null);
+  const dotRef  = useRef(null);
+
   const targetRef = useRef({ x: -1000, y: -1000 });
-  const posRef    = useRef({ x: -1000, y: -1000 });
-  const visibleRef = useRef(false);
+  // separate damped positions per layer
+  const haloPos   = useRef({ x: -1000, y: -1000 });
+  const ringPos   = useRef({ x: -1000, y: -1000 });
+  const dotPos    = useRef({ x: -1000, y: -1000 });
+
+  // Animated scale & opacity (driven by rAF, not React state)
+  const ringSc   = useRef(1);
+  const dotSc    = useRef(1);
+  const ringBright = useRef(1);
+
+  const hoveringIface = useRef(false);
+  const pressed       = useRef(false);
+  const visible       = useRef(false);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    // Skip on touch-primary devices
     if (window.matchMedia('(hover: none)').matches) return;
+
+    const showAll = () => {
+      if (visible.current) return;
+      visible.current = true;
+      if (haloRef.current) haloRef.current.style.opacity = '1';
+      if (ringRef.current) ringRef.current.style.opacity = '1';
+      if (dotRef.current)  dotRef.current.style.opacity  = '1';
+    };
+    const hideAll = () => {
+      visible.current = false;
+      if (haloRef.current) haloRef.current.style.opacity = '0';
+      if (ringRef.current) ringRef.current.style.opacity = '0';
+      if (dotRef.current)  dotRef.current.style.opacity  = '0';
+    };
 
     const onMove = (e) => {
       targetRef.current.x = e.clientX;
       targetRef.current.y = e.clientY;
-      if (!visibleRef.current && ref.current) {
-        ref.current.style.opacity = '1';
-        visibleRef.current = true;
-      }
+      // Detect whether the element under cursor is interactive
+      const el = e.target instanceof Element ? e.target : null;
+      hoveringIface.current = !!(el && el.closest('button, a, [role="button"], input, textarea, select, [data-cursor="hover"]'));
+      showAll();
     };
-    const onLeave = () => {
-      if (ref.current) ref.current.style.opacity = '0';
-      visibleRef.current = false;
-    };
+    const onLeave = () => hideAll();
+    const onDown  = () => { pressed.current = true; };
+    const onUp    = () => { pressed.current = false; };
 
     let raf;
     const tick = () => {
-      // Damping: ease pos towards target
-      posRef.current.x += (targetRef.current.x - posRef.current.x) * 0.18;
-      posRef.current.y += (targetRef.current.y - posRef.current.y) * 0.18;
-      if (ref.current) {
-        ref.current.style.transform = `translate3d(${(posRef.current.x - size/2).toFixed(2)}px, ${(posRef.current.y - size/2).toFixed(2)}px, 0)`;
+      // Lerp positions with different speeds per layer
+      const t = targetRef.current;
+      // Halo: slowest (0.10) for the most lag — feels like ambient drift
+      haloPos.current.x += (t.x - haloPos.current.x) * 0.10;
+      haloPos.current.y += (t.y - haloPos.current.y) * 0.10;
+      // Ring: medium (0.22)
+      ringPos.current.x += (t.x - ringPos.current.x) * 0.22;
+      ringPos.current.y += (t.y - ringPos.current.y) * 0.22;
+      // Dot: instant (1.0)
+      dotPos.current.x = t.x;
+      dotPos.current.y = t.y;
+
+      // Scale animation toward hover / press state
+      const ringTargetSc  = pressed.current ? 0.86 : (hoveringIface.current ? (ringHoverSize / ringSize) : 1);
+      const dotTargetSc   = hoveringIface.current ? (dotHoverSize / dotSize) : 1;
+      const ringTargetBri = hoveringIface.current ? 1.45 : 1;
+      ringSc.current     += (ringTargetSc - ringSc.current) * 0.18;
+      dotSc.current      += (dotTargetSc - dotSc.current) * 0.18;
+      ringBright.current += (ringTargetBri - ringBright.current) * 0.18;
+
+      if (haloRef.current) {
+        haloRef.current.style.transform =
+          `translate3d(${(haloPos.current.x - haloSize/2).toFixed(2)}px, ${(haloPos.current.y - haloSize/2).toFixed(2)}px, 0)`;
+      }
+      if (ringRef.current) {
+        ringRef.current.style.transform =
+          `translate3d(${(ringPos.current.x - ringSize/2).toFixed(2)}px, ${(ringPos.current.y - ringSize/2).toFixed(2)}px, 0) scale(${ringSc.current.toFixed(4)})`;
+        ringRef.current.style.borderColor = `rgba(255,255,255,${(0.55 * ringBright.current).toFixed(3)})`;
+      }
+      if (dotRef.current) {
+        dotRef.current.style.transform =
+          `translate3d(${(dotPos.current.x - dotSize/2).toFixed(2)}px, ${(dotPos.current.y - dotSize/2).toFixed(2)}px, 0) scale(${dotSc.current.toFixed(4)})`;
       }
       raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
 
     window.addEventListener('mousemove', onMove, { passive: true });
-    window.addEventListener('mouseleave', onLeave);
+    window.addEventListener('mousedown', onDown, { passive: true });
+    window.addEventListener('mouseup',   onUp,   { passive: true });
     document.addEventListener('mouseleave', onLeave);
     return () => {
       window.removeEventListener('mousemove', onMove);
-      window.removeEventListener('mouseleave', onLeave);
+      window.removeEventListener('mousedown', onDown);
+      window.removeEventListener('mouseup',   onUp);
       document.removeEventListener('mouseleave', onLeave);
       cancelAnimationFrame(raf);
     };
-  }, [size]);
+  }, [haloSize, ringSize, ringHoverSize, dotSize, dotHoverSize]);
+
+  const layerStyle = {
+    position: 'fixed', top: 0, left: 0,
+    pointerEvents: 'none',
+    opacity: 0,
+    transition: 'opacity 400ms ease',
+    willChange: 'transform, opacity',
+  };
 
   return (
-    <div
-      ref={ref}
-      aria-hidden
-      style={{
-        position: 'fixed', top: 0, left: 0,
-        width: size, height: size,
-        pointerEvents: 'none',
-        zIndex: 1,
-        opacity: 0,
-        transition: 'opacity 400ms ease',
-        background: `radial-gradient(circle, ${color} 0%, transparent 60%)`,
-        mixBlendMode: 'screen',
-        willChange: 'transform, opacity',
-      }}
-    />
+    <>
+      {/* Layer 1 — soft halo (lazy follower, mix-blend additive) */}
+      <div
+        ref={haloRef}
+        aria-hidden
+        style={{
+          ...layerStyle,
+          width: haloSize, height: haloSize,
+          zIndex: 1,
+          background: `radial-gradient(circle, ${haloColor} 0%, transparent 60%)`,
+          mixBlendMode: 'screen',
+        }}
+      />
+      {/* Layer 2 — hollow ring (medium lag, scales on hover/press) */}
+      <div
+        ref={ringRef}
+        aria-hidden
+        style={{
+          ...layerStyle,
+          width: ringSize, height: ringSize,
+          zIndex: 9998,
+          borderRadius: '50%',
+          border: '1px solid rgba(255,255,255,0.55)',
+          backdropFilter: 'invert(8%)',
+          WebkitBackdropFilter: 'invert(8%)',
+          mixBlendMode: 'difference',
+        }}
+      />
+      {/* Layer 3 — leading dot (instant follow, exact cursor position) */}
+      <div
+        ref={dotRef}
+        aria-hidden
+        style={{
+          ...layerStyle,
+          width: dotSize, height: dotSize,
+          zIndex: 9999,
+          borderRadius: '50%',
+          background: '#fff',
+          mixBlendMode: 'difference',
+        }}
+      />
+    </>
   );
 }
 
