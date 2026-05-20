@@ -230,9 +230,9 @@ html:not(.dark) ::selection { background: rgba(0,0,0,0.10); }
   background: linear-gradient(
     180deg,
     transparent 0%,
-    rgba(255,255,255,0.04) 40%,
-    rgba(255,255,255,0.12) 50%,
-    rgba(255,255,255,0.04) 60%,
+    rgba(255,255,255,0.025) 40%,
+    rgba(255,255,255,0.07) 50%,
+    rgba(255,255,255,0.025) 60%,
     transparent 100%
   );
   mix-blend-mode: screen;
@@ -243,9 +243,9 @@ html:not(.dark) .aiwar-screen-glitch-line {
   background: linear-gradient(
     180deg,
     transparent 0%,
-    rgba(0,0,0,0.03) 40%,
-    rgba(0,0,0,0.09) 50%,
-    rgba(0,0,0,0.03) 60%,
+    rgba(0,0,0,0.02) 40%,
+    rgba(0,0,0,0.055) 50%,
+    rgba(0,0,0,0.02) 60%,
     transparent 100%
   );
   mix-blend-mode: multiply;
@@ -262,8 +262,8 @@ html:not(.dark) .aiwar-screen-glitch-line {
 }
 @keyframes aiwar-scan-v {
   0%   { top: -220px; opacity: 0;  }
-  15%  { opacity: 0.95; }
-  85%  { opacity: 0.95; }
+  15%  { opacity: 0.6; }
+  85%  { opacity: 0.6; }
   100% { top: 100vh;  opacity: 0;  }
 }
 
@@ -273,9 +273,9 @@ html:not(.dark) .aiwar-screen-glitch-line {
   background: linear-gradient(
     90deg,
     transparent 0%,
-    rgba(255,255,255,0.04) 40%,
-    rgba(255,255,255,0.12) 50%,
-    rgba(255,255,255,0.04) 60%,
+    rgba(255,255,255,0.025) 40%,
+    rgba(255,255,255,0.07) 50%,
+    rgba(255,255,255,0.025) 60%,
     transparent 100%
   );
   animation: aiwar-scan-h-r 480ms cubic-bezier(0.20,0.50,0.20,1) forwards;
@@ -292,8 +292,8 @@ html:not(.dark) .aiwar-screen-glitch--left .aiwar-screen-glitch-line {
 }
 @keyframes aiwar-scan-h-r {
   0%   { left: -220px; opacity: 0;  }
-  15%  { opacity: 0.95; }
-  85%  { opacity: 0.95; }
+  15%  { opacity: 0.6; }
+  85%  { opacity: 0.6; }
   100% { left: 100vw;  opacity: 0;  }
 }
 
@@ -303,9 +303,9 @@ html:not(.dark) .aiwar-screen-glitch--left .aiwar-screen-glitch-line {
   background: linear-gradient(
     270deg,
     transparent 0%,
-    rgba(255,255,255,0.04) 40%,
-    rgba(255,255,255,0.12) 50%,
-    rgba(255,255,255,0.04) 60%,
+    rgba(255,255,255,0.025) 40%,
+    rgba(255,255,255,0.07) 50%,
+    rgba(255,255,255,0.025) 60%,
     transparent 100%
   );
   animation: aiwar-scan-h-l 480ms cubic-bezier(0.20,0.50,0.20,1) forwards;
@@ -322,8 +322,8 @@ html:not(.dark) .aiwar-screen-glitch--right .aiwar-screen-glitch-line {
 }
 @keyframes aiwar-scan-h-l {
   0%   { right: -220px; opacity: 0;  }
-  15%  { opacity: 0.95; }
-  85%  { opacity: 0.95; }
+  15%  { opacity: 0.6; }
+  85%  { opacity: 0.6; }
   100% { right: 100vw; opacity: 0;  }
 }
 
@@ -352,39 +352,37 @@ html:not(.dark) .aiwar-screen-glitch--right .aiwar-screen-glitch-line {
 
 @keyframes aiwar-scan-diag-tl {
   0%   { transform: translate(-180%, -180%) rotate(40deg);  opacity: 0;  }
-  15%  { opacity: 0.9; }
-  85%  { opacity: 0.9; }
+  15%  { opacity: 0.55; }
+  85%  { opacity: 0.55; }
   100% { transform: translate(80%, 80%)     rotate(40deg);  opacity: 0;  }
 }
 @keyframes aiwar-scan-diag-tr {
   0%   { transform: translate(80%, -180%)   rotate(-40deg); opacity: 0;  }
-  15%  { opacity: 0.9; }
-  85%  { opacity: 0.9; }
+  15%  { opacity: 0.55; }
+  85%  { opacity: 0.55; }
   100% { transform: translate(-180%, 80%)   rotate(-40deg); opacity: 0;  }
 }
 @keyframes aiwar-scan-diag-bl {
   0%   { transform: translate(-180%, 80%)   rotate(-40deg); opacity: 0;  }
-  15%  { opacity: 0.9; }
-  85%  { opacity: 0.9; }
+  15%  { opacity: 0.55; }
+  85%  { opacity: 0.55; }
   100% { transform: translate(80%, -180%)   rotate(-40deg); opacity: 0;  }
 }
 @keyframes aiwar-scan-diag-br {
   0%   { transform: translate(80%, 80%)     rotate(40deg);  opacity: 0;  }
-  15%  { opacity: 0.9; }
-  85%  { opacity: 0.9; }
+  15%  { opacity: 0.55; }
+  85%  { opacity: 0.55; }
   100% { transform: translate(-180%, -180%) rotate(40deg);  opacity: 0;  }
 }
 
-/* ─── Body shake — quick wobble on glitch trigger ─────────────────────── */
+/* ─── Body shake — gentle wobble on glitch trigger ────────────────────── */
 @keyframes aiwar-body-shake {
-  0%   { transform: translate3d(0, 0, 0)       skew(0deg, 0deg); }
-  15%  { transform: translate3d(-3px, 2px, 0)  skew(-0.35deg, 0.15deg); }
-  30%  { transform: translate3d(3px, -2px, 0)  skew(0.35deg, -0.15deg); }
-  45%  { transform: translate3d(-2px, 1px, 0)  skew(-0.25deg, 0.10deg); }
-  60%  { transform: translate3d(2px, -1px, 0)  skew(0.20deg, -0.08deg); }
-  75%  { transform: translate3d(-1px, 0, 0)    skew(-0.10deg, 0deg); }
-  100% { transform: translate3d(0, 0, 0)       skew(0deg, 0deg); }
+  0%   { transform: translate3d(0, 0, 0)        skew(0deg, 0deg); }
+  20%  { transform: translate3d(-1.2px, 0.6px, 0) skew(-0.12deg, 0.04deg); }
+  45%  { transform: translate3d(1.2px, -0.6px, 0) skew(0.12deg, -0.04deg); }
+  70%  { transform: translate3d(-0.6px, 0.3px, 0) skew(-0.06deg, 0.02deg); }
+  100% { transform: translate3d(0, 0, 0)        skew(0deg, 0deg); }
 }
 body.aiwar-screen-shake {
-  animation: aiwar-body-shake 320ms cubic-bezier(0.36,0.07,0.19,0.97);
+  animation: aiwar-body-shake 240ms cubic-bezier(0.36,0.07,0.19,0.97);
 }
