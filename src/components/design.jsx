@@ -200,44 +200,51 @@ export function ClickEffects() {
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
-   <ScreenGlitch/> — random ambient scan-band sweep, scoped to NavBar.
-   No longer fires on click (too aggressive site-wide). Instead it
-   self-triggers at a random 6-18s interval and runs only over the
-   top navigation strip, giving the nav a quiet "bad signal" pulse
-   without interfering with content.
+   <ScreenGlitch/> — full-screen scan + body shake.
+   ONLY triggers when clicking a top NavBar item (.aiwar-nav-link).
+   Random direction per click: vertical-top, horizontal-left/right,
+   or one of four diagonals. Body briefly shakes.
+   Clicks on anything else do nothing.
    ────────────────────────────────────────────────────────────────────── */
-export function ScreenGlitch({ minDelay = 6000, maxDelay = 18000 }) {
+const GLITCH_DIRS = ['top', 'left', 'right', 'diag-tl', 'diag-tr', 'diag-bl', 'diag-br'];
+
+export function ScreenGlitch() {
   const overlayRef = useRef(null);
 
   useEffect(() => {
-    let timeoutId;
-    const fire = () => {
+    const handler = (e) => {
+      const t = e.target instanceof Element ? e.target : null;
+      if (!t) return;
+      // Only fire when the click lands on a NavBar link
+      if (!t.closest('.aiwar-nav-link')) return;
+
       const el = overlayRef.current;
-      if (el) {
-        el.classList.remove('aiwar-screen-glitch-active');
-        // Force reflow so the animation restarts cleanly
-        void el.offsetWidth;
-        el.classList.add('aiwar-screen-glitch-active');
-      }
+      if (!el) return;
+
+      const dir = GLITCH_DIRS[Math.floor(Math.random() * GLITCH_DIRS.length)];
+
+      // Reset → reflow → re-add with new direction class for a fresh animation
+      el.className = 'aiwar-screen-glitch';
+      void el.offsetWidth;
+      el.classList.add('aiwar-screen-glitch-active', `aiwar-screen-glitch--${dir}`);
+
+      // Body shake briefly
+      document.body.classList.remove('aiwar-screen-shake');
+      void document.body.offsetWidth;
+      document.body.classList.add('aiwar-screen-shake');
+      window.setTimeout(() => document.body.classList.remove('aiwar-screen-shake'), 320);
     };
-    const schedule = () => {
-      const delay = minDelay + Math.random() * (maxDelay - minDelay);
-      timeoutId = window.setTimeout(() => {
-        fire();
-        schedule();
-      }, delay);
+
+    document.addEventListener('mousedown', handler, { passive: true });
+    document.addEventListener('touchstart', handler, { passive: true });
+    return () => {
+      document.removeEventListener('mousedown', handler);
+      document.removeEventListener('touchstart', handler);
     };
-    // First fire kicks in 1–3s after mount so the page settles first
-    timeoutId = window.setTimeout(() => { fire(); schedule(); }, 1000 + Math.random() * 2000);
-    return () => clearTimeout(timeoutId);
-  }, [minDelay, maxDelay]);
+  }, []);
 
   return (
-    <div
-      ref={overlayRef}
-      aria-hidden
-      className="aiwar-screen-glitch"
-    >
+    <div ref={overlayRef} aria-hidden className="aiwar-screen-glitch">
       <div className="aiwar-screen-glitch-line" />
       <div className="aiwar-screen-glitch-line aiwar-screen-glitch-line--lag" />
     </div>
