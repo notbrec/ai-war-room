@@ -492,7 +492,13 @@ export default function LeaderboardPage({ liveModels }) {
                     </div>
                   </div>
                   {expanded && (
-                    <div style={{ padding: '14px 16px 18px 54px', background: dark ? 'rgba(255,255,255,0.025)' : 'rgba(0,0,0,0.025)', borderTop: '0.5px solid var(--sep)' }}>
+                    <div style={{
+                      padding: '14px 16px 18px 54px',
+                      background: 'var(--card2)',
+                      borderTop: '0.5px solid var(--sep)',
+                      transformOrigin: 'top center',
+                      animation: `aiwar-pop-in 460ms ${EASE} both`,
+                    }}>
                       <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--muted2)', textTransform: 'uppercase', letterSpacing: '0.09em', marginBottom: 8 }}>About</div>
                       <p style={{ fontSize: 13, lineHeight: 1.6, color: 'var(--text)', letterSpacing: '-0.01em', margin: '0 0 10px' }}>
                         {description ?? `${model.name} — ${model.org} model. ELO ${model.elo} from ${model.votesLabel} arena battles. No description available yet.`}
@@ -622,9 +628,10 @@ export default function LeaderboardPage({ liveModels }) {
                 {expanded && (
                   <div style={{
                     padding: '20px 28px 24px 72px',
-                    background: dark ? 'rgba(255,255,255,0.025)' : 'rgba(0,0,0,0.025)',
+                    background: 'var(--card2)',
                     borderTop: '0.5px solid var(--sep)',
-                    animation: `aiwar-fade-up 380ms ${EASE} both`,
+                    transformOrigin: 'top center',
+                    animation: `aiwar-pop-in 460ms ${EASE} both`,
                   }}>
                     <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--muted2)', textTransform: 'uppercase', letterSpacing: '0.09em', marginBottom: 10, fontFamily: MONO }}>About</div>
                     <p style={{ fontSize: 13.5, lineHeight: 1.65, color: 'var(--text)', letterSpacing: '-0.01em', margin: '0 0 18px', maxWidth: 820, opacity: 0.88 }}>

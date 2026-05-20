@@ -2,15 +2,16 @@
 :root {
   --bg:          #F5F5F7;
   --bg2:         #ECECEE;
-  --card:        rgba(255,255,255,0.78);
-  --card2:       #FFFFFF;
+  /* Solid cards — no transparency, no glass blur */
+  --card:        #FFFFFF;
+  --card2:       #F5F5F7;
   --text:        #0a0a0c;
   --text2:       #2c2c2e;
   --muted:       rgba(28,28,30,0.62);
   --muted2:      rgba(28,28,30,0.40);
   --sep:         rgba(28,28,30,0.10);
   --sep2:        rgba(28,28,30,0.05);
-  --nav:         rgba(245,245,247,0.78);
+  --nav:         rgba(245,245,247,0.92);
   --search:      rgba(28,28,30,0.06);
   --hover:       rgba(0,0,0,0.035);
   --pill:        rgba(28,28,30,0.06);
@@ -20,18 +21,18 @@
 }
 
 html.dark {
-  /* Bloomberg-graphite: near-black backgrounds, glass cards, hairline borders */
+  /* Bloomberg-graphite: near-black backgrounds, SOLID cards, hairline borders */
   --bg:          #07070a;
   --bg2:         #0d0d10;
-  --card:        rgba(22,22,26,0.74);
-  --card2:       #15151a;
+  --card:        #15151a;
+  --card2:       #1d1d22;
   --text:        #f5f5f7;
   --text2:       #d2d2d7;
   --muted:       rgba(245,245,247,0.62);
   --muted2:      rgba(245,245,247,0.38);
   --sep:         rgba(255,255,255,0.08);
   --sep2:        rgba(255,255,255,0.04);
-  --nav:         rgba(7,7,10,0.72);
+  --nav:         rgba(7,7,10,0.92);
   --search:      rgba(255,255,255,0.05);
   --hover:       rgba(255,255,255,0.035);
   --pill:        rgba(255,255,255,0.05);
@@ -207,10 +208,8 @@ html:not(.dark) ::selection { background: rgba(0,0,0,0.10); }
   outline-offset: 2px;
 }
 
-/* ─── Premium glass surface helper ─────────────────────────────────────── */
+/* ─── Solid card surface helper ────────────────────────────────────────── */
 .aiwar-glass {
   background: var(--card);
-  backdrop-filter: saturate(180%) blur(20px);
-  -webkit-backdrop-filter: saturate(180%) blur(20px);
   border: 0.5px solid var(--sep);
 }

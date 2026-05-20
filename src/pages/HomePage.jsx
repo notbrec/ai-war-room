@@ -38,8 +38,6 @@ function LeaderboardPreview({ models, onNavigate, dark, mobile, isLoaded }) {
       border: '0.5px solid var(--sep)',
       borderRadius: 22,
       overflow: 'hidden',
-      backdropFilter: 'saturate(180%) blur(22px)',
-      WebkitBackdropFilter: 'saturate(180%) blur(22px)',
       boxShadow: 'var(--shadow)',
     }}>
       {/* Glass panel header */}
@@ -271,8 +269,6 @@ export default function HomePage({ onNavigate, liveModels, countSnapshot }) {
               padding: '6px 12px 6px 10px', borderRadius: 980,
               marginBottom: 28,
               fontFamily: MONO,
-              backdropFilter: 'saturate(180%) blur(20px)',
-              WebkitBackdropFilter: 'saturate(180%) blur(20px)',
               opacity: 0, animation: `aiwar-fade-in 600ms ${EASE} both`,
             }}>
               <LivePulse color="#34C759" />
@@ -411,8 +407,6 @@ export default function HomePage({ onNavigate, liveModels, countSnapshot }) {
                   borderRadius: 18,
                   padding: mobile ? '22px 20px' : '26px 24px',
                   height: '100%',
-                  backdropFilter: 'saturate(180%) blur(18px)',
-                  WebkitBackdropFilter: 'saturate(180%) blur(18px)',
                   transition: `border-color 350ms ${EASE}, transform 600ms ${EASE}`,
                 }}
                   onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--text)'; e.currentTarget.style.transform = 'translateY(-3px)'; }}
@@ -482,8 +476,6 @@ export default function HomePage({ onNavigate, liveModels, countSnapshot }) {
               border: '0.5px solid var(--sep)',
               borderRadius: 18,
               padding: mobile ? '8px 20px' : '12px 28px',
-              backdropFilter: 'saturate(180%) blur(20px)',
-              WebkitBackdropFilter: 'saturate(180%) blur(20px)',
             }}>
               {labStats.map((lab, i) => (
                 <LabBar

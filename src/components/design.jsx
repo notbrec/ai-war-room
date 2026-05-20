@@ -559,8 +559,6 @@ export function EditorialNote({ author = 'Analyst', date, kicker, title, childre
         border: '0.5px solid var(--sep)',
         borderRadius: 18,
         padding: '22px 24px',
-        backdropFilter: 'saturate(180%) blur(20px)',
-        WebkitBackdropFilter: 'saturate(180%) blur(20px)',
         transition: `transform 500ms ${EASE}, border-color 350ms ${EASE}, box-shadow 500ms ${EASE}`,
         cursor: 'default',
         height: '100%',
@@ -859,6 +857,22 @@ export function GlobalMotion() {
       @keyframes aiwar-glow {
         0%, 100% { box-shadow: 0 0 0 0 rgba(52,199,89,0.0); }
         50%      { box-shadow: 0 0 0 6px rgba(52,199,89,0.12); }
+      }
+      /* Pop-in for expanded rows / inline panels — quick over-shoot,
+         not childish, just a clean spring lift. */
+      @keyframes aiwar-pop-in {
+        0% {
+          opacity: 0;
+          transform: translateY(-6px) scaleY(0.96);
+        }
+        70% {
+          opacity: 1;
+          transform: translateY(1px) scaleY(1.01);
+        }
+        100% {
+          opacity: 1;
+          transform: translateY(0) scaleY(1);
+        }
       }
       /* Soft pulse-glow for the #1 leader card / live signal cells */
       @keyframes aiwar-leader-pulse {
