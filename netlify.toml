@@ -1,6 +1,10 @@
+# Serve the REVAMP build. The frontend is prebuilt and committed in
+# NETLIFY-AIWAR/, so there's no frontend build step here — Netlify just
+# publishes that folder. The leaderboard Netlify Function is still bundled
+# from netlify/functions (it self-registers the /api/leaderboard route).
 [build]
-  command   = "npm run build"
-  publish   = "dist"
+  command   = "echo 'Serving prebuilt REVAMP (NETLIFY-AIWAR)'"
+  publish   = "NETLIFY-AIWAR"
   functions = "netlify/functions"
 
 [build.environment]
