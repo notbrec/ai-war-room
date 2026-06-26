@@ -8,7 +8,16 @@
       "WebFetch(domain:lmarena.ai)",
       "WebFetch(domain:arena.ai)",
       "WebFetch(domain:raw.githubusercontent.com)",
-      "WebFetch(domain:openrouter.ai)"
+      "WebFetch(domain:openrouter.ai)",
+      "WebFetch(domain:aiwarroom.app)",
+      "Bash(python -c \"import pypdf; r=pypdf.PdfReader\\('aiwarroom_271_ai_catalogue.pdf'\\); print\\(len\\(r.pages\\)\\)\")",
+      "Bash(python -c \"from pdfminer.high_level import extract_text; print\\(extract_text\\('aiwarroom_271_ai_catalogue.pdf'\\)[:500]\\)\")",
+      "Bash(pip install *)",
+      "Bash(node -e \"const d=require\\('C:/Users/beret/Downloads/moji projekti/AI-WAR/src/model-descriptions.json'\\); console.log\\('Entries:', Object.keys\\(d\\).length\\);\")",
+      "Bash(curl -s https://aiwarroom.app/api/leaderboard)",
+      "Bash(node -e ' *)",
+      "Bash(rm lb-tmp.json)",
+      "Bash(node --input-type=module -e ' *)"
     ]
   }
 }

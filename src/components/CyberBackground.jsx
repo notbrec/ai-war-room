@@ -56,46 +56,69 @@ export default function CyberBackground({ dark }) {
   // SVG re-measure when viewport resizes (lines positioned in %)
   const svgRef = useRef(null);
 
+  // Scroll-parallax depth: glow drifts slowest, net + particles a touch
+  // faster — the background visibly sits "behind" the content while the
+  // page scrolls normally. Lerped on rAF, transform-only (cheap).
+  const glowRef  = useRef(null);
+  const fieldRef = useRef(null);
+  useEffect(() => {
+    let raf, curGlow = 0, curField = 0;
+    const tick = () => {
+      const y = window.scrollY || 0;
+      curGlow  += (-y * 0.06 - curGlow)  * 0.08;
+      curField += (-y * 0.025 - curField) * 0.08;
+      if (glowRef.current)  glowRef.current.style.transform  = `translate3d(0, ${curGlow.toFixed(2)}px, 0)`;
+      if (fieldRef.current) fieldRef.current.style.transform = `translate3d(0, ${curField.toFixed(2)}px, 0)`;
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, []);
+
   return (
     <div className="aiwar-bg" aria-hidden>
-      <div className="aiwar-bg-glow" />
+      <div ref={glowRef} style={{ position: 'absolute', inset: 0, willChange: 'transform' }}>
+        <div className="aiwar-bg-glow" />
+      </div>
 
-      {/* Neural-net connections — faint lines between near-by nodes */}
-      <svg
-        ref={svgRef}
-        className="aiwar-bg-net"
-        viewBox="0 0 100 100"
-        preserveAspectRatio="none"
-      >
-        {connections.map(c => (
-          <line
-            key={c.id}
-            x1={c.x1} y1={c.y1} x2={c.x2} y2={c.y2}
-            className="aiwar-bg-net-line"
-            style={{
-              animation: `aiwar-net-pulse ${c.dur}s ease-in-out ${c.delay}s infinite`,
-            }}
-          />
-        ))}
-      </svg>
+      <div ref={fieldRef} style={{ position: 'absolute', inset: 0, willChange: 'transform' }}>
+        {/* Neural-net connections — faint lines between near-by nodes */}
+        <svg
+          ref={svgRef}
+          className="aiwar-bg-net"
+          viewBox="0 0 100 100"
+          preserveAspectRatio="none"
+        >
+          {connections.map(c => (
+            <line
+              key={c.id}
+              x1={c.x1} y1={c.y1} x2={c.x2} y2={c.y2}
+              className="aiwar-bg-net-line"
+              style={{
+                animation: `aiwar-net-pulse ${c.dur}s ease-in-out ${c.delay}s infinite`,
+              }}
+            />
+          ))}
+        </svg>
 
-      <div className="aiwar-bg-particles">
-        {nodes.map(n => (
-          <span
-            key={n.id}
-            className="aiwar-bg-particle"
-            style={{
-              left:  `${n.x}%`,
-              top:   `${n.y}%`,
-              width:  `${n.size}px`,
-              height: `${n.size}px`,
-              animation:
-                `aiwar-particle-rise ${n.dur}s ease-in-out ${n.delay}s infinite,
-                 aiwar-particle-fire ${n.firePeriod}s ease-in-out ${n.fireDelay}s infinite`,
-              ['--p-max']: n.max,
-            }}
-          />
-        ))}
+        <div className="aiwar-bg-particles">
+          {nodes.map(n => (
+            <span
+              key={n.id}
+              className="aiwar-bg-particle"
+              style={{
+                left:  `${n.x}%`,
+                top:   `${n.y}%`,
+                width:  `${n.size}px`,
+                height: `${n.size}px`,
+                animation:
+                  `aiwar-particle-rise ${n.dur}s ease-in-out ${n.delay}s infinite,
+                   aiwar-particle-fire ${n.firePeriod}s ease-in-out ${n.fireDelay}s infinite`,
+                ['--p-max']: n.max,
+              }}
+            />
+          ))}
+        </div>
       </div>
 
       <div className="aiwar-bg-vignette" />

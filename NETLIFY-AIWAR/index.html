@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="description" content="AI WAR ROOM ranks 280+ AI models by live arena ELO. Daily-updated leaderboard, plain-English guide, FAQ, blog, and pricing for OpenAI, Anthropic, Google, xAI, DeepSeek, Qwen, Kimi and more. aiwarroom.app" />
+    <meta name="keywords" content="AI leaderboard, LLM ranking, arena ELO, GPT-5, Claude Opus, Gemini 3, Grok 4, DeepSeek, Qwen, AI model comparison, AI pricing" />
+    <meta name="author" content="AI WAR ROOM" />
+    <link rel="canonical" href="https://aiwarroom.app/" />
+
+    <!-- Open Graph -->
+    <meta property="og:title" content="AI WAR ROOM — 280+ AI models, ranked by live ELO" />
+    <meta property="og:description" content="Track the AI arena. Live ELO scores, real pricing, and an honest plain-English guide to picking a model in 2026." />
+    <meta property="og:url" content="https://aiwarroom.app/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="AI WAR ROOM" />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="AI WAR ROOM — 280+ AI models, ranked by live ELO" />
+    <meta name="twitter:description" content="Track the AI arena. Live ELO scores, real pricing, and an honest guide to picking a model in 2026." />
+
+    <title>AI WAR ROOM — 280+ AI models ranked by live arena ELO</title>
+
+    <!-- ─ Google Analytics 4 (GA4) ─ -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-K00V59DWYF"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-K00V59DWYF', {
+        anonymize_ip: true,
+        send_page_view: true,
+      });
+    </script>
+
+    <!-- ─ Blocking theme script: dark is default, user can toggle ─ -->
+    <script>
+      (function () {
+        try {
+          var stored = localStorage.getItem('aiwar-theme');
+          // Dark by default unless the user has explicitly chosen light.
+          var isDark = stored ? stored === 'dark' : true;
+          if (isDark) document.documentElement.classList.add('dark');
+          document.querySelector('meta[name=theme-color]') ||
+            document.head.insertAdjacentHTML('beforeend',
+              '<meta name="theme-color" content="' + (isDark ? '#07070a' : '#F5F5F7') + '">');
+        } catch (e) {
+          document.documentElement.classList.add('dark');
+        }
+      })();
+    </script>
+
+    <style>
+      /* Match body bg before CSS loads to prevent FOUC */
+      html        { background: #F5F5F7; }
+      html.dark   { background: #07070a; }
+
+      /* Crawlable hero content — visible to bots & no-JS, hidden once React mounts */
+      #seo-hero {
+        max-width: 760px;
+        margin: 0 auto;
+        padding: 48px 24px;
+        font-family: -apple-system, 'SF Pro Display', 'Segoe UI', system-ui, sans-serif;
+        color: #1d1d1f;
+      }
+      html.dark #seo-hero { color: #f5f5f7; }
+      #seo-hero h1 { font-size: 38px; font-weight: 700; letter-spacing: -0.04em; margin: 0 0 14px; line-height: 1.05; }
+      #seo-hero h2 { font-size: 22px; font-weight: 700; letter-spacing: -0.03em; margin: 28px 0 10px; }
+      #seo-hero p  { font-size: 16px; line-height: 1.65; margin: 0 0 12px; opacity: 0.85; }
+      #seo-hero ul { padding-left: 22px; }
+      #seo-hero li { font-size: 15px; line-height: 1.7; margin-bottom: 6px; opacity: 0.85; }
+      #seo-hero a  { color: #007AFF; text-decoration: none; }
+    </style>
+
+    <!-- Structured data: Website + organization -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "AI WAR ROOM",
+      "url": "https://aiwarroom.app/",
+      "description": "Live leaderboard of 280+ AI models ranked by arena ELO, with daily pricing and an in-depth guide to picking a model in 2026.",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": "https://aiwarroom.app/#leaderboard?q={search_term_string}",
+        "query-input": "required name=search_term_string"
+      }
+    }
+    </script>
+
+    <!-- Google AdSense -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3759864674720930"
+     crossorigin="anonymous"></script>
+    <script type="module" crossorigin src="/assets/index-DNgdxSVf.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-BYN2qYtf.css">
+  </head>
+  <body>
+    <div id="root">
+      <!-- ─ Prerendered content for crawlers / no-JS visitors ─
+           This is replaced the moment React hydrates. It exists so search
+           engines and the AdSense quality crawler always see substantive
+           content even if JavaScript is delayed or disabled. -->
+      <main id="seo-hero">
+        <h1>AI WAR ROOM — 280+ AI models, ranked by live arena ELO</h1>
+        <p>
+          AI WAR ROOM is an independent, daily-updated leaderboard of the strongest large language
+          models in the world. We pull live ELO scores from arena.ai's human-vote battle system,
+          combine them with current pricing from OpenRouter, and present the entire field — 280+
+          models from OpenAI, Anthropic, Google, xAI, Meta, Alibaba, DeepSeek, Moonshot, Z.ai,
+          Mistral, Baidu, ByteDance, Xiaomi, Tencent and more — in one ranked, filterable view.
+        </p>
+        <p>
+          Every score comes from real human preference: anonymous head-to-head battles where
+          voters pick the better of two responses. The result is a relative skill rating — the
+          same ELO system used in competitive chess — that is harder to game than benchmark
+          numbers and more useful than marketing claims.
+        </p>
+
+        <h2>What you'll find here</h2>
+        <ul>
+          <li><strong>Leaderboard</strong> — every active model ranked by ELO, with confidence intervals, votes, live pricing, context length, licence, and per-model descriptions.</li>
+          <li><strong>The Guide</strong> — a plain-English walkthrough of how arena ELO works, the 2026 lab landscape, how to pick a model, and common pitfalls.</li>
+          <li><strong>FAQ</strong> — honest answers to the questions we get most often about ratings, pricing, thinking variants, open-weight models, and arena mechanics.</li>
+          <li><strong>Blog</strong> — long-form analysis on reading ELO leaderboards, open vs closed weights in 2026, and when thinking models help or hurt.</li>
+          <li><strong>Model and lab profiles</strong> — in-depth pages for the top frontier models and the labs building them.</li>
+          <li><strong>Methodology</strong> — the exact rules behind the rankings, the ELO tiers (S/A/B/C), and how pricing data is sourced.</li>
+        </ul>
+
+        <h2>How to choose a model</h2>
+        <p>
+          The #1 model is rarely the model you want. Top-ranked frontier models are the most
+          expensive, slowest, and built for the hardest reasoning. For most real workloads — chat,
+          summarisation, classification, RAG pipelines — a model in positions 5–20 will perform
+          indistinguishably for a fraction of the cost. Start by sorting on ELO to identify the
+          top tier, then filter on context window, licence (open vs proprietary), and price. Run
+          your own evals on the three candidates with the best fit. The arena gives you the
+          shortlist; your own judgement picks the winner.
+        </p>
+
+        <h2>How the data is sourced</h2>
+        <p>
+          ELO ratings come live from arena.ai, refreshed every 30 minutes. Pricing comes live from
+          OpenRouter, refreshed on the same cadence. Model descriptions are maintained by hand
+          from public lab announcements and model cards. AI WAR ROOM is not affiliated with any
+          AI lab, with arena.ai, or with OpenRouter — we surface their public data and add
+          editorial context.
+        </p>
+
+        <h2>Start exploring</h2>
+        <p>
+          <a href="#leaderboard">Open the leaderboard</a> ·
+          <a href="#guide">Read the guide</a> ·
+          <a href="#faq">Browse the FAQ</a> ·
+          <a href="#/blog">Visit the blog</a> ·
+          <a href="#methodology">See the methodology</a>
+        </p>
+
+        <p style="margin-top:32px;font-size:13px;opacity:0.6;">
+          Loading interactive view… If you're seeing this for more than a few seconds, JavaScript
+          may be disabled in your browser. The content above is a summary; the full leaderboard
+          requires JavaScript to load.
+        </p>
+      </main>
+    </div>
+  </body>
+</html>

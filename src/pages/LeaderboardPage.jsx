@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { MODELS, ORG_CONFIG, LICENSE_CONFIG, RELEASE, AUTO_REFRESH_MS, fetchLeaderboard, fetchOpenRouterMeta, getDescription } from '../models-data.js';
 import { useDark, useMobile } from '../hooks/useTheme.js';
-import { SF, MONO, EASE, Reveal, AnimatedNumber, Eyebrow, LivePulse, GlobalMotion, ComparisonBar } from '../components/design.jsx';
+import { SF, MONO, EASE, Reveal, RowReveal, AnimatedNumber, Eyebrow, LivePulse, GlobalMotion, ComparisonBar } from '../components/design.jsx';
 
 const SORTS = [
   { key: 'elo',      label: 'ELO'      },
@@ -326,13 +326,14 @@ export default function LeaderboardPage({ liveModels }) {
               Featured — top 5 by ELO
             </p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              {filtered.slice(0, 5).map((m) => {
+              {filtered.slice(0, 5).map((m, fi) => {
                 const org      = ORG_CONFIG[m.org] ?? { color: '#8E8E93', bg: '#F2F2F7', bgDark: '#2C2C2E' };
                 const iconBg   = dark ? (org.bgDark ?? '#2C2C2E') : org.bg;
                 const tColor   = eloColor(m.elo);
                 const desc     = getDescription(m.name);
                 return (
-                  <article key={m.slug} style={{
+                  <Reveal key={m.slug} delay={fi * 90} y={26}>
+                  <article style={{
                     background: 'var(--card)', borderRadius: 14,
                     padding: mobile ? '14px 14px 14px' : '16px 20px',
                     boxShadow: 'var(--shadow)',
@@ -379,6 +380,7 @@ export default function LeaderboardPage({ liveModels }) {
                       </div>
                     )}
                   </article>
+                  </Reveal>
                 );
               })}
             </div>
@@ -435,14 +437,9 @@ export default function LeaderboardPage({ liveModels }) {
             const description  = getDescription(model.name);
 
             if (mobile) {
-              // ── Mobile row ──────────────────────────────────────
+              // ── Mobile row — cascades in as it scrolls into view ──
               return (
-                <div key={model.slug} style={{
-                  opacity: 0,
-                  animation: i < 30
-                    ? `aiwar-fade-up 500ms ${EASE} ${Math.min(i * 30, 360)}ms both`
-                    : `aiwar-fade-in 300ms ${EASE} both`,
-                }}>
+                <RowReveal key={model.slug} index={i}>
                   <div onClick={toggleExpand} style={{
                     display: 'grid', gridTemplateColumns: '4px 40px 1fr auto',
                     alignItems: 'center', cursor: 'pointer',
@@ -511,18 +508,13 @@ export default function LeaderboardPage({ liveModels }) {
                     </div>
                   )}
                   {i < filtered.length - 1 && <div style={{ height: '0.5px', background: 'var(--sep)', marginLeft: 54 }} />}
-                </div>
+                </RowReveal>
               );
             }
 
-            // ── Desktop row ──────────────────────────────────────────
+            // ── Desktop row — cascades in as it scrolls into view ────
             return (
-              <div key={model.slug} style={{
-                opacity: 0,
-                animation: i < 30
-                  ? `aiwar-fade-up 500ms ${EASE} ${Math.min(i * 30, 360)}ms both`
-                  : `aiwar-fade-in 300ms ${EASE} both`,
-              }}>
+              <RowReveal key={model.slug} index={i}>
                 <div onClick={toggleExpand} style={{
                   display: 'grid',
                   gridTemplateColumns: `4px ${COL.rank}px ${COL.icon}px 1fr ${COL.badges}px ${COL.elo}px ${COL.votes}px ${COL.price}px ${COL.ctx}px ${COL.chev}px`,
@@ -678,7 +670,7 @@ export default function LeaderboardPage({ liveModels }) {
                   </div>
                 )}
                 {i < filtered.length - 1 && <div style={{ height: '0.5px', background: 'var(--sep)', marginLeft: 68 }} />}
-              </div>
+              </RowReveal>
             );
           })}
         </div>

@@ -52,6 +52,153 @@ export function useSpring(initial, { stiffness = 120, damping = 18, mass = 1 } =
   return [value, setTarget];
 }
 
+/* ─────────────────────────────────────────────────────────────────────────
+   <SmoothScroll/> — Lenis-style inertia scrolling, zero dependencies.
+   Hijacks wheel input and lerps window scroll on rAF so the whole page
+   glides with momentum instead of stepping. The page still scrolls
+   normally top-to-bottom — native scrollbar, keyboard, anchors and
+   programmatic scrollTo all keep working (we resync on external jumps).
+   Touch devices keep their native momentum scrolling untouched.
+   ────────────────────────────────────────────────────────────────────── */
+export function SmoothScroll({ lerp = 0.105 }) {
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (window.matchMedia('(hover: none)').matches) return; // native on touch
+
+    let target    = window.scrollY;
+    let current   = window.scrollY;
+    let raf       = null;
+    let animating = false;
+
+    const maxScroll = () =>
+      Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
+
+    const tick = () => {
+      current += (target - current) * lerp;
+      if (Math.abs(target - current) < 0.4) {
+        current = target;
+        window.scrollTo(0, current);
+        animating = false;
+        return;
+      }
+      window.scrollTo(0, current);
+      raf = requestAnimationFrame(tick);
+    };
+
+    const onWheel = (e) => {
+      // Leave pinch-zoom and horizontal-dominant gestures alone
+      if (e.ctrlKey || Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;
+      // Don't hijack inner scrollable areas (dropdowns, code blocks…)
+      let el = e.target instanceof Element ? e.target : null;
+      while (el && el !== document.body) {
+        const cs = getComputedStyle(el);
+        if (/(auto|scroll)/.test(cs.overflowY) && el.scrollHeight > el.clientHeight + 1) return;
+        el = el.parentElement;
+      }
+      e.preventDefault();
+      const dy = e.deltaMode === 1 ? e.deltaY * 16
+               : e.deltaMode === 2 ? e.deltaY * window.innerHeight
+               : e.deltaY;
+      target = Math.max(0, Math.min(maxScroll(), target + dy));
+      if (!animating) { animating = true; raf = requestAnimationFrame(tick); }
+    };
+
+    // Keyboard / hash-nav / programmatic scrolls land here — resync state.
+    // Our own rAF writes differ from scrollY by <1px, external jumps don't.
+    const onScroll = () => {
+      const y = window.scrollY;
+      if (Math.abs(y - current) > 1.5) { target = y; current = y; }
+    };
+
+    window.addEventListener('wheel',  onWheel,  { passive: false });
+    window.addEventListener('scroll', onScroll, { passive: true  });
+    return () => {
+      window.removeEventListener('wheel',  onWheel);
+      window.removeEventListener('scroll', onScroll);
+      if (raf) cancelAnimationFrame(raf);
+    };
+  }, [lerp]);
+  return null;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   <Parallax/> — scroll-depth wrapper. Element drifts relative to the
+   viewport centre at `speed` (positive = lags behind the scroll, feels
+   deeper; negative = leads, feels closer). Lerped on rAF, transform-only.
+   ────────────────────────────────────────────────────────────────────── */
+export function Parallax({ children, speed = 0.08, maxShift = 90, style, ...rest }) {
+  const ref = useRef(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    if (window.matchMedia('(hover: none)').matches) return; // keep mobile flat
+    let raf, cur = 0;
+    const tick = () => {
+      const r  = el.getBoundingClientRect();
+      const vh = window.innerHeight || 1;
+      // subtract our own translation so we don't feed back into the math
+      const offset  = (r.top + r.height / 2 - cur) - vh / 2;
+      const clamped = Math.max(-maxShift, Math.min(maxShift, -offset * speed));
+      cur += (clamped - cur) * 0.10;
+      el.style.transform = `translate3d(0, ${cur.toFixed(2)}px, 0)`;
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [speed, maxShift]);
+  return (
+    <div ref={ref} style={{ willChange: 'transform', ...style }} {...rest}>
+      {children}
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   <RowReveal/> — scroll-cascade for long lists. One shared
+   IntersectionObserver for every row; each row fades/lifts in the first
+   time it enters the viewport, with a small stagger inside each batch.
+   ────────────────────────────────────────────────────────────────────── */
+let _rowObserver = null;
+const _rowCallbacks = new WeakMap();
+function getRowObserver() {
+  if (_rowObserver) return _rowObserver;
+  _rowObserver = new IntersectionObserver((entries) => {
+    for (const en of entries) {
+      if (!en.isIntersecting) continue;
+      const cb = _rowCallbacks.get(en.target);
+      if (cb) cb();
+      _rowObserver.unobserve(en.target);
+      _rowCallbacks.delete(en.target);
+    }
+  }, { rootMargin: '0px 0px -4% 0px', threshold: 0 });
+  return _rowObserver;
+}
+
+export function RowReveal({ index = 0, y = 18, children, style }) {
+  const ref = useRef(null);
+  const [on, setOn] = useState(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || on) return;
+    const obs = getRowObserver();
+    _rowCallbacks.set(el, () => setOn(true));
+    obs.observe(el);
+    return () => { _rowCallbacks.delete(el); obs.unobserve(el); };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  const d = (index % 7) * 42; // stagger inside each visible batch
+  return (
+    <div ref={ref} style={{
+      opacity: on ? 1 : 0,
+      transform: on ? 'translateY(0)' : `translateY(${y}px)`,
+      transition: `opacity 650ms ${EASE} ${d}ms, transform 750ms ${EASE} ${d}ms`,
+      ...style,
+    }}>
+      {children}
+    </div>
+  );
+}
+
 /* ─── useReveal — IntersectionObserver hook ──────────────────────────────── */
 export function useReveal(options = { threshold: 0.12 }) {
   const ref = useRef(null);
@@ -68,15 +215,16 @@ export function useReveal(options = { threshold: 0.12 }) {
   return [ref, shown];
 }
 
-/* ─── <Reveal> — wrap children for fade + slide-up on scroll ─────────────── */
-export function Reveal({ children, delay = 0, y = 16, as: Tag = 'div', style, ...rest }) {
+/* ─── <Reveal> — fade + lift + de-blur + settle-scale on scroll ──────────── */
+export function Reveal({ children, delay = 0, y = 22, blur = 7, scale = 0.985, as: Tag = 'div', style, ...rest }) {
   const [ref, shown] = useReveal();
   return (
     <Tag ref={ref} style={{
       opacity: shown ? 1 : 0,
-      transform: shown ? 'translateY(0)' : `translateY(${y}px)`,
-      transition: `opacity 800ms ${EASE} ${delay}ms, transform 900ms ${EASE} ${delay}ms`,
-      willChange: 'opacity, transform',
+      transform: shown ? 'translateY(0) scale(1)' : `translateY(${y}px) scale(${scale})`,
+      filter: shown ? 'blur(0px)' : `blur(${blur}px)`,
+      transition: `opacity 850ms ${EASE} ${delay}ms, transform 1000ms ${EASE} ${delay}ms, filter 800ms ${EASE} ${delay}ms`,
+      willChange: 'opacity, transform, filter',
       ...style,
     }} {...rest}>
       {children}

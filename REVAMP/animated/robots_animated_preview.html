@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="hr"><head><meta charset="utf-8"><title>Brec Destroyer // animirani roboti</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0a0a0a;color:#eee;font-family:"DM Mono",ui-monospace,monospace;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:48px 20px;gap:8px}
+h1{font-size:14px;letter-spacing:.25em;text-transform:uppercase;color:#c8f560;font-weight:500}
+.sub{font-size:11px;letter-spacing:.12em;color:#777;margin-bottom:34px}
+.grid{display:flex;flex-wrap:wrap;gap:26px;justify-content:center;align-items:flex-start;width:100%;max-width:1100px}
+.card{border:1px solid rgba(255,255,255,.08);background:#0d0d0d;padding:0;overflow:hidden;display:flex;flex-direction:column}
+.card svg{display:block;width:100%;height:auto}
+.fight{flex:1 1 520px;max-width:560px}
+.solo{flex:0 0 240px}
+.cap{font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:#888;padding:11px 14px;border-top:1px solid rgba(255,255,255,.08)}
+.cap b{color:#c8f560;font-weight:500}
+footer{margin-top:34px;font-size:10px;letter-spacing:.1em;color:#555}
+</style></head>
+<body>
+<h1>Robot Wars</h1>
+<div class="sub">animirani pixel art // SVG + CSS</div>
+<div class="grid">
+ <div class="card fight"><svg xmlns="http://www.w3.org/2000/svg" width="580" height="580" viewBox="0 0 58 58" shape-rendering="crispEdges">
+<style>
+.scn{animation:shk 2.4s linear infinite}
+.flB{animation:flb .9s ease-in-out infinite alternate}
+.frB{animation:frb 1.05s ease-in-out infinite alternate}
+.flL{animation:fll 2.4s ease-in-out infinite}
+.frL{animation:frl 2.4s ease-in-out infinite}
+.flF{animation:flf 2.4s ease-in-out infinite}
+.frF{animation:frf 2.4s ease-in-out infinite}
+.spk{transform-box:fill-box;transform-origin:center;opacity:0;animation:spk 2.4s linear infinite}
+.vsg{transform-box:fill-box;transform-origin:center;animation:vsg .66s ease-in-out infinite}
+@keyframes shk{0%,17%{transform:translate(0,0)}19%{transform:translate(.5px,-.4px)}21%{transform:translate(-.5px,.4px)}23%,58%{transform:translate(0,0)}61%{transform:translate(-.6px,.4px)}63%{transform:translate(.6px,-.4px)}65%,100%{transform:translate(0,0)}}
+@keyframes flb{from{transform:translateY(0)}to{transform:translateY(-.5px)}}
+@keyframes frb{from{transform:translateY(0)}to{transform:translateY(-.5px)}}
+@keyframes fll{0%,8%{transform:translateX(0)}18%{transform:translateX(3px)}24%{transform:translateX(2.6px)}32%{transform:translateX(0)}60%{transform:translateX(-1.4px)}70%,100%{transform:translateX(0)}}
+@keyframes frl{0%{transform:translateX(0)}20%{transform:translateX(1.4px)}30%,40%{transform:translateX(0)}60%{transform:translateX(-3px)}66%{transform:translateX(-2.6px)}74%,100%{transform:translateX(0)}}
+@keyframes flf{0%,10%{transform:translate(0,0)}18%{transform:translate(2.5px,1px)}24%{transform:translate(2.2px,1px)}30%,100%{transform:translate(0,0)}}
+@keyframes frf{0%,42%{transform:translate(0,0)}60%{transform:translate(-2.5px,1px)}66%{transform:translate(-2.2px,1px)}72%,100%{transform:translate(0,0)}}
+@keyframes spk{0%,16%{opacity:0;transform:scale(.3)}19%{opacity:1;transform:scale(1.15)}24%{opacity:0;transform:scale(1.4)}58%{opacity:0;transform:scale(.3)}61%{opacity:1;transform:scale(1.15)}66%{opacity:0;transform:scale(1.4)}100%{opacity:0}}
+@keyframes vsg{0%,100%{transform:scale(1)}50%{transform:scale(1.16)}}
+</style>
+<rect width="58" height="58" fill="#4d676f"/>
+<g class="scn" fill="#d87456">
+ <g transform="translate(4,19)"><g class="flB"><g class="flL">
+   <g><rect x="8" y="0" width="2" height="2"/><rect x="7" y="2" width="2" height="8"/><rect x="4" y="4" width="3" height="2"/><rect x="9" y="4" width="3" height="2"/><rect x="4" y="6" width="1" height="4"/><rect x="11" y="6" width="1" height="4"/><rect x="5" y="8" width="2" height="2"/><rect x="9" y="8" width="2" height="2"/><rect x="3" y="11" width="10" height="2"/><rect x="2" y="13" width="3" height="2"/><rect x="6" y="13" width="1" height="6"/><rect x="8" y="13" width="1" height="3"/><rect x="10" y="13" width="2" height="7"/><rect x="0" y="14" width="2" height="3"/><rect x="5" y="14" width="1" height="6"/><rect x="7" y="14" width="1" height="2"/><rect x="9" y="14" width="1" height="6"/><rect x="2" y="15" width="1" height="2"/><rect x="4" y="15" width="1" height="5"/><rect x="2" y="18" width="2" height="2"/><rect x="12" y="18" width="1" height="2"/></g><g class="flF"><rect x="12" y="6" width="3" height="3"/><rect x="12" y="9" width="2" height="2"/></g>
+ </g></g></g>
+ <g transform="translate(36,17)"><g class="frB"><g class="frL">
+   <g><rect x="4" y="1" width="2" height="6"/><rect x="11" y="1" width="2" height="6"/><rect x="3" y="5" width="1" height="7"/><rect x="6" y="5" width="5" height="2"/><rect x="13" y="5" width="1" height="7"/><rect x="4" y="7" width="1" height="5"/><rect x="7" y="7" width="3" height="3"/><rect x="12" y="7" width="1" height="5"/><rect x="5" y="9" width="2" height="1"/><rect x="10" y="9" width="2" height="1"/><rect x="14" y="9" width="3" height="3"/><rect x="5" y="10" width="1" height="11"/><rect x="11" y="10" width="1" height="11"/><rect x="6" y="11" width="5" height="6"/><rect x="6" y="17" width="2" height="3"/><rect x="9" y="17" width="2" height="4"/><rect x="3" y="19" width="2" height="2"/><rect x="12" y="19" width="1" height="2"/><rect x="6" y="20" width="1" height="1"/></g><g class="frF"><rect x="0" y="9" width="3" height="3"/></g>
+ </g></g></g>
+ <g transform="translate(24,28)"><g class="vsg"><rect x="0" y="0" width="1" height="3"/><rect x="4" y="0" width="1" height="3"/><rect x="6" y="0" width="3" height="1"/><rect x="6" y="1" width="1" height="2"/><rect x="7" y="2" width="2" height="1"/><rect x="1" y="3" width="1" height="1"/><rect x="3" y="3" width="1" height="1"/><rect x="8" y="3" width="1" height="2"/><rect x="2" y="4" width="1" height="1"/><rect x="6" y="4" width="2" height="1"/></g></g>
+ <g transform="translate(28,24)"><g class="spk"><rect x="-0.5" y="-3" width="1" height="6"/><rect x="-3" y="-0.5" width="6" height="1"/><rect x="1.6" y="1.6" width="1" height="1"/><rect x="-2.6" y="1.6" width="1" height="1"/><rect x="1.6" y="-2.6" width="1" height="1"/><rect x="-2.6" y="-2.6" width="1" height="1"/><rect x="-0.5" y="-4.6" width="1" height="1"/><rect x="-0.5" y="3.6" width="1" height="1"/><rect x="-4.6" y="-0.5" width="1" height="1"/><rect x="3.6" y="-0.5" width="1" height="1"/></g></g>
+</g>
+</svg><div class="cap"><b>VS</b> &nbsp; sudar, zamasi, trešnja, iskre</div></div>
+ <div class="card solo"><svg xmlns="http://www.w3.org/2000/svg" width="448" height="448" viewBox="0 0 28 28" shape-rendering="crispEdges">
+<style>
+.r1b{animation:r1b 1.6s ease-in-out infinite alternate}
+.r1a{transform-box:fill-box;transform-origin:center bottom;animation:r1a 1.3s ease-in-out infinite alternate}
+.r1k{opacity:0;animation:r1k 3.4s ease-in-out infinite}
+@keyframes r1b{from{transform:translateY(0)}to{transform:translateY(-.5px)}}
+@keyframes r1a{from{transform:rotate(-8deg)}to{transform:rotate(8deg)}}
+@keyframes r1k{0%,90%{opacity:0}93%{opacity:1}96%,100%{opacity:0}}
+</style>
+<rect width="28" height="28" fill="#4d676f"/>
+<g transform="translate(4,4)" fill="#d87456">
+ <g class="r1b">
+  <g class="r1a"><rect x="9" y="0" width="2" height="3"/></g>
+  <g><rect x="4" y="4" width="12" height="2"/><rect x="3" y="5" width="1" height="5"/><rect x="16" y="5" width="1" height="5"/><rect x="4" y="6" width="2" height="5"/><rect x="8" y="6" width="4" height="5"/><rect x="14" y="6" width="2" height="5"/><rect x="6" y="8" width="2" height="3"/><rect x="12" y="8" width="2" height="3"/><rect x="0" y="12" width="3" height="1"/><rect x="5" y="12" width="10" height="2"/><rect x="17" y="12" width="3" height="1"/><rect x="0" y="13" width="1" height="3"/><rect x="2" y="13" width="3" height="2"/><rect x="15" y="13" width="3" height="2"/><rect x="19" y="13" width="1" height="3"/><rect x="5" y="14" width="2" height="4"/><rect x="8" y="14" width="1" height="4"/><rect x="10" y="14" width="1" height="4"/><rect x="12" y="14" width="3" height="4"/><rect x="1" y="15" width="2" height="1"/><rect x="7" y="15" width="1" height="5"/><rect x="9" y="15" width="1" height="3"/><rect x="11" y="15" width="1" height="3"/><rect x="17" y="15" width="2" height="1"/><rect x="6" y="18" width="1" height="2"/><rect x="12" y="18" width="2" height="2"/><rect x="5" y="19" width="1" height="1"/><rect x="14" y="19" width="1" height="1"/></g>
+  <g class="r1k"><rect x="6" y="6" width="2" height="2"/><rect x="12" y="6" width="2" height="2"/></g>
+ </g>
+</g>
+</svg><div class="cap"><b>01</b> &nbsp; classic</div></div>
+ <div class="card solo"><svg xmlns="http://www.w3.org/2000/svg" width="416" height="416" viewBox="0 0 26 26" shape-rendering="crispEdges">
+<style>
+.r2b{animation:r2b 1.5s ease-in-out infinite alternate}
+.r2l{transform-box:fill-box;transform-origin:center bottom;animation:r2l 1.1s ease-in-out infinite alternate}
+.r2r{transform-box:fill-box;transform-origin:center bottom;animation:r2r 1.25s ease-in-out infinite alternate}
+.r2k{opacity:0;animation:r2k 3.8s ease-in-out infinite}
+@keyframes r2b{from{transform:translateY(0)}to{transform:translateY(-.5px)}}
+@keyframes r2l{from{transform:rotate(7deg)}to{transform:rotate(-4deg)}}
+@keyframes r2r{from{transform:rotate(-7deg)}to{transform:rotate(4deg)}}
+@keyframes r2k{0%,91%{opacity:0}94%{opacity:1}97%,100%{opacity:0}}
+</style>
+<rect width="26" height="26" fill="#4d676f"/>
+<g transform="translate(3,5)" fill="#d87456">
+ <g class="r2b">
+  <g class="r2l"><rect x="5" y="0" width="2" height="3"/></g>
+  <g class="r2r"><rect x="13" y="0" width="2" height="3"/></g>
+  <g><rect x="4" y="3" width="12" height="3"/><rect x="3" y="4" width="1" height="9"/><rect x="16" y="4" width="1" height="9"/><rect x="4" y="6" width="2" height="8"/><rect x="8" y="6" width="4" height="4"/><rect x="14" y="6" width="2" height="8"/><rect x="6" y="8" width="2" height="8"/><rect x="12" y="8" width="2" height="8"/><rect x="0" y="9" width="2" height="3"/><rect x="18" y="9" width="2" height="3"/><rect x="2" y="10" width="1" height="1"/><rect x="17" y="10" width="1" height="1"/><rect x="8" y="11" width="4" height="3"/><rect x="5" y="15" width="1" height="1"/><rect x="14" y="15" width="1" height="1"/></g>
+  <g class="r2k"><rect x="6" y="6" width="2" height="2"/><rect x="12" y="6" width="2" height="2"/></g>
+ </g>
+</g>
+</svg><div class="cap"><b>02</b> &nbsp; eared</div></div>
+</div>
+<footer>brecdestroyer.com</footer>
+</body></html>

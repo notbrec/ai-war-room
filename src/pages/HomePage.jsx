@@ -4,7 +4,7 @@ import {
   SF, MONO, EASE,
   Reveal, AnimatedNumber, LivePulse, WordReveal,
   Magnetic, ComparisonBar, EditorialNote, Skeleton,
-  TrendArrow,
+  TrendArrow, Parallax,
 } from '../components/design.jsx';
 
 function eloColor(v) {
@@ -369,17 +369,20 @@ export default function HomePage({ onNavigate, liveModels, countSnapshot }) {
             </div>
           </div>
 
-          {/* RIGHT: live leaderboard preview */}
+          {/* RIGHT: live leaderboard preview — drifts slower than the page
+              (parallax depth) so the hero feels layered while scrolling */}
           <div style={{
             opacity: 0, animation: `aiwar-fade-up 1000ms ${EASE} 720ms both`,
           }}>
-            <LeaderboardPreview
-              models={data}
-              onNavigate={onNavigate}
-              dark={dark}
-              mobile={mobile}
-              isLoaded={isLoaded}
-            />
+            <Parallax speed={mobile ? 0 : 0.06} maxShift={56}>
+              <LeaderboardPreview
+                models={data}
+                onNavigate={onNavigate}
+                dark={dark}
+                mobile={mobile}
+                isLoaded={isLoaded}
+              />
+            </Parallax>
           </div>
         </section>
 
@@ -555,6 +558,7 @@ export default function HomePage({ onNavigate, liveModels, countSnapshot }) {
            ═════════════════════════════════════════════════════════ */}
         <Reveal>
           <section>
+            <Parallax speed={mobile ? 0 : 0.04} maxShift={40}>
             <div style={{
               position: 'relative', overflow: 'hidden',
               borderRadius: 24,
@@ -622,6 +626,7 @@ export default function HomePage({ onNavigate, liveModels, countSnapshot }) {
                 </div>
               </div>
             </div>
+            </Parallax>
           </section>
         </Reveal>
 

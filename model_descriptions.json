@@ -1,0 +1,1899 @@
+[
+  {
+    "rank": 1,
+    "name": "Claude Opus 4.7 Thinking",
+    "company": "Anthropic",
+    "access": "Proprietary",
+    "desc": "Claude Opus 4.7 Thinking is a general-purpose LLM from Anthropic. Anthropic's flagship Claude line aimed at the strongest general reasoning, writing, and coding tasks. This variant emphasizes explicit reasoning and harder multi-step tasks. Access model: Proprietary."
+  },
+  {
+    "rank": 2,
+    "name": "Claude Opus 4.6 Thinking",
+    "company": "Anthropic",
+    "access": "Proprietary",
+    "desc": "Claude Opus 4.6 Thinking is a general-purpose LLM from Anthropic. Anthropic's flagship Claude line aimed at the strongest general reasoning, writing, and coding tasks. This variant emphasizes explicit reasoning and harder multi-step tasks. Access model: Proprietary."
+  },
+  {
+    "rank": 3,
+    "name": "Claude Opus 4.7",
+    "company": "Anthropic",
+    "access": "Proprietary",
+    "desc": "Claude Opus 4.7 is a general-purpose LLM from Anthropic. Anthropic's flagship Claude line aimed at the strongest general reasoning, writing, and coding tasks. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: Proprietary."
+  },
+  {
+    "rank": 4,
+    "name": "Claude Opus 4.6",
+    "company": "Anthropic",
+    "access": "Proprietary",
+    "desc": "Claude Opus 4.6 is a general-purpose LLM from Anthropic. Anthropic's flagship Claude line aimed at the strongest general reasoning, writing, and coding tasks. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: Proprietary."
+  },
+  {
+    "rank": 5,
+    "name": "Muse Spark",
+    "company": "Meta",
+    "access": "Proprietary",
+    "desc": "Muse Spark is a general-purpose AI model from Meta. A Meta model line listed here as a proprietary general AI system, likely positioned for broad assistant or creative use. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: Proprietary."
+  },
+  {
+    "rank": 6,
+    "name": "Gemini 3.1 Pro Preview",
+    "company": "Google",
+    "access": "Proprietary",
+    "desc": "Gemini 3.1 Pro Preview is a multimodal LLM from Google. Google's high-end Gemini tier built for stronger multimodal reasoning, longer-context work, and more demanding problem solving. The naming indicates an experimental, preview, or beta snapshot rather than a final stable release. Access model: Proprietary."
+  },
+  {
+    "rank": 7,
+    "name": "Gemini 3 Pro",
+    "company": "Google",
+    "access": "Proprietary",
+    "desc": "Gemini 3 Pro is a multimodal LLM from Google. Google's high-end Gemini tier built for stronger multimodal reasoning, longer-context work, and more demanding problem solving. The 'Pro' label suggests a higher-capability tier within the same family. Access model: Proprietary."
+  },
+  {
+    "rank": 8,
+    "name": "Grok 4.20 Beta1",
+    "company": "xAI",
+    "access": "Proprietary",
+    "desc": "Grok 4.20 Beta1 is a general-purpose LLM from xAI. xAI's Grok family, generally positioned as a fast general assistant and reasoning model line with web-style conversational behavior. The naming indicates an experimental, preview, or beta snapshot rather than a final stable release. Access model: Proprietary."
+  },
+  {
+    "rank": 9,
+    "name": "GPT 5.4 High",
+    "company": "OpenAI",
+    "access": "Proprietary",
+    "desc": "GPT 5.4 High is a general-purpose LLM from OpenAI. An OpenAI general model line used for chat, coding, analysis, and assistant-style tasks. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: Proprietary."
+  },
+  {
+    "rank": 10,
+    "name": "Grok 4.20 Beta 0309 Reasoning",
+    "company": "xAI",
+    "access": "Proprietary",
+    "desc": "Grok 4.20 Beta 0309 Reasoning is a general-purpose LLM from xAI. xAI's Grok family, generally positioned as a fast general assistant and reasoning model line with web-style conversational behavior. This variant emphasizes explicit reasoning and harder multi-step tasks. Access model: Proprietary."
+  },
+  {
+    "rank": 11,
+    "name": "GPT 5.2 Chat Latest 20260210",
+    "company": "OpenAI",
+    "access": "Proprietary",
+    "desc": "GPT 5.2 Chat Latest 20260210 is a general-purpose LLM from OpenAI. An OpenAI general model line used for chat, coding, analysis, and assistant-style tasks. This name implies a rolling or continuously refreshed chat endpoint. Access model: Proprietary."
+  },
+  {
+    "rank": 12,
+    "name": "Grok 4.20 Multi Agent Beta 0309",
+    "company": "xAI",
+    "access": "Proprietary",
+    "desc": "Grok 4.20 Multi Agent Beta 0309 is a general-purpose LLM from xAI. xAI's Grok family, generally positioned as a fast general assistant and reasoning model line with web-style conversational behavior. The naming indicates an experimental, preview, or beta snapshot rather than a final stable release. Access model: Proprietary."
+  },
+  {
+    "rank": 13,
+    "name": "Gemini 3 Flash",
+    "company": "Google",
+    "access": "Proprietary",
+    "desc": "Gemini 3 Flash is a multimodal LLM from Google. Google's faster Gemini tier aimed at quick multimodal responses, lightweight tool use, and lower-cost production workloads. The 'Flash' label suggests a faster, lower-latency configuration. Access model: Proprietary."
+  },
+  {
+    "rank": 14,
+    "name": "Claude Opus 4.5 Thinking 32k",
+    "company": "Anthropic",
+    "access": "Proprietary",
+    "desc": "Claude Opus 4.5 Thinking 32k is a general-purpose LLM from Anthropic. Anthropic's flagship Claude line aimed at the strongest general reasoning, writing, and coding tasks. This variant emphasizes explicit reasoning and harder multi-step tasks. Access model: Proprietary. AI War Room, 271-model catalogue Page 3"
+  },
+  {
+    "rank": 15,
+    "name": "GLM 5.1",
+    "company": "Z.ai",
+    "access": "MIT",
+    "desc": "GLM 5.1 is a general-purpose LLM from Z.ai. Z.ai / Zhipu's GLM family, a broad language-model line used for general chat, reasoning, and developer-facing applications. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: MIT."
+  },
+  {
+    "rank": 16,
+    "name": "Grok 4.1 Thinking",
+    "company": "xAI",
+    "access": "Proprietary",
+    "desc": "Grok 4.1 Thinking is a general-purpose LLM from xAI. xAI's Grok family, generally positioned as a fast general assistant and reasoning model line with web-style conversational behavior. This variant emphasizes explicit reasoning and harder multi-step tasks. Access model: Proprietary."
+  },
+  {
+    "rank": 17,
+    "name": "Claude Opus 4.5",
+    "company": "Anthropic",
+    "access": "Proprietary",
+    "desc": "Claude Opus 4.5 is a general-purpose LLM from Anthropic. Anthropic's flagship Claude line aimed at the strongest general reasoning, writing, and coding tasks. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: Proprietary."
+  },
+  {
+    "rank": 18,
+    "name": "GPT 5.4",
+    "company": "OpenAI",
+    "access": "Proprietary",
+    "desc": "GPT 5.4 is a general-purpose LLM from OpenAI. An OpenAI general model line used for chat, coding, analysis, and assistant-style tasks. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: Proprietary."
+  },
+  {
+    "rank": 19,
+    "name": "Qwen3.5 Max Preview",
+    "company": "Alibaba",
+    "access": "Proprietary",
+    "desc": "Qwen3.5 Max Preview is a general-purpose LLM from Alibaba. Alibaba's Qwen model family for general chat, reasoning, and multilingual developer workloads. The naming indicates an experimental, preview, or beta snapshot rather than a final stable release. Access model: Proprietary."
+  },
+  {
+    "rank": 20,
+    "name": "Claude Sonnet 4.6",
+    "company": "Anthropic",
+    "access": "Proprietary",
+    "desc": "Claude Sonnet 4.6 is a general-purpose LLM from Anthropic. Anthropic's balanced Claude line designed for strong everyday reasoning, writing, and coding with faster turnaround than Opus. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: Proprietary."
+  },
+  {
+    "rank": 21,
+    "name": "Gemini 3 Flash (thinking-minimal)",
+    "company": "Google",
+    "access": "Proprietary",
+    "desc": "Gemini 3 Flash (thinking-minimal) is a multimodal LLM from Google. Google's faster Gemini tier aimed at quick multimodal responses, lightweight tool use, and lower-cost production workloads. This variant emphasizes explicit reasoning and harder multi-step tasks. Access model: Proprietary."
+  },
+  {
+    "rank": 22,
+    "name": "Bytedance Dola Seed 2.0 Pro",
+    "company": "Bytedance",
+    "access": "Proprietary",
+    "desc": "Bytedance Dola Seed 2.0 Pro is a general-purpose LLM from Bytedance. ByteDance's Seed / Dola line, a proprietary general model intended for strong assistant and reasoning performance. The 'Pro' label suggests a higher-capability tier within the same family. Access model: Proprietary."
+  },
+  {
+    "rank": 23,
+    "name": "Grok 4.1",
+    "company": "xAI",
+    "access": "Proprietary",
+    "desc": "Grok 4.1 is a general-purpose LLM from xAI. xAI's Grok family, generally positioned as a fast general assistant and reasoning model line with web-style conversational behavior. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: Proprietary."
+  },
+  {
+    "rank": 24,
+    "name": "GPT 5.4 Mini High",
+    "company": "OpenAI",
+    "access": "Proprietary",
+    "desc": "GPT 5.4 Mini High is a general-purpose LLM from OpenAI. An OpenAI general model line used for chat, coding, analysis, and assistant-style tasks. The 'Mini' label suggests a smaller and cheaper version of the parent model. Access model: Proprietary."
+  },
+  {
+    "rank": 25,
+    "name": "GLM 5",
+    "company": "Z.ai",
+    "access": "MIT",
+    "desc": "GLM 5 is a general-purpose LLM from Z.ai. Z.ai / Zhipu's GLM family, a broad language-model line used for general chat, reasoning, and developer-facing applications. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: MIT."
+  },
+  {
+    "rank": 26,
+    "name": "GPT 5.1 High",
+    "company": "OpenAI",
+    "access": "Proprietary",
+    "desc": "GPT 5.1 High is a general-purpose LLM from OpenAI. An OpenAI general model line used for chat, coding, analysis, and assistant-style tasks. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: Proprietary."
+  },
+  {
+    "rank": 27,
+    "name": "GPT 5.3 Chat Latest",
+    "company": "OpenAI",
+    "access": "Proprietary",
+    "desc": "GPT 5.3 Chat Latest is a general-purpose LLM from OpenAI. An OpenAI general model line used for chat, coding, analysis, and assistant-style tasks. This name implies a rolling or continuously refreshed chat endpoint. Access model: Proprietary."
+  },
+  {
+    "rank": 28,
+    "name": "Claude Sonnet 4.5 Thinking 32k",
+    "company": "Anthropic",
+    "access": "Proprietary",
+    "desc": "Claude Sonnet 4.5 Thinking 32k is a general-purpose LLM from Anthropic. Anthropic's balanced Claude line designed for strong everyday reasoning, writing, and coding with faster turnaround than Opus. This variant emphasizes explicit reasoning and harder multi-step tasks. Access model: Proprietary. AI War Room, 271-model catalogue Page 4"
+  },
+  {
+    "rank": 29,
+    "name": "Claude Sonnet 4.5",
+    "company": "Anthropic",
+    "access": "Proprietary",
+    "desc": "Claude Sonnet 4.5 is a general-purpose LLM from Anthropic. Anthropic's balanced Claude line designed for strong everyday reasoning, writing, and coding with faster turnaround than Opus. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: Proprietary."
+  },
+  {
+    "rank": 30,
+    "name": "Gemma 4 31B",
+    "company": "Google",
+    "access": "Apache 2.0",
+    "desc": "Gemma 4 31B is a open-weight LLM from Google. Google's Gemma open model family, designed for local use, fine-tuning, and research-friendly deployment. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: Apache 2.0."
+  },
+  {
+    "rank": 31,
+    "name": "Kimi K2.5 Thinking",
+    "company": "Moonshot",
+    "access": "Modified MIT",
+    "desc": "Kimi K2.5 Thinking is a general-purpose LLM from Moonshot. Moonshot AI's Kimi family, typically aimed at fast assistant use with strong long-context and reasoning-oriented variants. This variant emphasizes explicit reasoning and harder multi-step tasks. Access model: Modified MIT."
+  },
+  {
+    "rank": 32,
+    "name": "ERNIE 5.0 0110",
+    "company": "Baidu",
+    "access": "Proprietary",
+    "desc": "ERNIE 5.0 0110 is a general-purpose LLM from Baidu. Baidu's ERNIE family, a proprietary Chinese foundation-model line for chat, reasoning, and enterprise AI tasks. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: Proprietary."
+  },
+  {
+    "rank": 33,
+    "name": "ERNIE 5.0 Preview 1203",
+    "company": "Baidu",
+    "access": "Proprietary",
+    "desc": "ERNIE 5.0 Preview 1203 is a general-purpose LLM from Baidu. Baidu's ERNIE family, a proprietary Chinese foundation-model line for chat, reasoning, and enterprise AI tasks. The naming indicates an experimental, preview, or beta snapshot rather than a final stable release. Access model: Proprietary."
+  },
+  {
+    "rank": 34,
+    "name": "Claude Opus 4.1 Thinking 16k",
+    "company": "Anthropic",
+    "access": "Proprietary",
+    "desc": "Claude Opus 4.1 Thinking 16k is a general-purpose LLM from Anthropic. Anthropic's flagship Claude line aimed at the strongest general reasoning, writing, and coding tasks. This variant emphasizes explicit reasoning and harder multi-step tasks. Access model: Proprietary."
+  },
+  {
+    "rank": 35,
+    "name": "Gemini 2.5 Pro",
+    "company": "Google",
+    "access": "Proprietary",
+    "desc": "Gemini 2.5 Pro is a multimodal LLM from Google. Google's high-end Gemini tier built for stronger multimodal reasoning, longer-context work, and more demanding problem solving. The 'Pro' label suggests a higher-capability tier within the same family. Access model: Proprietary."
+  },
+  {
+    "rank": 36,
+    "name": "Claude Opus 4.1",
+    "company": "Anthropic",
+    "access": "Proprietary",
+    "desc": "Claude Opus 4.1 is a general-purpose LLM from Anthropic. Anthropic's flagship Claude line aimed at the strongest general reasoning, writing, and coding tasks. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: Proprietary."
+  },
+  {
+    "rank": 37,
+    "name": "MiMo V2 Pro",
+    "company": "Xiaomi",
+    "access": "Proprietary",
+    "desc": "MiMo V2 Pro is a general-purpose LLM from Xiaomi. Xiaomi's MiMo family, a compact model line for chat and reasoning with faster 'Flash' variants for lower-latency use. The 'Pro' label suggests a higher-capability tier within the same family. Access model: Proprietary."
+  },
+  {
+    "rank": 38,
+    "name": "Qwen3.5 397B A17B",
+    "company": "Alibaba",
+    "access": "Apache 2.0",
+    "desc": "Qwen3.5 397B A17B is a general-purpose LLM from Alibaba. Alibaba's Qwen model family for general chat, reasoning, and multilingual developer workloads. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: Apache 2.0."
+  },
+  {
+    "rank": 39,
+    "name": "GPT 4.5 Preview 2025-02-27",
+    "company": "OpenAI",
+    "access": "Proprietary",
+    "desc": "GPT 4.5 Preview 2025-02-27 is a general-purpose LLM from OpenAI. An OpenAI general model line used for chat, coding, analysis, and assistant-style tasks. The naming indicates an experimental, preview, or beta snapshot rather than a final stable release. Access model: Proprietary."
+  },
+  {
+    "rank": 40,
+    "name": "ChatGPT 4o Latest 20250326",
+    "company": "OpenAI",
+    "access": "Proprietary",
+    "desc": "ChatGPT 4o Latest 20250326 is a multimodal LLM from OpenAI. An OpenAI omni model line aimed at fast, general multimodal use across chat, coding, and assistant workflows. This name implies a rolling or continuously refreshed chat endpoint. Access model: Proprietary."
+  },
+  {
+    "rank": 41,
+    "name": "GLM 4.7",
+    "company": "Z.ai",
+    "access": "MIT",
+    "desc": "GLM 4.7 is a general-purpose LLM from Z.ai. Z.ai / Zhipu's GLM family, a broad language-model line used for general chat, reasoning, and developer-facing applications. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: MIT."
+  },
+  {
+    "rank": 42,
+    "name": "GPT 5.2 High",
+    "company": "OpenAI",
+    "access": "Proprietary",
+    "desc": "GPT 5.2 High is a general-purpose LLM from OpenAI. An OpenAI general model line used for chat, coding, analysis, and assistant-style tasks. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: Proprietary. AI War Room, 271-model catalogue Page 5"
+  },
+  {
+    "rank": 43,
+    "name": "GPT 5.2",
+    "company": "OpenAI",
+    "access": "Proprietary",
+    "desc": "GPT 5.2 is a general-purpose LLM from OpenAI. An OpenAI general model line used for chat, coding, analysis, and assistant-style tasks. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: Proprietary."
+  },
+  {
+    "rank": 44,
+    "name": "Gemma 4 26B A4B",
+    "company": "Google",
+    "access": "Apache 2.0",
+    "desc": "Gemma 4 26B A4B is a open-weight LLM from Google. Google's Gemma open model family, designed for local use, fine-tuning, and research-friendly deployment. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: Apache 2.0."
+  },
+  {
+    "rank": 45,
+    "name": "GPT 5.1",
+    "company": "OpenAI",
+    "access": "Proprietary",
+    "desc": "GPT 5.1 is a general-purpose LLM from OpenAI. An OpenAI general model line used for chat, coding, analysis, and assistant-style tasks. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: Proprietary."
+  },
+  {
+    "rank": 46,
+    "name": "Gemini 3.1 Flash Lite Preview",
+    "company": "Google",
+    "access": "Proprietary",
+    "desc": "Gemini 3.1 Flash Lite Preview is a multimodal LLM from Google. Google's lightweight Gemini tier built for very fast, inexpensive inference in high-volume applications. The 'Flash Lite' label suggests a lower-cost, higher-throughput tier. Access model: Proprietary."
+  },
+  {
+    "rank": 47,
+    "name": "Qwen3 Max Preview",
+    "company": "Alibaba",
+    "access": "Proprietary",
+    "desc": "Qwen3 Max Preview is a general-purpose LLM from Alibaba. Alibaba's Qwen model family for general chat, reasoning, and multilingual developer workloads. The naming indicates an experimental, preview, or beta snapshot rather than a final stable release. Access model: Proprietary."
+  },
+  {
+    "rank": 48,
+    "name": "LongCat Flash Chat 2602 Exp",
+    "company": "Meituan",
+    "access": "Proprietary",
+    "desc": "LongCat Flash Chat 2602 Exp is a general-purpose LLM from Meituan. Meituan's LongCat family, positioned as a chat-oriented model line with fast-response variants. The 'Flash' label suggests a faster, lower-latency configuration. Access model: Proprietary."
+  },
+  {
+    "rank": 49,
+    "name": "GPT 5 High",
+    "company": "OpenAI",
+    "access": "Proprietary",
+    "desc": "GPT 5 High is a general-purpose LLM from OpenAI. An OpenAI general model line used for chat, coding, analysis, and assistant-style tasks. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: Proprietary."
+  },
+  {
+    "rank": 50,
+    "name": "Kimi K2.5 Instant",
+    "company": "Moonshot",
+    "access": "Modified MIT",
+    "desc": "Kimi K2.5 Instant is a general-purpose LLM from Moonshot. Moonshot AI's Kimi family, typically aimed at fast assistant use with strong long-context and reasoning-oriented variants. Its naming points to faster responses and interactive production use. Access model: Modified MIT."
+  },
+  {
+    "rank": 51,
+    "name": "Grok 4.1 Fast Reasoning",
+    "company": "xAI",
+    "access": "Proprietary",
+    "desc": "Grok 4.1 Fast Reasoning is a general-purpose LLM from xAI. xAI's Grok family, generally positioned as a fast general assistant and reasoning model line with web-style conversational behavior. This variant emphasizes explicit reasoning and harder multi-step tasks. Access model: Proprietary."
+  },
+  {
+    "rank": 52,
+    "name": "o3 2025-04-16",
+    "company": "OpenAI",
+    "access": "Proprietary",
+    "desc": "o3 2025-04-16 is a reasoning LLM from OpenAI. An OpenAI reasoning-focused model variant intended for harder analysis, planning, and multi-step problem solving. This variant emphasizes explicit reasoning and harder multi-step tasks. Access model: Proprietary."
+  },
+  {
+    "rank": 53,
+    "name": "Kimi K2 Thinking Turbo",
+    "company": "Moonshot",
+    "access": "Modified MIT",
+    "desc": "Kimi K2 Thinking Turbo is a general-purpose LLM from Moonshot. Moonshot AI's Kimi family, typically aimed at fast assistant use with strong long-context and reasoning-oriented variants. This variant emphasizes explicit reasoning and harder multi-step tasks. Access model: Modified MIT."
+  },
+  {
+    "rank": 54,
+    "name": "Amazon Nova Experimental Chat 26-02-10",
+    "company": "Amazon",
+    "access": "Proprietary",
+    "desc": "Amazon Nova Experimental Chat 26-02-10 is a general-purpose LLM from Amazon. Amazon's Nova family, a proprietary model line for assistant use, production inference, and enterprise-facing AI applications. The naming indicates an experimental, preview, or beta snapshot rather than a final stable release. Access model: Proprietary."
+  },
+  {
+    "rank": 55,
+    "name": "GPT 5 Chat",
+    "company": "OpenAI",
+    "access": "Proprietary",
+    "desc": "GPT 5 Chat is a general-purpose LLM from OpenAI. An OpenAI general model line used for chat, coding, analysis, and assistant-style tasks. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: Proprietary. AI War Room, 271-model catalogue Page 6"
+  },
+  {
+    "rank": 56,
+    "name": "GLM 4.6",
+    "company": "Z.ai",
+    "access": "MIT",
+    "desc": "GLM 4.6 is a general-purpose LLM from Z.ai. Z.ai / Zhipu's GLM family, a broad language-model line used for general chat, reasoning, and developer-facing applications. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: MIT."
+  },
+  {
+    "rank": 57,
+    "name": "DeepSeek V3.2 Exp Thinking",
+    "company": "DeepSeek",
+    "access": "MIT",
+    "desc": "DeepSeek V3.2 Exp Thinking is a general-purpose LLM from DeepSeek. DeepSeek's general model family for strong open-weight chat, reasoning, and coding performance. This variant emphasizes explicit reasoning and harder multi-step tasks. Access model: MIT."
+  },
+  {
+    "rank": 58,
+    "name": "DeepSeek V3.2",
+    "company": "DeepSeek",
+    "access": "MIT",
+    "desc": "DeepSeek V3.2 is a general-purpose LLM from DeepSeek. DeepSeek's general model family for strong open-weight chat, reasoning, and coding performance. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: MIT."
+  },
+  {
+    "rank": 59,
+    "name": "Qwen3 Max 2025-09-23",
+    "company": "Alibaba",
+    "access": "Proprietary",
+    "desc": "Qwen3 Max 2025-09-23 is a general-purpose LLM from Alibaba. Alibaba's Qwen model family for general chat, reasoning, and multilingual developer workloads. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: Proprietary."
+  },
+  {
+    "rank": 60,
+    "name": "Claude Opus 4 20250514 Thinking 16k",
+    "company": "Anthropic",
+    "access": "Proprietary",
+    "desc": "Claude Opus 4 20250514 Thinking 16k is a general-purpose LLM from Anthropic. Anthropic's flagship Claude line aimed at the strongest general reasoning, writing, and coding tasks. This variant emphasizes explicit reasoning and harder multi-step tasks. Access model: Proprietary."
+  },
+  {
+    "rank": 61,
+    "name": "Qwen3 235B A22B Instruct 2507",
+    "company": "Alibaba",
+    "access": "Apache 2.0",
+    "desc": "Qwen3 235B A22B Instruct 2507 is a general-purpose LLM from Alibaba. Alibaba's Qwen model family for general chat, reasoning, and multilingual developer workloads. The 'Instruct' label indicates tuning for instruction following and assistant-style prompting. Access model: Apache 2.0."
+  },
+  {
+    "rank": 62,
+    "name": "DeepSeek V3.2 Exp",
+    "company": "DeepSeek",
+    "access": "MIT",
+    "desc": "DeepSeek V3.2 Exp is a general-purpose LLM from DeepSeek. DeepSeek's general model family for strong open-weight chat, reasoning, and coding performance. The naming indicates an experimental, preview, or beta snapshot rather than a final stable release. Access model: MIT."
+  },
+  {
+    "rank": 63,
+    "name": "DeepSeek V3.2 Thinking",
+    "company": "DeepSeek",
+    "access": "MIT",
+    "desc": "DeepSeek V3.2 Thinking is a general-purpose LLM from DeepSeek. DeepSeek's general model family for strong open-weight chat, reasoning, and coding performance. This variant emphasizes explicit reasoning and harder multi-step tasks. Access model: MIT."
+  },
+  {
+    "rank": 64,
+    "name": "DeepSeek R1 0528",
+    "company": "DeepSeek",
+    "access": "MIT",
+    "desc": "DeepSeek R1 0528 is a reasoning LLM from DeepSeek. DeepSeek's reasoning-oriented R-series, focused on chain-of-thought style analysis and harder logic tasks. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: MIT."
+  },
+  {
+    "rank": 65,
+    "name": "Grok 4 Fast Chat",
+    "company": "xAI",
+    "access": "Proprietary",
+    "desc": "Grok 4 Fast Chat is a general-purpose LLM from xAI. xAI's Grok family, generally positioned as a fast general assistant and reasoning model line with web-style conversational behavior. Its naming points to faster responses and interactive production use. Access model: Proprietary."
+  },
+  {
+    "rank": 66,
+    "name": "ERNIE 5.0 Preview 1022",
+    "company": "Baidu",
+    "access": "Proprietary",
+    "desc": "ERNIE 5.0 Preview 1022 is a general-purpose LLM from Baidu. Baidu's ERNIE family, a proprietary Chinese foundation-model line for chat, reasoning, and enterprise AI tasks. The naming indicates an experimental, preview, or beta snapshot rather than a final stable release. Access model: Proprietary."
+  },
+  {
+    "rank": 67,
+    "name": "Qwen3.5 122B A10B",
+    "company": "Alibaba",
+    "access": "Apache 2.0",
+    "desc": "Qwen3.5 122B A10B is a general-purpose LLM from Alibaba. Alibaba's Qwen model family for general chat, reasoning, and multilingual developer workloads. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: Apache 2.0."
+  },
+  {
+    "rank": 68,
+    "name": "DeepSeek V3.1",
+    "company": "DeepSeek",
+    "access": "MIT",
+    "desc": "DeepSeek V3.1 is a general-purpose LLM from DeepSeek. DeepSeek's general model family for strong open-weight chat, reasoning, and coding performance. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: MIT."
+  },
+  {
+    "rank": 69,
+    "name": "Kimi K2 0905 Preview",
+    "company": "Moonshot",
+    "access": "Modified MIT",
+    "desc": "Kimi K2 0905 Preview is a general-purpose LLM from Moonshot. Moonshot AI's Kimi family, typically aimed at fast assistant use with strong long-context and reasoning-oriented variants. The naming indicates an experimental, preview, or beta snapshot rather than a final stable release. Access model: Modified MIT. AI War Room, 271-model catalogue Page 7"
+  },
+  {
+    "rank": 70,
+    "name": "Kimi K2 0711 Preview",
+    "company": "Moonshot",
+    "access": "Modified MIT",
+    "desc": "Kimi K2 0711 Preview is a general-purpose LLM from Moonshot. Moonshot AI's Kimi family, typically aimed at fast assistant use with strong long-context and reasoning-oriented variants. The naming indicates an experimental, preview, or beta snapshot rather than a final stable release. Access model: Modified MIT."
+  },
+  {
+    "rank": 71,
+    "name": "DeepSeek V3.1 Thinking",
+    "company": "DeepSeek",
+    "access": "MIT",
+    "desc": "DeepSeek V3.1 Thinking is a general-purpose LLM from DeepSeek. DeepSeek's general model family for strong open-weight chat, reasoning, and coding performance. This variant emphasizes explicit reasoning and harder multi-step tasks. Access model: MIT."
+  },
+  {
+    "rank": 72,
+    "name": "DeepSeek V3.1 Terminus Thinking",
+    "company": "DeepSeek",
+    "access": "MIT",
+    "desc": "DeepSeek V3.1 Terminus Thinking is a general-purpose LLM from DeepSeek. DeepSeek's general model family for strong open-weight chat, reasoning, and coding performance. This variant emphasizes explicit reasoning and harder multi-step tasks. Access model: MIT."
+  },
+  {
+    "rank": 73,
+    "name": "DeepSeek V3.1 Terminus",
+    "company": "DeepSeek",
+    "access": "MIT",
+    "desc": "DeepSeek V3.1 Terminus is a general-purpose LLM from DeepSeek. DeepSeek's general model family for strong open-weight chat, reasoning, and coding performance. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: MIT."
+  },
+  {
+    "rank": 74,
+    "name": "Qwen3 VL 235B A22B Instruct",
+    "company": "Alibaba",
+    "access": "Apache 2.0",
+    "desc": "Qwen3 VL 235B A22B Instruct is a vision-language model from Alibaba. Alibaba's multimodal Qwen vision-language line for image-aware reasoning and text-plus-vision tasks. It is intended for multimodal tasks that combine text with visual inputs. Access model: Apache 2.0."
+  },
+  {
+    "rank": 75,
+    "name": "Amazon Nova Experimental Chat 26-01-10",
+    "company": "Amazon",
+    "access": "Proprietary",
+    "desc": "Amazon Nova Experimental Chat 26-01-10 is a general-purpose LLM from Amazon. Amazon's Nova family, a proprietary model line for assistant use, production inference, and enterprise-facing AI applications. The naming indicates an experimental, preview, or beta snapshot rather than a final stable release. Access model: Proprietary."
+  },
+  {
+    "rank": 76,
+    "name": "Mistral Large 3",
+    "company": "Mistral",
+    "access": "Apache 2.0",
+    "desc": "Mistral Large 3 is a general-purpose LLM from Mistral. Mistral's model family for assistant use, coding, and enterprise deployment, spanning open and proprietary tiers. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: Apache 2.0."
+  },
+  {
+    "rank": 77,
+    "name": "GPT 4.1 2025-04-14",
+    "company": "OpenAI",
+    "access": "Proprietary",
+    "desc": "GPT 4.1 2025-04-14 is a general-purpose LLM from OpenAI. An OpenAI general model line used for chat, coding, analysis, and assistant-style tasks. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: Proprietary."
+  },
+  {
+    "rank": 78,
+    "name": "Claude Opus 4 20250514",
+    "company": "Anthropic",
+    "access": "Proprietary",
+    "desc": "Claude Opus 4 20250514 is a general-purpose LLM from Anthropic. Anthropic's flagship Claude line aimed at the strongest general reasoning, writing, and coding tasks. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: Proprietary."
+  },
+  {
+    "rank": 79,
+    "name": "Grok 3 Preview 02-24",
+    "company": "xAI",
+    "access": "Proprietary",
+    "desc": "Grok 3 Preview 02-24 is a general-purpose LLM from xAI. xAI's Grok family, generally positioned as a fast general assistant and reasoning model line with web-style conversational behavior. The naming indicates an experimental, preview, or beta snapshot rather than a final stable release. Access model: Proprietary."
+  },
+  {
+    "rank": 80,
+    "name": "GLM 4.5",
+    "company": "Z.ai",
+    "access": "MIT",
+    "desc": "GLM 4.5 is a general-purpose LLM from Z.ai. Z.ai / Zhipu's GLM family, a broad language-model line used for general chat, reasoning, and developer-facing applications. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: MIT."
+  },
+  {
+    "rank": 81,
+    "name": "Gemini 2.5 Flash",
+    "company": "Google",
+    "access": "Proprietary",
+    "desc": "Gemini 2.5 Flash is a multimodal LLM from Google. Google's faster Gemini tier aimed at quick multimodal responses, lightweight tool use, and lower-cost production workloads. The 'Flash' label suggests a faster, lower-latency configuration. Access model: Proprietary."
+  },
+  {
+    "rank": 82,
+    "name": "Grok 4 0709",
+    "company": "xAI",
+    "access": "Proprietary",
+    "desc": "Grok 4 0709 is a general-purpose LLM from xAI. xAI's Grok family, generally positioned as a fast general assistant and reasoning model line with web-style conversational behavior. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: Proprietary. AI War Room, 271-model catalogue Page 8"
+  },
+  {
+    "rank": 83,
+    "name": "Mistral Medium 2508",
+    "company": "Mistral",
+    "access": "Proprietary",
+    "desc": "Mistral Medium 2508 is a general-purpose LLM from Mistral. Mistral's model family for assistant use, coding, and enterprise deployment, spanning open and proprietary tiers. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: Proprietary."
+  },
+  {
+    "rank": 84,
+    "name": "Claude Haiku 4.5",
+    "company": "Anthropic",
+    "access": "Proprietary",
+    "desc": "Claude Haiku 4.5 is a general-purpose LLM from Anthropic. Anthropic's lighter Claude line optimized for speed, low latency, and efficient general assistant work. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: Proprietary."
+  },
+  {
+    "rank": 85,
+    "name": "Gemini 2.5 Flash Preview 09-2025",
+    "company": "Google",
+    "access": "Proprietary",
+    "desc": "Gemini 2.5 Flash Preview 09-2025 is a multimodal LLM from Google. Google's faster Gemini tier aimed at quick multimodal responses, lightweight tool use, and lower-cost production workloads. The 'Flash' label suggests a faster, lower-latency configuration. Access model: Proprietary."
+  },
+  {
+    "rank": 86,
+    "name": "Grok 4 Fast Reasoning",
+    "company": "xAI",
+    "access": "Proprietary",
+    "desc": "Grok 4 Fast Reasoning is a general-purpose LLM from xAI. xAI's Grok family, generally positioned as a fast general assistant and reasoning model line with web-style conversational behavior. This variant emphasizes explicit reasoning and harder multi-step tasks. Access model: Proprietary."
+  },
+  {
+    "rank": 87,
+    "name": "Qwen3.5 27B",
+    "company": "Alibaba",
+    "access": "Apache 2.0",
+    "desc": "Qwen3.5 27B is a general-purpose LLM from Alibaba. Alibaba's Qwen model family for general chat, reasoning, and multilingual developer workloads. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: Apache 2.0."
+  },
+  {
+    "rank": 88,
+    "name": "MiniMax M2.7",
+    "company": "MiniMax",
+    "access": "Modified MIT",
+    "desc": "MiniMax M2.7 is a general-purpose LLM from MiniMax. MiniMax's model family for general assistant use, with multiple sizes and preview variants for different speed/quality tradeoffs. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: Modified MIT."
+  },
+  {
+    "rank": 89,
+    "name": "Qwen3 235B A22B No Thinking",
+    "company": "Alibaba",
+    "access": "Apache 2.0",
+    "desc": "Qwen3 235B A22B No Thinking is a general-purpose LLM from Alibaba. Alibaba's Qwen model family for general chat, reasoning, and multilingual developer workloads. This variant emphasizes explicit reasoning and harder multi-step tasks. Access model: Apache 2.0."
+  },
+  {
+    "rank": 90,
+    "name": "MiniMax M2.5",
+    "company": "MiniMax",
+    "access": "Modified MIT",
+    "desc": "MiniMax M2.5 is a general-purpose LLM from MiniMax. MiniMax's model family for general assistant use, with multiple sizes and preview variants for different speed/quality tradeoffs. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: Modified MIT."
+  },
+  {
+    "rank": 91,
+    "name": "GPT 5.4 Nano High",
+    "company": "OpenAI",
+    "access": "Proprietary",
+    "desc": "GPT 5.4 Nano High is a general-purpose LLM from OpenAI. An OpenAI general model line used for chat, coding, analysis, and assistant-style tasks. The 'Nano' label suggests a very small, highly efficient deployment tier. Access model: Proprietary."
+  },
+  {
+    "rank": 92,
+    "name": "Qwen3 Next 80B A3B Instruct",
+    "company": "Alibaba",
+    "access": "Apache 2.0",
+    "desc": "Qwen3 Next 80B A3B Instruct is a general-purpose LLM from Alibaba. Alibaba's Qwen model family for general chat, reasoning, and multilingual developer workloads. The 'Instruct' label indicates tuning for instruction following and assistant-style prompting. Access model: Apache 2.0."
+  },
+  {
+    "rank": 93,
+    "name": "o1 2024-12-17",
+    "company": "OpenAI",
+    "access": "Proprietary",
+    "desc": "o1 2024-12-17 is a reasoning LLM from OpenAI. An OpenAI reasoning-focused model variant intended for harder analysis, planning, and multi-step problem solving. This variant emphasizes explicit reasoning and harder multi-step tasks. Access model: Proprietary."
+  },
+  {
+    "rank": 94,
+    "name": "LongCat Flash Chat",
+    "company": "Meituan",
+    "access": "MIT",
+    "desc": "LongCat Flash Chat is a general-purpose LLM from Meituan. Meituan's LongCat family, positioned as a chat-oriented model line with fast-response variants. The 'Flash' label suggests a faster, lower-latency configuration. Access model: MIT."
+  },
+  {
+    "rank": 95,
+    "name": "Qwen3 235B A22B Thinking 2507",
+    "company": "Alibaba",
+    "access": "Apache 2.0",
+    "desc": "Qwen3 235B A22B Thinking 2507 is a general-purpose LLM from Alibaba. Alibaba's Qwen model family for general chat, reasoning, and multilingual developer workloads. This variant emphasizes explicit reasoning and harder multi-step tasks. Access model: Apache 2.0."
+  },
+  {
+    "rank": 96,
+    "name": "Claude Sonnet 4 Thinking 32k",
+    "company": "Anthropic",
+    "access": "Proprietary",
+    "desc": "Claude Sonnet 4 Thinking 32k is a general-purpose LLM from Anthropic. Anthropic's balanced Claude line designed for strong everyday reasoning, writing, and coding with faster turnaround than Opus. This variant emphasizes explicit reasoning and harder multi-step tasks. Access model: Proprietary. AI War Room, 271-model catalogue Page 9"
+  },
+  {
+    "rank": 97,
+    "name": "Qwen3.5 Flash",
+    "company": "Alibaba",
+    "access": "Proprietary",
+    "desc": "Qwen3.5 Flash is a general-purpose LLM from Alibaba. Alibaba's Qwen model family for general chat, reasoning, and multilingual developer workloads. The 'Flash' label suggests a faster, lower-latency configuration. Access model: Proprietary."
+  },
+  {
+    "rank": 98,
+    "name": "DeepSeek R1",
+    "company": "DeepSeek",
+    "access": "MIT",
+    "desc": "DeepSeek R1 is a reasoning LLM from DeepSeek. DeepSeek's reasoning-oriented R-series, focused on chain-of-thought style analysis and harder logic tasks. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: MIT."
+  },
+  {
+    "rank": 99,
+    "name": "Tencent Hunyuan Vision 1.5 Thinking",
+    "company": "Tencent",
+    "access": "Proprietary",
+    "desc": "Tencent Hunyuan Vision 1.5 Thinking is a vision-language model from Tencent. Tencent's Hunyuan vision-enabled line for multimodal reasoning over text and images. This variant emphasizes explicit reasoning and harder multi-step tasks. Access model: Proprietary."
+  },
+  {
+    "rank": 100,
+    "name": "Qwen3 VL 235B A22B Thinking",
+    "company": "Alibaba",
+    "access": "Apache 2.0",
+    "desc": "Qwen3 VL 235B A22B Thinking is a vision-language model from Alibaba. Alibaba's multimodal Qwen vision-language line for image-aware reasoning and text-plus-vision tasks. This variant emphasizes explicit reasoning and harder multi-step tasks. Access model: Apache 2.0."
+  },
+  {
+    "rank": 101,
+    "name": "Qwen3.5 35B A3B",
+    "company": "Alibaba",
+    "access": "Apache 2.0",
+    "desc": "Qwen3.5 35B A3B is a general-purpose LLM from Alibaba. Alibaba's Qwen model family for general chat, reasoning, and multilingual developer workloads. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: Apache 2.0."
+  },
+  {
+    "rank": 102,
+    "name": "Amazon Nova Experimental Chat 12-10",
+    "company": "Amazon",
+    "access": "Proprietary",
+    "desc": "Amazon Nova Experimental Chat 12-10 is a general-purpose LLM from Amazon. Amazon's Nova family, a proprietary model line for assistant use, production inference, and enterprise-facing AI applications. The naming indicates an experimental, preview, or beta snapshot rather than a final stable release. Access model: Proprietary."
+  },
+  {
+    "rank": 103,
+    "name": "DeepSeek V3 0324",
+    "company": "DeepSeek",
+    "access": "MIT",
+    "desc": "DeepSeek V3 0324 is a general-purpose LLM from DeepSeek. DeepSeek's general model family for strong open-weight chat, reasoning, and coding performance. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: MIT."
+  },
+  {
+    "rank": 104,
+    "name": "MAI 1 Preview",
+    "company": "Microsoft AI",
+    "access": "Proprietary",
+    "desc": "MAI 1 Preview is a general-purpose LLM from Microsoft AI. Microsoft AI's experimental foundation-model line for general assistant and reasoning tasks. The naming indicates an experimental, preview, or beta snapshot rather than a final stable release. Access model: Proprietary."
+  },
+  {
+    "rank": 105,
+    "name": "StepFun Step 3.5 Flash",
+    "company": "StepFun",
+    "access": "Apache 2.0",
+    "desc": "StepFun Step 3.5 Flash is a general-purpose LLM from StepFun. StepFun's model family, spanning fast and larger instruction-tuned variants for general assistant use. The 'Flash' label suggests a faster, lower-latency configuration. Access model: Apache 2.0."
+  },
+  {
+    "rank": 106,
+    "name": "MiMo V2 Flash (non-thinking)",
+    "company": "Xiaomi",
+    "access": "MIT",
+    "desc": "MiMo V2 Flash (non-thinking) is a general-purpose LLM from Xiaomi. Xiaomi's MiMo family, a compact model line for chat and reasoning with faster 'Flash' variants for lower-latency use. This variant emphasizes explicit reasoning and harder multi-step tasks. Access model: MIT."
+  },
+  {
+    "rank": 107,
+    "name": "o4 Mini 2025-04-16",
+    "company": "OpenAI",
+    "access": "Proprietary",
+    "desc": "o4 Mini 2025-04-16 is a reasoning LLM from OpenAI. An OpenAI reasoning-focused model variant intended for harder analysis, planning, and multi-step problem solving. This variant emphasizes explicit reasoning and harder multi-step tasks. Access model: Proprietary."
+  },
+  {
+    "rank": 108,
+    "name": "GPT 5 Mini High",
+    "company": "OpenAI",
+    "access": "Proprietary",
+    "desc": "GPT 5 Mini High is a general-purpose LLM from OpenAI. An OpenAI general model line used for chat, coding, analysis, and assistant-style tasks. The 'Mini' label suggests a smaller and cheaper version of the parent model. Access model: Proprietary."
+  },
+  {
+    "rank": 109,
+    "name": "Claude Sonnet 4 20250514",
+    "company": "Anthropic",
+    "access": "Proprietary",
+    "desc": "Claude Sonnet 4 20250514 is a general-purpose LLM from Anthropic. Anthropic's balanced Claude line designed for strong everyday reasoning, writing, and coding with faster turnaround than Opus. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: Proprietary."
+  },
+  {
+    "rank": 110,
+    "name": "o1 Preview",
+    "company": "OpenAI",
+    "access": "Proprietary",
+    "desc": "o1 Preview is a reasoning LLM from OpenAI. An OpenAI reasoning-focused model variant intended for harder analysis, planning, and multi-step problem solving. This variant emphasizes explicit reasoning and harder multi-step tasks. Access model: Proprietary. AI War Room, 271-model catalogue Page 10"
+  },
+  {
+    "rank": 111,
+    "name": "Tencent Hunyuan T1 20250711",
+    "company": "Tencent",
+    "access": "Proprietary",
+    "desc": "Tencent Hunyuan T1 20250711 is a general-purpose LLM from Tencent. Tencent's Hunyuan family, a proprietary model line for general assistant use, reasoning, and enterprise applications. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: Proprietary."
+  },
+  {
+    "rank": 112,
+    "name": "Qwen3 Coder 480B A35B Instruct",
+    "company": "Alibaba",
+    "access": "Apache 2.0",
+    "desc": "Qwen3 Coder 480B A35B Instruct is a coding LLM from Alibaba. Alibaba's Qwen coder-oriented model line tuned for software engineering, code generation, and repository-style tasks. It is explicitly aimed at coding and software-engineering workloads. Access model: Apache 2.0."
+  },
+  {
+    "rank": 113,
+    "name": "MiMo V2 Flash (thinking)",
+    "company": "Xiaomi",
+    "access": "MIT",
+    "desc": "MiMo V2 Flash (thinking) is a general-purpose LLM from Xiaomi. Xiaomi's MiMo family, a compact model line for chat and reasoning with faster 'Flash' variants for lower-latency use. This variant emphasizes explicit reasoning and harder multi-step tasks. Access model: MIT."
+  },
+  {
+    "rank": 114,
+    "name": "Claude 3.7 Sonnet Thinking 32k",
+    "company": "Anthropic",
+    "access": "Proprietary",
+    "desc": "Claude 3.7 Sonnet Thinking 32k is a general-purpose LLM from Anthropic. Anthropic's balanced Claude line designed for strong everyday reasoning, writing, and coding with faster turnaround than Opus. This variant emphasizes explicit reasoning and harder multi-step tasks. Access model: Proprietary."
+  },
+  {
+    "rank": 115,
+    "name": "Mistral Medium 2505",
+    "company": "Mistral",
+    "access": "Proprietary",
+    "desc": "Mistral Medium 2505 is a general-purpose LLM from Mistral. Mistral's model family for assistant use, coding, and enterprise deployment, spanning open and proprietary tiers. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: Proprietary."
+  },
+  {
+    "rank": 116,
+    "name": "MiniMax M2.1 Preview",
+    "company": "MiniMax",
+    "access": "MIT",
+    "desc": "MiniMax M2.1 Preview is a general-purpose LLM from MiniMax. MiniMax's model family for general assistant use, with multiple sizes and preview variants for different speed/quality tradeoffs. The naming indicates an experimental, preview, or beta snapshot rather than a final stable release. Access model: MIT."
+  },
+  {
+    "rank": 117,
+    "name": "Qwen3 30B A3B Instruct 2507",
+    "company": "Alibaba",
+    "access": "Apache 2.0",
+    "desc": "Qwen3 30B A3B Instruct 2507 is a general-purpose LLM from Alibaba. Alibaba's Qwen model family for general chat, reasoning, and multilingual developer workloads. The 'Instruct' label indicates tuning for instruction following and assistant-style prompting. Access model: Apache 2.0."
+  },
+  {
+    "rank": 118,
+    "name": "Tencent Hunyuan TurboS 20250416",
+    "company": "Tencent",
+    "access": "Proprietary",
+    "desc": "Tencent Hunyuan TurboS 20250416 is a general-purpose LLM from Tencent. Tencent's Hunyuan family, a proprietary model line for general assistant use, reasoning, and enterprise applications. Its naming points to faster responses and interactive production use. Access model: Proprietary."
+  },
+  {
+    "rank": 119,
+    "name": "GPT 4.1 Mini 2025-04-14",
+    "company": "OpenAI",
+    "access": "Proprietary",
+    "desc": "GPT 4.1 Mini 2025-04-14 is a general-purpose LLM from OpenAI. An OpenAI general model line used for chat, coding, analysis, and assistant-style tasks. The 'Mini' label suggests a smaller and cheaper version of the parent model. Access model: Proprietary."
+  },
+  {
+    "rank": 120,
+    "name": "Gemini 2.5 Flash Lite Preview 09-2025 No Thinking Google",
+    "company": "Unknown",
+    "access": "Proprietary",
+    "desc": "Gemini 2.5 Flash Lite Preview 09-2025 No Thinking Google is a multimodal LLM from . Google's lightweight Gemini tier built for very fast, inexpensive inference in high-volume applications. This variant emphasizes explicit reasoning and harder multi-step tasks. Access model: Proprietary."
+  },
+  {
+    "rank": 121,
+    "name": "GLM 4.6V",
+    "company": "Z.ai",
+    "access": "MIT",
+    "desc": "GLM 4.6V is a general-purpose LLM from Z.ai. Z.ai / Zhipu's GLM family, a broad language-model line used for general chat, reasoning, and developer-facing applications. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: MIT."
+  },
+  {
+    "rank": 122,
+    "name": "Trinity Large Preview",
+    "company": "Arcee AI",
+    "access": "Apache 2.0",
+    "desc": "Trinity Large Preview is a open-weight LLM from Arcee AI. Arcee AI's large instruction model line aimed at open deployment and enterprise customization. The naming indicates an experimental, preview, or beta snapshot rather than a final stable release. Access model: Apache 2.0."
+  },
+  {
+    "rank": 123,
+    "name": "Qwen3 235B A22B",
+    "company": "Alibaba",
+    "access": "Apache 2.0",
+    "desc": "Qwen3 235B A22B is a general-purpose LLM from Alibaba. Alibaba's Qwen model family for general chat, reasoning, and multilingual developer workloads. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: Apache 2.0."
+  },
+  {
+    "rank": 124,
+    "name": "Gemini 2.5 Flash Lite Preview 06-17 Thinking",
+    "company": "Google",
+    "access": "Proprietary",
+    "desc": "Gemini 2.5 Flash Lite Preview 06-17 Thinking is a multimodal LLM from Google. Google's lightweight Gemini tier built for very fast, inexpensive inference in high-volume applications. This variant emphasizes explicit reasoning and harder multi-step tasks. Access model: Proprietary. AI War Room, 271-model catalogue Page 11"
+  },
+  {
+    "rank": 125,
+    "name": "Qwen2.5 Max",
+    "company": "Alibaba",
+    "access": "Proprietary",
+    "desc": "Qwen2.5 Max is a general-purpose LLM from Alibaba. Alibaba's Qwen model family for general chat, reasoning, and multilingual developer workloads. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: Proprietary."
+  },
+  {
+    "rank": 126,
+    "name": "GLM 4.5 Air",
+    "company": "Z.ai",
+    "access": "MIT",
+    "desc": "GLM 4.5 Air is a general-purpose LLM from Z.ai. Z.ai / Zhipu's GLM family, a broad language-model line used for general chat, reasoning, and developer-facing applications. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: MIT."
+  },
+  {
+    "rank": 127,
+    "name": "Claude 3.5 Sonnet 20241022",
+    "company": "Anthropic",
+    "access": "Proprietary",
+    "desc": "Claude 3.5 Sonnet 20241022 is a general-purpose LLM from Anthropic. Anthropic's balanced Claude line designed for strong everyday reasoning, writing, and coding with faster turnaround than Opus. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: Proprietary."
+  },
+  {
+    "rank": 128,
+    "name": "Claude 3.7 Sonnet 20250219",
+    "company": "Anthropic",
+    "access": "Proprietary",
+    "desc": "Claude 3.7 Sonnet 20250219 is a general-purpose LLM from Anthropic. Anthropic's balanced Claude line designed for strong everyday reasoning, writing, and coding with faster turnaround than Opus. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: Proprietary."
+  },
+  {
+    "rank": 129,
+    "name": "Qwen3 Next 80B A3B Thinking",
+    "company": "Alibaba",
+    "access": "Apache 2.0",
+    "desc": "Qwen3 Next 80B A3B Thinking is a general-purpose LLM from Alibaba. Alibaba's Qwen model family for general chat, reasoning, and multilingual developer workloads. This variant emphasizes explicit reasoning and harder multi-step tasks. Access model: Apache 2.0."
+  },
+  {
+    "rank": 130,
+    "name": "GLM 4.7 Flash",
+    "company": "Z.ai",
+    "access": "MIT",
+    "desc": "GLM 4.7 Flash is a general-purpose LLM from Z.ai. Z.ai / Zhipu's GLM family, a broad language-model line used for general chat, reasoning, and developer-facing applications. The 'Flash' label suggests a faster, lower-latency configuration. Access model: MIT."
+  },
+  {
+    "rank": 131,
+    "name": "Amazon Nova Experimental Chat 11-10",
+    "company": "Amazon",
+    "access": "Proprietary",
+    "desc": "Amazon Nova Experimental Chat 11-10 is a general-purpose LLM from Amazon. Amazon's Nova family, a proprietary model line for assistant use, production inference, and enterprise-facing AI applications. The naming indicates an experimental, preview, or beta snapshot rather than a final stable release. Access model: Proprietary."
+  },
+  {
+    "rank": 132,
+    "name": "Gemma 3 27B IT",
+    "company": "Google",
+    "access": "Gemma",
+    "desc": "Gemma 3 27B IT is a open-weight LLM from Google. Google's Gemma open model family, designed for local use, fine-tuning, and research-friendly deployment. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: Gemma."
+  },
+  {
+    "rank": 133,
+    "name": "MiniMax M1",
+    "company": "MiniMax",
+    "access": "Apache 2.0",
+    "desc": "MiniMax M1 is a general-purpose LLM from MiniMax. MiniMax's model family for general assistant use, with multiple sizes and preview variants for different speed/quality tradeoffs. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: Apache 2.0."
+  },
+  {
+    "rank": 134,
+    "name": "o3 Mini High",
+    "company": "OpenAI",
+    "access": "Proprietary",
+    "desc": "o3 Mini High is a reasoning LLM from OpenAI. An OpenAI reasoning-focused model variant intended for harder analysis, planning, and multi-step problem solving. This variant emphasizes explicit reasoning and harder multi-step tasks. Access model: Proprietary."
+  },
+  {
+    "rank": 135,
+    "name": "Grok 3 Mini High",
+    "company": "xAI",
+    "access": "Proprietary",
+    "desc": "Grok 3 Mini High is a general-purpose LLM from xAI. xAI's Grok family, generally positioned as a fast general assistant and reasoning model line with web-style conversational behavior. The 'Mini' label suggests a smaller and cheaper version of the parent model. Access model: Proprietary."
+  },
+  {
+    "rank": 136,
+    "name": "Nvidia Nemotron 3 Super 120B A12B",
+    "company": "Nvidia",
+    "access": "NVIDIA Open Model",
+    "desc": "Nvidia Nemotron 3 Super 120B A12B is a open-weight LLM from Nvidia. NVIDIA's Nemotron line, typically optimized for enterprise inference, tool use, and strong open-model deployment. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: NVIDIA Open Model. AI War Room, 271-model catalogue Page 12"
+  },
+  {
+    "rank": 137,
+    "name": "Gemini 2.0 Flash 001",
+    "company": "Google",
+    "access": "Proprietary",
+    "desc": "Gemini 2.0 Flash 001 is a multimodal LLM from Google. Google's faster Gemini tier aimed at quick multimodal responses, lightweight tool use, and lower-cost production workloads. The 'Flash' label suggests a faster, lower-latency configuration. Access model: Proprietary."
+  },
+  {
+    "rank": 138,
+    "name": "DeepSeek V3",
+    "company": "DeepSeek",
+    "access": "DeepSeek",
+    "desc": "DeepSeek V3 is a general-purpose LLM from DeepSeek. DeepSeek's general model family for strong open-weight chat, reasoning, and coding performance. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: DeepSeek."
+  },
+  {
+    "rank": 139,
+    "name": "Mistral Small 2506",
+    "company": "Mistral",
+    "access": "Apache 2.0",
+    "desc": "Mistral Small 2506 is a general-purpose LLM from Mistral. Mistral's model family for assistant use, coding, and enterprise deployment, spanning open and proprietary tiers. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: Apache 2.0."
+  },
+  {
+    "rank": 140,
+    "name": "Grok 3 Mini Beta",
+    "company": "xAI",
+    "access": "Proprietary",
+    "desc": "Grok 3 Mini Beta is a general-purpose LLM from xAI. xAI's Grok family, generally positioned as a fast general assistant and reasoning model line with web-style conversational behavior. The 'Mini' label suggests a smaller and cheaper version of the parent model. Access model: Proprietary."
+  },
+  {
+    "rank": 141,
+    "name": "Intellect 3",
+    "company": "Prime Intellect",
+    "access": "MIT",
+    "desc": "Intellect 3 is a open-weight LLM from Prime Intellect. Prime Intellect's open model line for general reasoning and research-oriented deployment. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: MIT."
+  },
+  {
+    "rank": 142,
+    "name": "Cohere Command A 03-2025",
+    "company": "Cohere",
+    "access": "CC-BY-NC-4.0",
+    "desc": "Cohere Command A 03-2025 is a enterprise LLM from Cohere. Cohere's Command family, designed for enterprise chat, retrieval-augmented workflows, and business applications. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: CC-BY-NC-4.0."
+  },
+  {
+    "rank": 143,
+    "name": "GPT OSS 120B",
+    "company": "OpenAI",
+    "access": "Apache 2.0",
+    "desc": "GPT OSS 120B is a open-weight LLM from OpenAI. An OpenAI open-weight model line intended for local deployment, research, or customized downstream use. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: Apache 2.0."
+  },
+  {
+    "rank": 144,
+    "name": "GLM 4.5V",
+    "company": "Z.ai",
+    "access": "MIT",
+    "desc": "GLM 4.5V is a general-purpose LLM from Z.ai. Z.ai / Zhipu's GLM family, a broad language-model line used for general chat, reasoning, and developer-facing applications. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: MIT."
+  },
+  {
+    "rank": 145,
+    "name": "Gemini 2.0 Flash Lite Preview 02-05",
+    "company": "Google",
+    "access": "Proprietary",
+    "desc": "Gemini 2.0 Flash Lite Preview 02-05 is a multimodal LLM from Google. Google's lightweight Gemini tier built for very fast, inexpensive inference in high-volume applications. The 'Flash Lite' label suggests a lower-cost, higher-throughput tier. Access model: Proprietary."
+  },
+  {
+    "rank": 146,
+    "name": "Gemini 1.5 Pro 002",
+    "company": "Google",
+    "access": "Proprietary",
+    "desc": "Gemini 1.5 Pro 002 is a multimodal LLM from Google. Google's high-end Gemini tier built for stronger multimodal reasoning, longer-context work, and more demanding problem solving. The 'Pro' label suggests a higher-capability tier within the same family. Access model: Proprietary."
+  },
+  {
+    "rank": 147,
+    "name": "Amazon Nova Experimental Chat 10-20",
+    "company": "Amazon",
+    "access": "Proprietary",
+    "desc": "Amazon Nova Experimental Chat 10-20 is a general-purpose LLM from Amazon. Amazon's Nova family, a proprietary model line for assistant use, production inference, and enterprise-facing AI applications. The naming indicates an experimental, preview, or beta snapshot rather than a final stable release. Access model: Proprietary."
+  },
+  {
+    "rank": 148,
+    "name": "Tencent Hunyuan TurboS 20250226",
+    "company": "Tencent",
+    "access": "Proprietary",
+    "desc": "Tencent Hunyuan TurboS 20250226 is a general-purpose LLM from Tencent. Tencent's Hunyuan family, a proprietary model line for general assistant use, reasoning, and enterprise applications. Its naming points to faster responses and interactive production use. Access model: Proprietary."
+  },
+  {
+    "rank": 149,
+    "name": "StepFun Step 3",
+    "company": "StepFun",
+    "access": "Apache 2.0",
+    "desc": "StepFun Step 3 is a general-purpose LLM from StepFun. StepFun's model family, spanning fast and larger instruction-tuned variants for general assistant use. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: Apache 2.0. AI War Room, 271-model catalogue Page 13"
+  },
+  {
+    "rank": 150,
+    "name": "o3 Mini",
+    "company": "OpenAI",
+    "access": "Proprietary",
+    "desc": "o3 Mini is a reasoning LLM from OpenAI. An OpenAI reasoning-focused model variant intended for harder analysis, planning, and multi-step problem solving. This variant emphasizes explicit reasoning and harder multi-step tasks. Access model: Proprietary."
+  },
+  {
+    "rank": 151,
+    "name": "Amazon Nova Experimental Chat 10-09",
+    "company": "Amazon",
+    "access": "Proprietary",
+    "desc": "Amazon Nova Experimental Chat 10-09 is a general-purpose LLM from Amazon. Amazon's Nova family, a proprietary model line for assistant use, production inference, and enterprise-facing AI applications. The naming indicates an experimental, preview, or beta snapshot rather than a final stable release. Access model: Proprietary."
+  },
+  {
+    "rank": 152,
+    "name": "Qwen3 32B",
+    "company": "Alibaba",
+    "access": "Apache 2.0",
+    "desc": "Qwen3 32B is a general-purpose LLM from Alibaba. Alibaba's Qwen model family for general chat, reasoning, and multilingual developer workloads. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: Apache 2.0."
+  },
+  {
+    "rank": 153,
+    "name": "Llama 3.1 Nemotron Ultra 253B V1",
+    "company": "Nvidia",
+    "access": "Nvidia Open Model",
+    "desc": "Llama 3.1 Nemotron Ultra 253B V1 is a open-weight LLM from Nvidia. NVIDIA's Nemotron line, typically optimized for enterprise inference, tool use, and strong open-model deployment. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: Nvidia Open Model."
+  },
+  {
+    "rank": 154,
+    "name": "Mercury 2",
+    "company": "Inception AI",
+    "access": "Proprietary",
+    "desc": "Mercury 2 is a general-purpose LLM from Inception AI. Inception AI's Mercury family, a proprietary general-purpose model line for assistant and reasoning use. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: Proprietary."
+  },
+  {
+    "rank": 155,
+    "name": "MiniMax M2",
+    "company": "MiniMax",
+    "access": "Apache 2.0",
+    "desc": "MiniMax M2 is a general-purpose LLM from MiniMax. MiniMax's model family for general assistant use, with multiple sizes and preview variants for different speed/quality tradeoffs. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: Apache 2.0."
+  },
+  {
+    "rank": 156,
+    "name": "Ling Flash 2.0",
+    "company": "Ant Group",
+    "access": "MIT",
+    "desc": "Ling Flash 2.0 is a general-purpose LLM from Ant Group. Ant Group's Flash-family model line, built for lightweight chat and fast inference. The 'Flash' label suggests a faster, lower-latency configuration. Access model: MIT."
+  },
+  {
+    "rank": 157,
+    "name": "Qwen Plus 0125",
+    "company": "Alibaba",
+    "access": "Proprietary",
+    "desc": "Qwen Plus 0125 is a general-purpose LLM from Alibaba. Alibaba's Qwen model family for general chat, reasoning, and multilingual developer workloads. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: Proprietary."
+  },
+  {
+    "rank": 158,
+    "name": "GPT 4o 2024-05-13",
+    "company": "OpenAI",
+    "access": "Proprietary",
+    "desc": "GPT 4o 2024-05-13 is a multimodal LLM from OpenAI. An OpenAI omni model line aimed at fast, general multimodal use across chat, coding, and assistant workflows. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: Proprietary."
+  },
+  {
+    "rank": 159,
+    "name": "Nvidia Llama 3.3 Nemotron Super 49B V1.5",
+    "company": "Nvidia",
+    "access": "Nvidia Open",
+    "desc": "Nvidia Llama 3.3 Nemotron Super 49B V1.5 is a open-weight LLM from Nvidia. NVIDIA's Nemotron line, typically optimized for enterprise inference, tool use, and strong open-model deployment. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: Nvidia Open."
+  },
+  {
+    "rank": 160,
+    "name": "GLM 4 Plus 0111",
+    "company": "Zhipu",
+    "access": "Proprietary",
+    "desc": "GLM 4 Plus 0111 is a general-purpose LLM from Zhipu. Z.ai / Zhipu's GLM family, a broad language-model line used for general chat, reasoning, and developer-facing applications. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: Proprietary."
+  },
+  {
+    "rank": 161,
+    "name": "Claude 3.5 Sonnet 20240620",
+    "company": "Anthropic",
+    "access": "Proprietary",
+    "desc": "Claude 3.5 Sonnet 20240620 is a general-purpose LLM from Anthropic. Anthropic's balanced Claude line designed for strong everyday reasoning, writing, and coding with faster turnaround than Opus. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: Proprietary."
+  },
+  {
+    "rank": 162,
+    "name": "Gemma 3 12B IT",
+    "company": "Google",
+    "access": "Gemma",
+    "desc": "Gemma 3 12B IT is a open-weight LLM from Google. Google's Gemma open model family, designed for local use, fine-tuning, and research-friendly deployment. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: Gemma. AI War Room, 271-model catalogue Page 14"
+  },
+  {
+    "rank": 163,
+    "name": "Tencent Hunyuan Turbo 0110",
+    "company": "Tencent",
+    "access": "Proprietary",
+    "desc": "Tencent Hunyuan Turbo 0110 is a general-purpose LLM from Tencent. Tencent's Hunyuan family, a proprietary model line for general assistant use, reasoning, and enterprise applications. Its naming points to faster responses and interactive production use. Access model: Proprietary."
+  },
+  {
+    "rank": 164,
+    "name": "Nova 2 Lite",
+    "company": "Amazon",
+    "access": "Proprietary",
+    "desc": "Nova 2 Lite is a general-purpose LLM from Amazon. Amazon's Nova family, a proprietary model line for assistant use, production inference, and enterprise-facing AI applications. The 'Lite' label suggests a lighter and more cost-efficient configuration. Access model: Proprietary."
+  },
+  {
+    "rank": 165,
+    "name": "o1 Mini",
+    "company": "OpenAI",
+    "access": "Proprietary",
+    "desc": "o1 Mini is a reasoning LLM from OpenAI. An OpenAI reasoning-focused model variant intended for harder analysis, planning, and multi-step problem solving. This variant emphasizes explicit reasoning and harder multi-step tasks. Access model: Proprietary."
+  },
+  {
+    "rank": 166,
+    "name": "GPT 5 Nano High",
+    "company": "OpenAI",
+    "access": "Proprietary",
+    "desc": "GPT 5 Nano High is a general-purpose LLM from OpenAI. An OpenAI general model line used for chat, coding, analysis, and assistant-style tasks. The 'Nano' label suggests a very small, highly efficient deployment tier. Access model: Proprietary."
+  },
+  {
+    "rank": 167,
+    "name": "QwQ 32B",
+    "company": "Alibaba",
+    "access": "Apache 2.0",
+    "desc": "QwQ 32B is a general-purpose LLM from Alibaba. Alibaba's Qwen model family for general chat, reasoning, and multilingual developer workloads. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: Apache 2.0."
+  },
+  {
+    "rank": 168,
+    "name": "Grok 2 2024-08-13",
+    "company": "xAI",
+    "access": "Proprietary",
+    "desc": "Grok 2 2024-08-13 is a general-purpose LLM from xAI. xAI's Grok family, generally positioned as a fast general assistant and reasoning model line with web-style conversational behavior. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: Proprietary."
+  },
+  {
+    "rank": 169,
+    "name": "GPT 4o 2024-08-06",
+    "company": "OpenAI",
+    "access": "Proprietary",
+    "desc": "GPT 4o 2024-08-06 is a multimodal LLM from OpenAI. An OpenAI omni model line aimed at fast, general multimodal use across chat, coding, and assistant workflows. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: Proprietary."
+  },
+  {
+    "rank": 170,
+    "name": "Gemini Advanced 0514",
+    "company": "Google",
+    "access": "Proprietary",
+    "desc": "Gemini Advanced 0514 is a multimodal LLM from Google. Google's Gemini family for multimodal assistant tasks across text, code, and image-aware workflows. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: Proprietary."
+  },
+  {
+    "rank": 171,
+    "name": "Llama 3.1 405B Instruct BF16",
+    "company": "Meta",
+    "access": "Llama 3.1 Community",
+    "desc": "Llama 3.1 405B Instruct BF16 is a open-weight LLM from Meta. Meta's Llama family, a widely used open model line for local deployment, fine-tuning, and general instruction following. The 'Instruct' label indicates tuning for instruction following and assistant-style prompting. Access model: Llama 3.1 Community."
+  },
+  {
+    "rank": 172,
+    "name": "StepFun Step 2 16k Exp 202412",
+    "company": "StepFun",
+    "access": "Proprietary",
+    "desc": "StepFun Step 2 16k Exp 202412 is a general-purpose LLM from StepFun. StepFun's model family, spanning fast and larger instruction-tuned variants for general assistant use. The naming indicates an experimental, preview, or beta snapshot rather than a final stable release. Access model: Proprietary."
+  },
+  {
+    "rank": 173,
+    "name": "Llama 3.1 405B Instruct FP8",
+    "company": "Meta",
+    "access": "Llama 3.1 Community",
+    "desc": "Llama 3.1 405B Instruct FP8 is a open-weight LLM from Meta. Meta's Llama family, a widely used open model line for local deployment, fine-tuning, and general instruction following. The 'Instruct' label indicates tuning for instruction following and assistant-style prompting. Access model: Llama 3.1 Community."
+  },
+  {
+    "rank": 174,
+    "name": "Olmo 3.1 32B Instruct",
+    "company": "Ai2",
+    "access": "Apache 2.0",
+    "desc": "Olmo 3.1 32B Instruct is a open-weight LLM from Ai2. Ai2's OLMo family, an open research model line for instruction following and reasoning experiments. The 'Instruct' label indicates tuning for instruction following and assistant-style prompting. Access model: Apache 2.0."
+  },
+  {
+    "rank": 175,
+    "name": "01.AI Yi Lightning",
+    "company": "01 AI",
+    "access": "Proprietary",
+    "desc": "01.AI Yi Lightning is a general-purpose LLM from 01 AI. 01.AI's Yi family for general chat and open deployment. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: Proprietary."
+  },
+  {
+    "rank": 176,
+    "name": "Llama 3.3 Nemotron 49B Super V1",
+    "company": "Nvidia",
+    "access": "Nvidia",
+    "desc": "Llama 3.3 Nemotron 49B Super V1 is a open-weight LLM from Nvidia. NVIDIA's Nemotron line, typically optimized for enterprise inference, tool use, and strong open-model deployment. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: Nvidia. AI War Room, 271-model catalogue Page 15"
+  },
+  {
+    "rank": 177,
+    "name": "Qwen3 30B A3B",
+    "company": "Alibaba",
+    "access": "Apache 2.0",
+    "desc": "Qwen3 30B A3B is a general-purpose LLM from Alibaba. Alibaba's Qwen model family for general chat, reasoning, and multilingual developer workloads. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: Apache 2.0."
+  },
+  {
+    "rank": 178,
+    "name": "Molmo 2 8B",
+    "company": "Ai2",
+    "access": "Apache 2.0",
+    "desc": "Molmo 2 8B is a vision-language model from Ai2. Ai2's Molmo line, built as a multimodal or perception-oriented open model for vision-language tasks. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: Apache 2.0."
+  },
+  {
+    "rank": 179,
+    "name": "Llama 4 Maverick 17B 128E Instruct",
+    "company": "Meta",
+    "access": "Llama 4",
+    "desc": "Llama 4 Maverick 17B 128E Instruct is a open-weight LLM from Meta. Meta's Llama family, a widely used open model line for local deployment, fine-tuning, and general instruction following. The 'Instruct' label indicates tuning for instruction following and assistant-style prompting. Access model: Llama"
+  },
+  {
+    "rank": 180,
+    "name": "Tencent Hunyuan Large 2025-02-10",
+    "company": "Tencent",
+    "access": "Proprietary",
+    "desc": "Tencent Hunyuan Large 2025-02-10 is a general-purpose LLM from Tencent. Tencent's Hunyuan family, a proprietary model line for general assistant use, reasoning, and enterprise applications. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: Proprietary."
+  },
+  {
+    "rank": 181,
+    "name": "GPT 4 Turbo 2024-04-09",
+    "company": "OpenAI",
+    "access": "Proprietary",
+    "desc": "GPT 4 Turbo 2024-04-09 is a general-purpose LLM from OpenAI. An OpenAI general model line used for chat, coding, analysis, and assistant-style tasks. Its naming points to faster responses and interactive production use. Access model: Proprietary."
+  },
+  {
+    "rank": 182,
+    "name": "DeepSeek V2.5 1210",
+    "company": "DeepSeek",
+    "access": "DeepSeek",
+    "desc": "DeepSeek V2.5 1210 is a general-purpose LLM from DeepSeek. DeepSeek's general model family for strong open-weight chat, reasoning, and coding performance. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: DeepSeek."
+  },
+  {
+    "rank": 183,
+    "name": "Gemini 1.5 Pro 001",
+    "company": "Google",
+    "access": "Proprietary",
+    "desc": "Gemini 1.5 Pro 001 is a multimodal LLM from Google. Google's high-end Gemini tier built for stronger multimodal reasoning, longer-context work, and more demanding problem solving. The 'Pro' label suggests a higher-capability tier within the same family. Access model: Proprietary."
+  },
+  {
+    "rank": 184,
+    "name": "Claude 3.5 Haiku 20241022",
+    "company": "Anthropic",
+    "access": "Proprietary",
+    "desc": "Claude 3.5 Haiku 20241022 is a general-purpose LLM from Anthropic. Anthropic's lighter Claude line optimized for speed, low latency, and efficient general assistant work. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: Proprietary."
+  },
+  {
+    "rank": 185,
+    "name": "Llama 4 Scout 17B 16E Instruct",
+    "company": "Meta",
+    "access": "Llama",
+    "desc": "Llama 4 Scout 17B 16E Instruct is a open-weight LLM from Meta. Meta's Llama family, a widely used open model line for local deployment, fine-tuning, and general instruction following. The 'Instruct' label indicates tuning for instruction following and assistant-style prompting. Access model: Llama."
+  },
+  {
+    "rank": 186,
+    "name": "GPT 4.1 Nano 2025-04-14",
+    "company": "OpenAI",
+    "access": "Proprietary",
+    "desc": "GPT 4.1 Nano 2025-04-14 is a general-purpose LLM from OpenAI. An OpenAI general model line used for chat, coding, analysis, and assistant-style tasks. The 'Nano' label suggests a very small, highly efficient deployment tier. Access model: Proprietary."
+  },
+  {
+    "rank": 187,
+    "name": "Claude 3 Opus 20240229",
+    "company": "Anthropic",
+    "access": "Proprietary",
+    "desc": "Claude 3 Opus 20240229 is a general-purpose LLM from Anthropic. Anthropic's flagship Claude line aimed at the strongest general reasoning, writing, and coding tasks. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: Proprietary."
+  },
+  {
+    "rank": 188,
+    "name": "Ring Flash 2.0",
+    "company": "Ant Group",
+    "access": "MIT",
+    "desc": "Ring Flash 2.0 is a general-purpose LLM from Ant Group. Ant Group's Flash-family model line, built for lightweight chat and fast inference. The 'Flash' label suggests a faster, lower-latency configuration. Access model: MIT."
+  },
+  {
+    "rank": 189,
+    "name": "StepFun Step 1o Turbo 202506",
+    "company": "StepFun",
+    "access": "Proprietary",
+    "desc": "StepFun Step 1o Turbo 202506 is a general-purpose LLM from StepFun. StepFun's model family, spanning fast and larger instruction-tuned variants for general assistant use. Its naming points to faster responses and interactive production use. Access model: Proprietary. AI War Room, 271-model catalogue Page 16"
+  },
+  {
+    "rank": 190,
+    "name": "GLM 4 Plus",
+    "company": "Zhipu AI",
+    "access": "Proprietary",
+    "desc": "GLM 4 Plus is a general-purpose LLM from Zhipu AI. Z.ai / Zhipu's GLM family, a broad language-model line used for general chat, reasoning, and developer-facing applications. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: Proprietary."
+  },
+  {
+    "rank": 191,
+    "name": "Llama 3.3 70B Instruct",
+    "company": "Meta",
+    "access": "Llama 3.3",
+    "desc": "Llama 3.3 70B Instruct is a open-weight LLM from Meta. Meta's Llama family, a widely used open model line for local deployment, fine-tuning, and general instruction following. The 'Instruct' label indicates tuning for instruction following and assistant-style prompting. Access model: Llama 3.3."
+  },
+  {
+    "rank": 192,
+    "name": "Gemma 3n E4B IT",
+    "company": "Google",
+    "access": "Gemma",
+    "desc": "Gemma 3n E4B IT is a open-weight LLM from Google. Google's Gemma open model family, designed for local use, fine-tuning, and research-friendly deployment. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: Gemma."
+  },
+  {
+    "rank": 193,
+    "name": "Qwen Max 0919",
+    "company": "Alibaba",
+    "access": "Qwen",
+    "desc": "Qwen Max 0919 is a general-purpose LLM from Alibaba. Alibaba's Qwen model family for general chat, reasoning, and multilingual developer workloads. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: Qwen."
+  },
+  {
+    "rank": 194,
+    "name": "GPT OSS 20B",
+    "company": "OpenAI",
+    "access": "Apache 2.0",
+    "desc": "GPT OSS 20B is a open-weight LLM from OpenAI. An OpenAI open-weight model line intended for local deployment, research, or customized downstream use. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: Apache 2.0."
+  },
+  {
+    "rank": 195,
+    "name": "GPT 4o Mini 2024-07-18",
+    "company": "OpenAI",
+    "access": "Proprietary",
+    "desc": "GPT 4o Mini 2024-07-18 is a multimodal LLM from OpenAI. An OpenAI omni model line aimed at fast, general multimodal use across chat, coding, and assistant workflows. The 'Mini' label suggests a smaller and cheaper version of the parent model. Access model: Proprietary."
+  },
+  {
+    "rank": 196,
+    "name": "Nvidia Nemotron 3 Nano 30B A3B BF16",
+    "company": "Nvidia",
+    "access": "NVIDIA Open Model",
+    "desc": "Nvidia Nemotron 3 Nano 30B A3B BF16 is a open-weight LLM from Nvidia. NVIDIA's Nemotron line, typically optimized for enterprise inference, tool use, and strong open-model deployment. The 'Nano' label suggests a very small, highly efficient deployment tier. Access model: NVIDIA Open Model."
+  },
+  {
+    "rank": 197,
+    "name": "Qwen2.5 Plus 1127",
+    "company": "Alibaba",
+    "access": "Proprietary",
+    "desc": "Qwen2.5 Plus 1127 is a general-purpose LLM from Alibaba. Alibaba's Qwen model family for general chat, reasoning, and multilingual developer workloads. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: Proprietary."
+  },
+  {
+    "rank": 198,
+    "name": "Athene V2 Chat",
+    "company": "NexusFlow",
+    "access": "NexusFlow",
+    "desc": "Athene V2 Chat is a open-weight LLM from NexusFlow. NexusFlow's Athene line, an instruction-tuned chat family aimed at open deployment. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: NexusFlow."
+  },
+  {
+    "rank": 199,
+    "name": "Mistral Large 2407",
+    "company": "Mistral",
+    "access": "Mistral Research",
+    "desc": "Mistral Large 2407 is a general-purpose LLM from Mistral. Mistral's model family for assistant use, coding, and enterprise deployment, spanning open and proprietary tiers. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: Mistral Research."
+  },
+  {
+    "rank": 200,
+    "name": "GPT 4 0125 Preview",
+    "company": "OpenAI",
+    "access": "Proprietary",
+    "desc": "GPT 4 0125 Preview is a general-purpose LLM from OpenAI. An OpenAI general model line used for chat, coding, analysis, and assistant-style tasks. The naming indicates an experimental, preview, or beta snapshot rather than a final stable release. Access model: Proprietary."
+  },
+  {
+    "rank": 201,
+    "name": "GPT 4 1106 Preview",
+    "company": "OpenAI",
+    "access": "Proprietary",
+    "desc": "GPT 4 1106 Preview is a general-purpose LLM from OpenAI. An OpenAI general model line used for chat, coding, analysis, and assistant-style tasks. The naming indicates an experimental, preview, or beta snapshot rather than a final stable release. Access model: Proprietary."
+  },
+  {
+    "rank": 202,
+    "name": "Tencent Hunyuan Standard 2025-02-10",
+    "company": "Tencent",
+    "access": "Proprietary",
+    "desc": "Tencent Hunyuan Standard 2025-02-10 is a general-purpose LLM from Tencent. Tencent's Hunyuan family, a proprietary model line for general assistant use, reasoning, and enterprise applications. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: Proprietary."
+  },
+  {
+    "rank": 203,
+    "name": "Gemini 1.5 Flash 002",
+    "company": "Google",
+    "access": "Proprietary",
+    "desc": "Gemini 1.5 Flash 002 is a multimodal LLM from Google. Google's faster Gemini tier aimed at quick multimodal responses, lightweight tool use, and lower-cost production workloads. The 'Flash' label suggests a faster, lower-latency configuration. Access model: Proprietary. AI War Room, 271-model catalogue Page 17"
+  },
+  {
+    "rank": 204,
+    "name": "Grok 2 Mini 2024-08-13",
+    "company": "xAI",
+    "access": "Proprietary",
+    "desc": "Grok 2 Mini 2024-08-13 is a general-purpose LLM from xAI. xAI's Grok family, generally positioned as a fast general assistant and reasoning model line with web-style conversational behavior. The 'Mini' label suggests a smaller and cheaper version of the parent model. Access model: Proprietary."
+  },
+  {
+    "rank": 205,
+    "name": "DeepSeek V2.5",
+    "company": "DeepSeek",
+    "access": "DeepSeek",
+    "desc": "DeepSeek V2.5 is a general-purpose LLM from DeepSeek. DeepSeek's general model family for strong open-weight chat, reasoning, and coding performance. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: DeepSeek."
+  },
+  {
+    "rank": 206,
+    "name": "Mercury",
+    "company": "Inception AI",
+    "access": "Proprietary",
+    "desc": "Mercury is a general-purpose LLM from Inception AI. Inception AI's Mercury family, a proprietary general-purpose model line for assistant and reasoning use. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: Proprietary."
+  },
+  {
+    "rank": 207,
+    "name": "Athene 70B 0725",
+    "company": "NexusFlow",
+    "access": "CC-BY-NC-4.0",
+    "desc": "Athene 70B 0725 is a open-weight LLM from NexusFlow. NexusFlow's Athene line, an instruction-tuned chat family aimed at open deployment. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: CC-BY-NC-4.0."
+  },
+  {
+    "rank": 208,
+    "name": "Olmo 3 32B Think",
+    "company": "Ai2",
+    "access": "Apache 2.0",
+    "desc": "Olmo 3 32B Think is a open-weight LLM from Ai2. Ai2's OLMo family, an open research model line for instruction following and reasoning experiments. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: Apache 2.0."
+  },
+  {
+    "rank": 209,
+    "name": "Mistral Large 2411",
+    "company": "Mistral",
+    "access": "MRL",
+    "desc": "Mistral Large 2411 is a general-purpose LLM from Mistral. Mistral's model family for assistant use, coding, and enterprise deployment, spanning open and proprietary tiers. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: MRL."
+  },
+  {
+    "rank": 210,
+    "name": "Magistral Medium 2506",
+    "company": "Mistral",
+    "access": "Proprietary",
+    "desc": "Magistral Medium 2506 is a general-purpose LLM from Mistral. Mistral's model family for assistant use, coding, and enterprise deployment, spanning open and proprietary tiers. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: Proprietary."
+  },
+  {
+    "rank": 211,
+    "name": "Mistral Small 3.1 24B Instruct 2503",
+    "company": "Mistral",
+    "access": "Apache 2.0",
+    "desc": "Mistral Small 3.1 24B Instruct 2503 is a general-purpose LLM from Mistral. Mistral's model family for assistant use, coding, and enterprise deployment, spanning open and proprietary tiers. The 'Instruct' label indicates tuning for instruction following and assistant-style prompting. Access model: Apache 2.0."
+  },
+  {
+    "rank": 212,
+    "name": "Gemma 3 4B IT",
+    "company": "Google",
+    "access": "Gemma",
+    "desc": "Gemma 3 4B IT is a open-weight LLM from Google. Google's Gemma open model family, designed for local use, fine-tuning, and research-friendly deployment. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: Gemma."
+  },
+  {
+    "rank": 213,
+    "name": "Qwen2.5 72B Instruct",
+    "company": "Alibaba",
+    "access": "Qwen",
+    "desc": "Qwen2.5 72B Instruct is a general-purpose LLM from Alibaba. Alibaba's Qwen model family for general chat, reasoning, and multilingual developer workloads. The 'Instruct' label indicates tuning for instruction following and assistant-style prompting. Access model: Qwen."
+  },
+  {
+    "rank": 214,
+    "name": "Llama 3.1 Nemotron 70B Instruct",
+    "company": "Nvidia",
+    "access": "Llama 3.1",
+    "desc": "Llama 3.1 Nemotron 70B Instruct is a open-weight LLM from Nvidia. NVIDIA's Nemotron line, typically optimized for enterprise inference, tool use, and strong open-model deployment. The 'Instruct' label indicates tuning for instruction following and assistant-style prompting. Access model: Llama 3.1."
+  },
+  {
+    "rank": 215,
+    "name": "Tencent Hunyuan Large Vision",
+    "company": "Tencent",
+    "access": "Proprietary",
+    "desc": "Tencent Hunyuan Large Vision is a vision-language model from Tencent. Tencent's Hunyuan vision-enabled line for multimodal reasoning over text and images. It is intended for multimodal tasks that combine text with visual inputs. Access model: Proprietary."
+  },
+  {
+    "rank": 216,
+    "name": "Llama 3.1 70B Instruct",
+    "company": "Meta",
+    "access": "Llama 3.1 Community",
+    "desc": "Llama 3.1 70B Instruct is a open-weight LLM from Meta. Meta's Llama family, a widely used open model line for local deployment, fine-tuning, and general instruction following. The 'Instruct' label indicates tuning for instruction following and assistant-style prompting. Access model: Llama 3.1 Community."
+  },
+  {
+    "rank": 217,
+    "name": "Amazon Nova Pro V1.0",
+    "company": "Amazon",
+    "access": "Proprietary",
+    "desc": "Amazon Nova Pro V1.0 is a general-purpose LLM from Amazon. Amazon's Nova family, a proprietary model line for assistant use, production inference, and enterprise-facing AI applications. The 'Pro' label suggests a higher-capability tier within the same family. Access model: Proprietary. AI War Room, 271-model catalogue Page 18"
+  },
+  {
+    "rank": 218,
+    "name": "Jamba 1.5 Large",
+    "company": "AI21 Labs",
+    "access": "Jamba Open",
+    "desc": "Jamba 1.5 Large is a open-weight LLM from AI21 Labs. AI21's Jamba line, a hybrid architecture family aimed at efficient long-context and enterprise deployment. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: Jamba Open."
+  },
+  {
+    "rank": 219,
+    "name": "Gemma 2 27B IT",
+    "company": "Google",
+    "access": "Gemma license",
+    "desc": "Gemma 2 27B IT is a open-weight LLM from Google. Google's Gemma open model family, designed for local use, fine-tuning, and research-friendly deployment. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: Gemma license."
+  },
+  {
+    "rank": 220,
+    "name": "Reka Core 20240904",
+    "company": "Reka AI",
+    "access": "Proprietary",
+    "desc": "Reka Core 20240904 is a general-purpose LLM from Reka AI. Reka AI's model family for general assistant and multimodal product use. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: Proprietary."
+  },
+  {
+    "rank": 221,
+    "name": "IBM Granite H Small",
+    "company": "IBM",
+    "access": "Apache 2.0",
+    "desc": "IBM Granite H Small is a enterprise LLM from IBM. IBM's Granite family, designed for enterprise AI, structured business tasks, and deployable open models. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: Apache 2.0."
+  },
+  {
+    "rank": 222,
+    "name": "GPT 4 0314",
+    "company": "OpenAI",
+    "access": "Proprietary",
+    "desc": "GPT 4 0314 is a general-purpose LLM from OpenAI. An OpenAI general model line used for chat, coding, analysis, and assistant-style tasks. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: Proprietary."
+  },
+  {
+    "rank": 223,
+    "name": "Llama 3.1 Tulu 3 70B",
+    "company": "Ai2",
+    "access": "Llama 3.1",
+    "desc": "Llama 3.1 Tulu 3 70B is a open-weight LLM from Ai2. Meta's Llama family, a widely used open model line for local deployment, fine-tuning, and general instruction following. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: Llama 3.1."
+  },
+  {
+    "rank": 224,
+    "name": "Llama 3.1 Nemotron 51B Instruct",
+    "company": "Nvidia",
+    "access": "Llama 3.1",
+    "desc": "Llama 3.1 Nemotron 51B Instruct is a open-weight LLM from Nvidia. NVIDIA's Nemotron line, typically optimized for enterprise inference, tool use, and strong open-model deployment. The 'Instruct' label indicates tuning for instruction following and assistant-style prompting. Access model: Llama 3.1."
+  },
+  {
+    "rank": 225,
+    "name": "Gemini 1.5 Flash 001",
+    "company": "Google",
+    "access": "Proprietary",
+    "desc": "Gemini 1.5 Flash 001 is a multimodal LLM from Google. Google's faster Gemini tier aimed at quick multimodal responses, lightweight tool use, and lower-cost production workloads. The 'Flash' label suggests a faster, lower-latency configuration. Access model: Proprietary."
+  },
+  {
+    "rank": 226,
+    "name": "Olmo 3.1 32B Think",
+    "company": "Ai2",
+    "access": "Apache 2.0",
+    "desc": "Olmo 3.1 32B Think is a open-weight LLM from Ai2. Ai2's OLMo family, an open research model line for instruction following and reasoning experiments. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: Apache 2.0."
+  },
+  {
+    "rank": 227,
+    "name": "Claude 3 Sonnet 20240229",
+    "company": "Anthropic",
+    "access": "Proprietary",
+    "desc": "Claude 3 Sonnet 20240229 is a general-purpose LLM from Anthropic. Anthropic's balanced Claude line designed for strong everyday reasoning, writing, and coding with faster turnaround than Opus. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: Proprietary."
+  },
+  {
+    "rank": 228,
+    "name": "Gemma 2 9B IT SimPO",
+    "company": "Princeton",
+    "access": "MIT",
+    "desc": "Gemma 2 9B IT SimPO is a open-weight LLM from Princeton. Google's Gemma open model family, designed for local use, fine-tuning, and research-friendly deployment. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: MIT."
+  },
+  {
+    "rank": 229,
+    "name": "Nemotron 4 340B Instruct",
+    "company": "Nvidia",
+    "access": "NVIDIA Open Model",
+    "desc": "Nemotron 4 340B Instruct is a open-weight LLM from Nvidia. NVIDIA's Nemotron line, typically optimized for enterprise inference, tool use, and strong open-model deployment. The 'Instruct' label indicates tuning for instruction following and assistant-style prompting. Access model: NVIDIA Open Model."
+  },
+  {
+    "rank": 230,
+    "name": "Cohere Command R Plus 08-2024",
+    "company": "Cohere",
+    "access": "CC-BY-NC-4.0",
+    "desc": "Cohere Command R Plus 08-2024 is a enterprise LLM from Cohere. Cohere's Command family, designed for enterprise chat, retrieval-augmented workflows, and business applications. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: CC-BY-NC-4.0."
+  },
+  {
+    "rank": 231,
+    "name": "Llama 3 70B Instruct",
+    "company": "Meta",
+    "access": "Llama 3 Community",
+    "desc": "Llama 3 70B Instruct is a open-weight LLM from Meta. Meta's Llama family, a widely used open model line for local deployment, fine-tuning, and general instruction following. The 'Instruct' label indicates tuning for instruction following and assistant-style prompting. Access model: Llama 3 Community. AI War Room, 271-model catalogue Page 19"
+  },
+  {
+    "rank": 232,
+    "name": "GPT 4 0613",
+    "company": "OpenAI",
+    "access": "Proprietary",
+    "desc": "GPT 4 0613 is a general-purpose LLM from OpenAI. An OpenAI general model line used for chat, coding, analysis, and assistant-style tasks. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: Proprietary."
+  },
+  {
+    "rank": 233,
+    "name": "Mistral Small 24B Instruct 2501",
+    "company": "Mistral",
+    "access": "Apache 2.0",
+    "desc": "Mistral Small 24B Instruct 2501 is a general-purpose LLM from Mistral. Mistral's model family for assistant use, coding, and enterprise deployment, spanning open and proprietary tiers. The 'Instruct' label indicates tuning for instruction following and assistant-style prompting. Access model: Apache 2.0."
+  },
+  {
+    "rank": 234,
+    "name": "GLM 4 0520",
+    "company": "Zhipu AI",
+    "access": "Proprietary",
+    "desc": "GLM 4 0520 is a general-purpose LLM from Zhipu AI. Z.ai / Zhipu's GLM family, a broad language-model line used for general chat, reasoning, and developer-facing applications. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: Proprietary."
+  },
+  {
+    "rank": 235,
+    "name": "Reka Flash 20240904",
+    "company": "Reka AI",
+    "access": "Proprietary",
+    "desc": "Reka Flash 20240904 is a general-purpose LLM from Reka AI. Reka AI's model family for general assistant and multimodal product use. The 'Flash' label suggests a faster, lower-latency configuration. Access model: Proprietary."
+  },
+  {
+    "rank": 236,
+    "name": "Qwen2.5 Coder 32B Instruct",
+    "company": "Alibaba",
+    "access": "Apache 2.0",
+    "desc": "Qwen2.5 Coder 32B Instruct is a coding LLM from Alibaba. Alibaba's Qwen coder-oriented model line tuned for software engineering, code generation, and repository-style tasks. It is explicitly aimed at coding and software-engineering workloads. Access model: Apache 2.0."
+  },
+  {
+    "rank": 237,
+    "name": "Cohere C4AI Aya Expanse 32B",
+    "company": "Cohere",
+    "access": "CC-BY-NC-4.0",
+    "desc": "Cohere C4AI Aya Expanse 32B is a multilingual LLM from Cohere. Cohere's Aya line, built for multilingual instruction following and broad cross-language usefulness. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: CC-BY-NC-4.0."
+  },
+  {
+    "rank": 238,
+    "name": "Gemma 2 9B IT",
+    "company": "Google",
+    "access": "Gemma license",
+    "desc": "Gemma 2 9B IT is a open-weight LLM from Google. Google's Gemma open model family, designed for local use, fine-tuning, and research-friendly deployment. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: Gemma license."
+  },
+  {
+    "rank": 239,
+    "name": "DeepSeek Coder V2",
+    "company": "DeepSeek",
+    "access": "DeepSeek License",
+    "desc": "DeepSeek Coder V2 is a coding LLM from DeepSeek. DeepSeek's coding-specialized model line for programming help, code generation, and technical problem solving. It is explicitly aimed at coding and software-engineering workloads. Access model: DeepSeek License."
+  },
+  {
+    "rank": 240,
+    "name": "Qwen2 72B Instruct",
+    "company": "Alibaba",
+    "access": "Qianwen LICENSE",
+    "desc": "Qwen2 72B Instruct is a general-purpose LLM from Alibaba. Alibaba's Qwen model family for general chat, reasoning, and multilingual developer workloads. The 'Instruct' label indicates tuning for instruction following and assistant-style prompting. Access model: Qianwen LICENSE."
+  },
+  {
+    "rank": 241,
+    "name": "Cohere Command R Plus",
+    "company": "Cohere",
+    "access": "CC-BY-NC-4.0",
+    "desc": "Cohere Command R Plus is a enterprise LLM from Cohere. Cohere's Command family, designed for enterprise chat, retrieval-augmented workflows, and business applications. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: CC-BY-NC-4.0."
+  },
+  {
+    "rank": 242,
+    "name": "Claude 3 Haiku 20240307",
+    "company": "Anthropic",
+    "access": "Proprietary",
+    "desc": "Claude 3 Haiku 20240307 is a general-purpose LLM from Anthropic. Anthropic's lighter Claude line optimized for speed, low latency, and efficient general assistant work. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: Proprietary."
+  },
+  {
+    "rank": 243,
+    "name": "Amazon Nova Lite V1.0",
+    "company": "Amazon",
+    "access": "Proprietary",
+    "desc": "Amazon Nova Lite V1.0 is a general-purpose LLM from Amazon. Amazon's Nova family, a proprietary model line for assistant use, production inference, and enterprise-facing AI applications. The 'Lite' label suggests a lighter and more cost-efficient configuration. Access model: Proprietary."
+  },
+  {
+    "rank": 244,
+    "name": "Gemini 1.5 Flash 8B 001",
+    "company": "Google",
+    "access": "Proprietary",
+    "desc": "Gemini 1.5 Flash 8B 001 is a multimodal LLM from Google. Google's faster Gemini tier aimed at quick multimodal responses, lightweight tool use, and lower-cost production workloads. The 'Flash' label suggests a faster, lower-latency configuration. Access model: Proprietary."
+  },
+  {
+    "rank": 245,
+    "name": "Phi 4",
+    "company": "Microsoft",
+    "access": "MIT",
+    "desc": "Phi 4 is a small LLM from Microsoft. Microsoft's Phi family, a compact open-weight model line for local inference and efficient deployment. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: MIT. AI War Room, 271-model catalogue Page 20"
+  },
+  {
+    "rank": 246,
+    "name": "Olmo 2 0325 32B Instruct",
+    "company": "Ai2",
+    "access": "Apache-2.0",
+    "desc": "Olmo 2 0325 32B Instruct is a open-weight LLM from Ai2. Ai2's OLMo family, an open research model line for instruction following and reasoning experiments. The 'Instruct' label indicates tuning for instruction following and assistant-style prompting. Access model: Apache-2.0."
+  },
+  {
+    "rank": 247,
+    "name": "Cohere Command R 08-2024",
+    "company": "Cohere",
+    "access": "CC-BY-NC-4.0",
+    "desc": "Cohere Command R 08-2024 is a enterprise LLM from Cohere. Cohere's Command family, designed for enterprise chat, retrieval-augmented workflows, and business applications. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: CC-BY-NC-4.0."
+  },
+  {
+    "rank": 248,
+    "name": "Mistral Large 2402",
+    "company": "Mistral",
+    "access": "Proprietary",
+    "desc": "Mistral Large 2402 is a general-purpose LLM from Mistral. Mistral's model family for assistant use, coding, and enterprise deployment, spanning open and proprietary tiers. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: Proprietary."
+  },
+  {
+    "rank": 249,
+    "name": "Amazon Nova Micro V1.0",
+    "company": "Amazon",
+    "access": "Proprietary",
+    "desc": "Amazon Nova Micro V1.0 is a general-purpose LLM from Amazon. Amazon's Nova family, a proprietary model line for assistant use, production inference, and enterprise-facing AI applications. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: Proprietary."
+  },
+  {
+    "rank": 250,
+    "name": "Jamba 1.5 Mini",
+    "company": "AI21 Labs",
+    "access": "Jamba Open",
+    "desc": "Jamba 1.5 Mini is a open-weight LLM from AI21 Labs. AI21's Jamba line, a hybrid architecture family aimed at efficient long-context and enterprise deployment. The 'Mini' label suggests a smaller and cheaper version of the parent model. Access model: Jamba Open."
+  },
+  {
+    "rank": 251,
+    "name": "Ministral 8B 2410",
+    "company": "Mistral",
+    "access": "MRL",
+    "desc": "Ministral 8B 2410 is a general-purpose LLM from Mistral. Mistral's model family for assistant use, coding, and enterprise deployment, spanning open and proprietary tiers. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: MRL."
+  },
+  {
+    "rank": 252,
+    "name": "Gemini Pro Dev API",
+    "company": "Google",
+    "access": "Proprietary",
+    "desc": "Gemini Pro Dev API is a multimodal LLM from Google. Google's high-end Gemini tier built for stronger multimodal reasoning, longer-context work, and more demanding problem solving. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: Proprietary."
+  },
+  {
+    "rank": 253,
+    "name": "Qwen1.5 110B Chat",
+    "company": "Alibaba",
+    "access": "Qianwen LICENSE",
+    "desc": "Qwen1.5 110B Chat is a general-purpose LLM from Alibaba. Alibaba's Qwen model family for general chat, reasoning, and multilingual developer workloads. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: Qianwen LICENSE."
+  },
+  {
+    "rank": 254,
+    "name": "Tencent Hunyuan Standard 256k",
+    "company": "Tencent",
+    "access": "Proprietary",
+    "desc": "Tencent Hunyuan Standard 256k is a general-purpose LLM from Tencent. Tencent's Hunyuan family, a proprietary model line for general assistant use, reasoning, and enterprise applications. The context window marker (256K) suggests support for longer prompts or documents. Access model: Proprietary."
+  },
+  {
+    "rank": 255,
+    "name": "Reka Flash 21B 20240226 Online",
+    "company": "Reka AI",
+    "access": "Proprietary",
+    "desc": "Reka Flash 21B 20240226 Online is a general-purpose LLM from Reka AI. Reka AI's model family for general assistant and multimodal product use. The 'Flash' label suggests a faster, lower-latency configuration. Access model: Proprietary."
+  },
+  {
+    "rank": 256,
+    "name": "Qwen1.5 72B Chat",
+    "company": "Alibaba",
+    "access": "Qianwen LICENSE",
+    "desc": "Qwen1.5 72B Chat is a general-purpose LLM from Alibaba. Alibaba's Qwen model family for general chat, reasoning, and multilingual developer workloads. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: Qianwen LICENSE."
+  },
+  {
+    "rank": 257,
+    "name": "Mixtral 8x22B Instruct V0.1",
+    "company": "Mistral",
+    "access": "Apache 2.0",
+    "desc": "Mixtral 8x22B Instruct V0.1 is a open-weight LLM from Mistral. Mistral's mixture-of-experts open model line aimed at strong open-weight instruction following and efficient scaling. The 'Instruct' label indicates tuning for instruction following and assistant-style prompting. Access model: Apache 2.0."
+  },
+  {
+    "rank": 258,
+    "name": "Cohere Command R",
+    "company": "Cohere",
+    "access": "CC-BY-NC-4.0",
+    "desc": "Cohere Command R is a enterprise LLM from Cohere. Cohere's Command family, designed for enterprise chat, retrieval-augmented workflows, and business applications. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: CC-BY-NC-4.0."
+  },
+  {
+    "rank": 259,
+    "name": "Reka Flash 21B 20240226",
+    "company": "Reka AI",
+    "access": "Proprietary",
+    "desc": "Reka Flash 21B 20240226 is a general-purpose LLM from Reka AI. Reka AI's model family for general assistant and multimodal product use. The 'Flash' label suggests a faster, lower-latency configuration. Access model: Proprietary. AI War Room, 271-model catalogue Page 21"
+  },
+  {
+    "rank": 260,
+    "name": "GPT 3.5 Turbo 0125",
+    "company": "OpenAI",
+    "access": "Proprietary",
+    "desc": "GPT 3.5 Turbo 0125 is a general-purpose LLM from OpenAI. An OpenAI general model line used for chat, coding, analysis, and assistant-style tasks. Its naming points to faster responses and interactive production use. Access model: Proprietary."
+  },
+  {
+    "rank": 261,
+    "name": "Llama 3 8B Instruct",
+    "company": "Meta",
+    "access": "Llama 3 Community",
+    "desc": "Llama 3 8B Instruct is a open-weight LLM from Meta. Meta's Llama family, a widely used open model line for local deployment, fine-tuning, and general instruction following. The 'Instruct' label indicates tuning for instruction following and assistant-style prompting. Access model: Llama 3 Community."
+  },
+  {
+    "rank": 262,
+    "name": "Cohere C4AI Aya Expanse 8B",
+    "company": "Cohere",
+    "access": "CC-BY-NC-4.0",
+    "desc": "Cohere C4AI Aya Expanse 8B is a multilingual LLM from Cohere. Cohere's Aya line, built for multilingual instruction following and broad cross-language usefulness. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: CC-BY-NC-4.0."
+  },
+  {
+    "rank": 263,
+    "name": "Mistral Medium",
+    "company": "Mistral",
+    "access": "Proprietary",
+    "desc": "Mistral Medium is a general-purpose LLM from Mistral. Mistral's model family for assistant use, coding, and enterprise deployment, spanning open and proprietary tiers. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: Proprietary."
+  },
+  {
+    "rank": 264,
+    "name": "Gemini Pro",
+    "company": "Google",
+    "access": "Proprietary",
+    "desc": "Gemini Pro is a multimodal LLM from Google. Google's high-end Gemini tier built for stronger multimodal reasoning, longer-context work, and more demanding problem solving. The 'Pro' label suggests a higher-capability tier within the same family. Access model: Proprietary."
+  },
+  {
+    "rank": 265,
+    "name": "Llama 3.1 Tulu 3 8B",
+    "company": "Ai2",
+    "access": "Llama 3.1",
+    "desc": "Llama 3.1 Tulu 3 8B is a open-weight LLM from Ai2. Meta's Llama family, a widely used open model line for local deployment, fine-tuning, and general instruction following. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: Llama 3.1."
+  },
+  {
+    "rank": 266,
+    "name": "01.AI Yi 1.5 34B Chat",
+    "company": "01 AI",
+    "access": "Apache-2.0",
+    "desc": "01.AI Yi 1.5 34B Chat is a general-purpose LLM from 01 AI. 01.AI's Yi family for general chat and open deployment. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: Apache-2.0."
+  },
+  {
+    "rank": 267,
+    "name": "Zephyr ORPO 141B A35B V0.1",
+    "company": "HuggingFace",
+    "access": "Apache 2.0",
+    "desc": "Zephyr ORPO 141B A35B V0.1 is a open-weight LLM from HuggingFace. Hugging Face's Zephyr line, an open instruction-tuned family for research and local experimentation. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: Apache 2.0."
+  },
+  {
+    "rank": 268,
+    "name": "Llama 3.1 8B Instruct",
+    "company": "Meta",
+    "access": "Llama 3.1 Community",
+    "desc": "Llama 3.1 8B Instruct is a open-weight LLM from Meta. Meta's Llama family, a widely used open model line for local deployment, fine-tuning, and general instruction following. The 'Instruct' label indicates tuning for instruction following and assistant-style prompting. Access model: Llama 3.1 Community."
+  },
+  {
+    "rank": 269,
+    "name": "Granite 3.1 8B Instruct",
+    "company": "IBM",
+    "access": "Apache 2.0",
+    "desc": "Granite 3.1 8B Instruct is a enterprise LLM from IBM. IBM's Granite family, designed for enterprise AI, structured business tasks, and deployable open models. The 'Instruct' label indicates tuning for instruction following and assistant-style prompting. Access model: Apache 2.0."
+  },
+  {
+    "rank": 270,
+    "name": "Qwen1.5 32B Chat",
+    "company": "Alibaba",
+    "access": "Qianwen LICENSE",
+    "desc": "Qwen1.5 32B Chat is a general-purpose LLM from Alibaba. Alibaba's Qwen model family for general chat, reasoning, and multilingual developer workloads. It is typically used for chat, analysis, coding, or automation depending on the product it is embedded in. Access model: Qianwen LICENSE."
+  },
+  {
+    "rank": 271,
+    "name": "GPT 3.5 Turbo 1106",
+    "company": "OpenAI",
+    "access": "Proprietary",
+    "desc": "GPT 3.5 Turbo 1106 is a general-purpose LLM from OpenAI. An OpenAI general model line used for chat, coding, analysis, and assistant-style tasks. Its naming points to faster responses and interactive production use. Access model: Proprietary."
+  }
+]

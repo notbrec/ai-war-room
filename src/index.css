@@ -46,7 +46,9 @@ html.dark {
 
 html {
   -webkit-text-size-adjust: 100%;
-  scroll-behavior: smooth;
+  /* scroll-behavior must stay auto — the JS inertia scroller (SmoothScroll)
+     owns the easing; CSS smooth would double-ease and feel rubbery. */
+  scroll-behavior: auto;
   color-scheme: light dark;
 }
 

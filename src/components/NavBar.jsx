@@ -59,8 +59,11 @@ export default function NavBar({ page, onNavigate, dark, onToggleTheme }) {
       backdropFilter: `saturate(180%) blur(${scrolled ? 28 : 20}px)`,
       WebkitBackdropFilter: `saturate(180%) blur(${scrolled ? 28 : 20}px)`,
       borderBottom: scrolled ? '0.5px solid var(--sep)' : '0.5px solid transparent',
+      boxShadow: scrolled
+        ? (dark ? '0 12px 32px rgba(0,0,0,0.35)' : '0 12px 32px rgba(0,0,0,0.06)')
+        : 'none',
       fontFamily: SF,
-      transition: `background 350ms ${EASE}, backdrop-filter 350ms ${EASE}, border-color 350ms ${EASE}`,
+      transition: `background 350ms ${EASE}, backdrop-filter 350ms ${EASE}, border-color 350ms ${EASE}, box-shadow 500ms ${EASE}`,
     }}>
       <div style={{
         maxWidth: 1100, margin: '0 auto', padding: '0 24px',

@@ -1,0 +1,376 @@
+/* ─── Theme tokens — graphite Bloomberg-grade ────────────────────────────── */
+:root {
+  --bg:          #F5F5F7;
+  --bg2:         #ECECEE;
+  /* Solid cards — no transparency, no glass blur */
+  --card:        #FFFFFF;
+  --card2:       #F5F5F7;
+  --text:        #0a0a0c;
+  --text2:       #2c2c2e;
+  --muted:       rgba(28,28,30,0.62);
+  --muted2:      rgba(28,28,30,0.40);
+  --sep:         rgba(28,28,30,0.10);
+  --sep2:        rgba(28,28,30,0.05);
+  --nav:         rgba(245,245,247,0.92);
+  --search:      rgba(28,28,30,0.06);
+  --hover:       rgba(0,0,0,0.035);
+  --pill:        rgba(28,28,30,0.06);
+  --pill-text:   rgba(28,28,30,0.78);
+  --shadow:      0 1px 0 rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.04);
+  --accent:      #CD5C4E;
+}
+
+html.dark {
+  /* Bloomberg-graphite: near-black backgrounds, SOLID cards, hairline borders */
+  --bg:          #07070a;
+  --bg2:         #0d0d10;
+  --card:        #15151a;
+  --card2:       #1d1d22;
+  --text:        #f5f5f7;
+  --text2:       #d2d2d7;
+  --muted:       rgba(245,245,247,0.62);
+  --muted2:      rgba(245,245,247,0.38);
+  --sep:         rgba(255,255,255,0.08);
+  --sep2:        rgba(255,255,255,0.04);
+  --nav:         rgba(7,7,10,0.92);
+  --search:      rgba(255,255,255,0.05);
+  --hover:       rgba(255,255,255,0.035);
+  --pill:        rgba(255,255,255,0.05);
+  --pill-text:   rgba(245,245,247,0.78);
+  --shadow:      0 1px 0 rgba(0,0,0,0.6), 0 12px 32px rgba(0,0,0,0.42);
+  --accent:      #CD5C4E;
+}
+
+/* ─── Reset ────────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* ─── Near-hard edges — war-room terminal aesthetic, just a hair of softening ── */
+*, *::before, *::after { border-radius: 2px !important; }
+/* keep genuinely circular things round (status dots, pulses, particles) */
+.aiwar-bg-particle, [data-round="1"] { border-radius: 50% !important; }
+
+html {
+  -webkit-text-size-adjust: 100%;
+  /* scroll-behavior must stay auto — the JS inertia scroller (SmoothScroll)
+     owns the easing; CSS smooth would double-ease and feel rubbery. */
+  scroll-behavior: auto;
+  color-scheme: light dark;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  overscroll-behavior: none;
+  scrollbar-gutter: stable;
+  font-feature-settings: 'ss01', 'cv11', 'liga';
+}
+
+input, button, select, textarea { font-family: inherit; }
+
+/* ─── Page enter animation (legacy, kept for class compat) ──────────────── */
+@keyframes pageEnter {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0);   }
+}
+.page-enter {
+  animation: pageEnter 0.20s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+  position: relative;
+  z-index: 2;
+}
+.aiwar-page-enter {
+  position: relative;
+  z-index: 2;
+}
+
+/* ─── Smooth theme transitions ─────────────────────────────────────────── */
+body, body * {
+  transition:
+    background-color 0.30s ease,
+    border-color     0.30s ease,
+    color            0.30s ease;
+}
+
+button, input, a, .page-enter, .aiwar-marquee-track, .aiwar-marquee-track * {
+  transition:
+    background-color 0.18s ease,
+    border-color     0.18s ease,
+    color            0.18s ease,
+    opacity          0.18s ease;
+}
+
+/* ─── Premium ambient background — single glow + particles + vignette ──── */
+.aiwar-bg {
+  position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden;
+}
+
+/* Very subtle static grain — adds texture without busy motion. Dark mode only. */
+html.dark .aiwar-bg::before {
+  content: '';
+  position: absolute; inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.92' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.04 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  mix-blend-mode: overlay;
+  opacity: 0.5;
+}
+
+/* No grid. The background is a sparse, drifting field of faint robot
+   silhouettes (the war-room "crowd") plus the signal dots/lines below. */
+.aiwar-bg-mark {
+  position: absolute;
+  color: var(--text);
+  opacity: var(--mark-op, 0.03);
+}
+html:not(.dark) .aiwar-bg-mark { opacity: calc(var(--mark-op, 0.03) * 0.6); }
+@media (max-width: 760px) { .aiwar-bg-mark.aiwar-bg-mark--hide-sm { display: none; } }
+
+/* Lab brand logos — monochrome SVG tinted via currentColor */
+.aiwar-lab-logo svg { width: 100%; height: 100%; display: block; fill: currentColor; }
+
+/* Floating particles — small dots that drift up + twinkle */
+.aiwar-bg-particles {
+  position: absolute; inset: 0;
+}
+.aiwar-bg-particle {
+  position: absolute;
+  border-radius: 50%;
+  background: #fff;
+  opacity: 0;
+  will-change: transform, opacity, box-shadow;
+  /* drift handles vertical motion; fire handles brightness "neuron pulse" */
+}
+html:not(.dark) .aiwar-bg-particle { background: #000; }
+
+@keyframes aiwar-particle-rise {
+  0%   { transform: translate3d(0, 30px, 0); }
+  100% { transform: translate3d(0, -120px, 0); }
+}
+
+/* Neuron fire — periodic rapid brighten + glow + scale pulse. Combined
+   with the rise keyframe via multi-animation so transform is owned by
+   rise and opacity/box-shadow are owned by fire. */
+@keyframes aiwar-particle-fire {
+  0%, 88% {
+    opacity: var(--p-max, 0.35);
+    box-shadow: 0 0 0 0 rgba(255,255,255,0);
+  }
+  91% {
+    opacity: 1;
+    box-shadow: 0 0 14px 2px rgba(255,255,255,0.65);
+  }
+  100% {
+    opacity: var(--p-max, 0.35);
+    box-shadow: 0 0 0 0 rgba(255,255,255,0);
+  }
+}
+html:not(.dark) .aiwar-bg-particle {
+  /* fire glow uses black on light bg */
+}
+
+/* Neural-net SVG layer — faint lines between near-by nodes, pulse opacity */
+.aiwar-bg-net {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  pointer-events: none;
+}
+.aiwar-bg-net-line {
+  stroke: rgba(255,255,255,0.08);
+  stroke-width: 0.06;
+  vector-effect: non-scaling-stroke;
+  opacity: 0;
+}
+html:not(.dark) .aiwar-bg-net-line { stroke: rgba(0,0,0,0.08); }
+
+@keyframes aiwar-net-pulse {
+  0%, 100% { opacity: 0; }
+  50%      { opacity: 0.85; }
+}
+
+/* ─── Scrollbar ─────────────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 0; background: transparent; }
+
+/* ─── Selection (neutral, not blue) ─────────────────────────────────────── */
+::selection { background: rgba(255,255,255,0.18); color: inherit; }
+html:not(.dark) ::selection { background: rgba(0,0,0,0.10); }
+
+/* ─── Focus ring (premium hairline, not chrome blue) ────────────────────── */
+:focus-visible {
+  outline: 1px solid var(--text);
+  outline-offset: 2px;
+}
+
+/* ─── Solid card surface helper ────────────────────────────────────────── */
+.aiwar-glass {
+  background: var(--card);
+  border: 0.5px solid var(--sep);
+}
+
+/* ─── NavBar-click glitch — random direction sweep + body shake ───────── */
+.aiwar-screen-glitch {
+  position: fixed; inset: 0;
+  pointer-events: none;
+  z-index: 9990;
+  overflow: hidden;
+  opacity: 0;
+}
+.aiwar-screen-glitch-active { opacity: 1; }
+
+/* Base line — sized + positioned per direction */
+.aiwar-screen-glitch-line {
+  position: absolute;
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    rgba(255,255,255,0.025) 40%,
+    rgba(255,255,255,0.07) 50%,
+    rgba(255,255,255,0.025) 60%,
+    transparent 100%
+  );
+  mix-blend-mode: screen;
+  will-change: transform, opacity;
+  opacity: 0;
+}
+html:not(.dark) .aiwar-screen-glitch-line {
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    rgba(0,0,0,0.02) 40%,
+    rgba(0,0,0,0.055) 50%,
+    rgba(0,0,0,0.02) 60%,
+    transparent 100%
+  );
+  mix-blend-mode: multiply;
+}
+
+/* ─── Direction: top (vertical, top → bottom) ──────────────────────────── */
+.aiwar-screen-glitch--top .aiwar-screen-glitch-line {
+  left: 0; right: 0; height: 220px; top: -220px;
+  animation: aiwar-scan-v 480ms cubic-bezier(0.20,0.50,0.20,1) forwards;
+}
+.aiwar-screen-glitch--top .aiwar-screen-glitch-line--lag {
+  height: 80px;
+  animation: aiwar-scan-v 560ms cubic-bezier(0.20,0.50,0.20,1) 60ms forwards;
+}
+@keyframes aiwar-scan-v {
+  0%   { top: -220px; opacity: 0;  }
+  15%  { opacity: 0.6; }
+  85%  { opacity: 0.6; }
+  100% { top: 100vh;  opacity: 0;  }
+}
+
+/* ─── Direction: left → right (horizontal) ────────────────────────────── */
+.aiwar-screen-glitch--left .aiwar-screen-glitch-line {
+  top: 0; bottom: 0; width: 220px; left: -220px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255,255,255,0.025) 40%,
+    rgba(255,255,255,0.07) 50%,
+    rgba(255,255,255,0.025) 60%,
+    transparent 100%
+  );
+  animation: aiwar-scan-h-r 480ms cubic-bezier(0.20,0.50,0.20,1) forwards;
+}
+html:not(.dark) .aiwar-screen-glitch--left .aiwar-screen-glitch-line {
+  background: linear-gradient(
+    90deg,
+    transparent 0%, rgba(0,0,0,0.03) 40%, rgba(0,0,0,0.09) 50%, rgba(0,0,0,0.03) 60%, transparent 100%
+  );
+}
+.aiwar-screen-glitch--left .aiwar-screen-glitch-line--lag {
+  width: 80px;
+  animation: aiwar-scan-h-r 560ms cubic-bezier(0.20,0.50,0.20,1) 60ms forwards;
+}
+@keyframes aiwar-scan-h-r {
+  0%   { left: -220px; opacity: 0;  }
+  15%  { opacity: 0.6; }
+  85%  { opacity: 0.6; }
+  100% { left: 100vw;  opacity: 0;  }
+}
+
+/* ─── Direction: right → left ─────────────────────────────────────────── */
+.aiwar-screen-glitch--right .aiwar-screen-glitch-line {
+  top: 0; bottom: 0; width: 220px; right: -220px;
+  background: linear-gradient(
+    270deg,
+    transparent 0%,
+    rgba(255,255,255,0.025) 40%,
+    rgba(255,255,255,0.07) 50%,
+    rgba(255,255,255,0.025) 60%,
+    transparent 100%
+  );
+  animation: aiwar-scan-h-l 480ms cubic-bezier(0.20,0.50,0.20,1) forwards;
+}
+html:not(.dark) .aiwar-screen-glitch--right .aiwar-screen-glitch-line {
+  background: linear-gradient(
+    270deg,
+    transparent 0%, rgba(0,0,0,0.03) 40%, rgba(0,0,0,0.09) 50%, rgba(0,0,0,0.03) 60%, transparent 100%
+  );
+}
+.aiwar-screen-glitch--right .aiwar-screen-glitch-line--lag {
+  width: 80px;
+  animation: aiwar-scan-h-l 560ms cubic-bezier(0.20,0.50,0.20,1) 60ms forwards;
+}
+@keyframes aiwar-scan-h-l {
+  0%   { right: -220px; opacity: 0;  }
+  15%  { opacity: 0.6; }
+  85%  { opacity: 0.6; }
+  100% { right: 100vw; opacity: 0;  }
+}
+
+/* ─── Diagonals — rotated band, translated across viewport ─────────────── */
+.aiwar-screen-glitch--diag-tl .aiwar-screen-glitch-line,
+.aiwar-screen-glitch--diag-tr .aiwar-screen-glitch-line,
+.aiwar-screen-glitch--diag-bl .aiwar-screen-glitch-line,
+.aiwar-screen-glitch--diag-br .aiwar-screen-glitch-line {
+  top: 50%; left: 50%;
+  width: 250vmax; height: 220px;
+  transform-origin: center;
+  will-change: transform, opacity;
+}
+.aiwar-screen-glitch--diag-tl .aiwar-screen-glitch-line {
+  animation: aiwar-scan-diag-tl 540ms cubic-bezier(0.20,0.50,0.20,1) forwards;
+}
+.aiwar-screen-glitch--diag-tr .aiwar-screen-glitch-line {
+  animation: aiwar-scan-diag-tr 540ms cubic-bezier(0.20,0.50,0.20,1) forwards;
+}
+.aiwar-screen-glitch--diag-bl .aiwar-screen-glitch-line {
+  animation: aiwar-scan-diag-bl 540ms cubic-bezier(0.20,0.50,0.20,1) forwards;
+}
+.aiwar-screen-glitch--diag-br .aiwar-screen-glitch-line {
+  animation: aiwar-scan-diag-br 540ms cubic-bezier(0.20,0.50,0.20,1) forwards;
+}
+
+@keyframes aiwar-scan-diag-tl {
+  0%   { transform: translate(-180%, -180%) rotate(40deg);  opacity: 0;  }
+  15%  { opacity: 0.55; }
+  85%  { opacity: 0.55; }
+  100% { transform: translate(80%, 80%)     rotate(40deg);  opacity: 0;  }
+}
+@keyframes aiwar-scan-diag-tr {
+  0%   { transform: translate(80%, -180%)   rotate(-40deg); opacity: 0;  }
+  15%  { opacity: 0.55; }
+  85%  { opacity: 0.55; }
+  100% { transform: translate(-180%, 80%)   rotate(-40deg); opacity: 0;  }
+}
+@keyframes aiwar-scan-diag-bl {
+  0%   { transform: translate(-180%, 80%)   rotate(-40deg); opacity: 0;  }
+  15%  { opacity: 0.55; }
+  85%  { opacity: 0.55; }
+  100% { transform: translate(80%, -180%)   rotate(-40deg); opacity: 0;  }
+}
+@keyframes aiwar-scan-diag-br {
+  0%   { transform: translate(80%, 80%)     rotate(40deg);  opacity: 0;  }
+  15%  { opacity: 0.55; }
+  85%  { opacity: 0.55; }
+  100% { transform: translate(-180%, -180%) rotate(40deg);  opacity: 0;  }
+}
+
+/* ─── Body shake — gentle wobble on glitch trigger ────────────────────── */
+@keyframes aiwar-body-shake {
+  0%   { transform: translate3d(0, 0, 0)        skew(0deg, 0deg); }
+  20%  { transform: translate3d(-1.2px, 0.6px, 0) skew(-0.12deg, 0.04deg); }
+  45%  { transform: translate3d(1.2px, -0.6px, 0) skew(0.12deg, -0.04deg); }
+  70%  { transform: translate3d(-0.6px, 0.3px, 0) skew(-0.06deg, 0.02deg); }
+  100% { transform: translate3d(0, 0, 0)        skew(0deg, 0deg); }
+}
+body.aiwar-screen-shake {
+  animation: aiwar-body-shake 240ms cubic-bezier(0.36,0.07,0.19,0.97);
+}
