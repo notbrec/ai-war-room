@@ -1,32 +1,48 @@
 import { useDark } from '../hooks/useTheme.js';
 import brawlRW from '../assets/robots/brawl_rw.png';
 import brawlRD from '../assets/robots/brawl_rd.png';
-import twoRW  from '../assets/robots/two_rw.png';
-import twoRD  from '../assets/robots/two_rd.png';
+import classicRed from '../assets/robots/classic_red.png';
+import classicRW  from '../assets/robots/classic_rw.png';
+import classicRD  from '../assets/robots/classic_rd.png';
+import earedRed   from '../assets/robots/eared_red.png';
+import earedRW    from '../assets/robots/eared_rw.png';
+import earedRD    from '../assets/robots/eared_rd.png';
 
 /* ─────────────────────────────────────────────────────────────────────────
-   <RobotAnim/> — the real animated robots (the moving GIF art), recoloured:
-   champion in red, challenger in white. The "white" robot would vanish on a
-   light surface, so we serve a dark-robot variant in light mode. Transparent
-   background, pixel-perfect scaling.
-     kind="brawl"  → the two combatants clashing (red vs white)
-     kind="two"    → the idle pair (red classic + white eared)
+   Animated robot art (the real moving pixel art), recoloured. The "white"
+   challenger would vanish on a light surface, so neutral robots serve a dark
+   variant in light mode. Transparent background, pixel-perfect scaling.
    ────────────────────────────────────────────────────────────────────── */
-const SRC = {
-  brawl: { dark: brawlRW, light: brawlRD },
-  two:   { dark: twoRW,   light: twoRD   },
-};
+
+/* <RobotAnim kind="brawl"/> — the two combatants clashing (red vs white). */
+const FIGHT = { brawl: { dark: brawlRW, light: brawlRD } };
 
 export function RobotAnim({ kind = 'brawl', width, alt = '', style, ...rest }) {
   const dark = useDark();
-  const src = SRC[kind][dark ? 'dark' : 'light'];
+  const src = FIGHT[kind][dark ? 'dark' : 'light'];
   return (
-    <img
-      src={src}
-      alt={alt}
+    <img src={src} alt={alt}
       style={{ width, height: 'auto', display: 'block', imageRendering: 'pixelated', ...style }}
-      {...rest}
-    />
+      {...rest} />
+  );
+}
+
+/* <RobotSingle robot="classic|eared" tone="red|neutral"/> — one robot.
+   tone="red" works on any background; tone="neutral" is white in dark mode
+   and ink in light mode so it always reads. */
+const SINGLE = {
+  classic: { red: classicRed, neutralDark: classicRW, neutralLight: classicRD },
+  eared:   { red: earedRed,   neutralDark: earedRW,   neutralLight: earedRD   },
+};
+
+export function RobotSingle({ robot = 'classic', tone = 'neutral', width, alt = '', style, ...rest }) {
+  const dark = useDark();
+  const set = SINGLE[robot] ?? SINGLE.classic;
+  const src = tone === 'red' ? set.red : (dark ? set.neutralDark : set.neutralLight);
+  return (
+    <img src={src} alt={alt}
+      style={{ width, height: 'auto', display: 'block', imageRendering: 'pixelated', ...style }}
+      {...rest} />
   );
 }
 
