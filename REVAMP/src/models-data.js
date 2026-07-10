@@ -233,13 +233,34 @@ export function normaliseModel(m, rank) {
   };
 }
 
+// Slugs of NEW fallback entries injected into live arena.ai data until arena
+// picks them up. Matched fuzzily against live names/slugs; inserted by ELO.
+const MANUAL_NEW_SLUGS = ['claude-opus-4-7', 'gpt-5.6-sol', 'gpt-5.6-terra', 'gpt-5.6-luna'];
+
+function mergeManualNew(models) {
+  const seen = new Set();
+  for (const m of models) {
+    for (const v of variants(m.name))       seen.add(v);
+    for (const v of variants(m.slug ?? '')) seen.add(v);
+  }
+  const missing = MODELS.filter(m => MANUAL_NEW_SLUGS.includes(m.slug) && !seen.has(descKey(m.slug)));
+  if (missing.length === 0) return models;
+  const out = [...models];
+  for (const add of missing) {
+    let i = out.findIndex(m => (m.elo ?? 0) < add.elo);
+    if (i < 0) i = out.length;
+    out.splice(i, 0, add);
+  }
+  return out.map((m, i) => ({ ...m, rank: i + 1 }));
+}
+
 /** Fetch live leaderboard from our Netlify Function */
 export async function fetchLeaderboard() {
   const res  = await fetch(LEADERBOARD_URL);
   if (!res.ok) throw new Error(`Leaderboard fetch failed: ${res.status}`);
   const json = await res.json();
   if (!Array.isArray(json.models)) throw new Error('Invalid leaderboard response');
-  return json.models.map((m, i) => normaliseModel(m, i + 1));
+  return mergeManualNew(json.models.map((m, i) => normaliseModel(m, i + 1)));
 }
 
 /** Fetch live pricing from OpenRouter */
@@ -265,9 +286,11 @@ export async function fetchOpenRouterMeta() {
 // Models marked NEW are manually added before arena.ai picks them up
 const RAW_FALLBACK = [
   ['claude-opus-4-7',                        'Anthropic', 1515, 0,      'Proprietary',  5,     25,    1000000 ], // NEW — estimated ELO
+  ['gpt-5.6-sol',                            'OpenAI',    1513, 0,      'Proprietary',  5,     30,    1050000 ], // NEW — estimated ELO (GA 2026-07-09)
   ['claude-opus-4-6-thinking',               'Anthropic', 1502, 17219,  'Proprietary',  5,     25,    1000000 ],
   ['claude-opus-4-6',                        'Anthropic', 1496, 18377,  'Proprietary',  5,     25,    1000000 ],
   ['muse-spark',                             'Meta',      1495, 4182,   'Proprietary',  null,  null,  null    ],
+  ['gpt-5.6-terra',                          'OpenAI',    1494, 0,      'Proprietary',  2.5,   15,    1050000 ], // NEW — estimated ELO (GA 2026-07-09)
   ['gemini-3.1-pro-preview',                 'Google',    1493, 21708,  'Proprietary',  2,     12,    1048576 ],
   ['gemini-3-pro',                           'Google',    1486, 41578,  'Proprietary',  2,     12,    1048576 ],
   ['grok-4.20-beta1',                        'xAI',       1485, 10884,  'Proprietary',  null,  null,  null    ],
@@ -277,6 +300,7 @@ const RAW_FALLBACK = [
   ['grok-4.20-multi-agent-beta-0309',        'xAI',       1476, 11079,  'Proprietary',  2,     6,     2000000 ],
   ['gemini-3-flash',                         'Google',    1474, 30922,  'Proprietary',  0.5,   3,     1048576 ],
   ['claude-opus-4-5-thinking',               'Anthropic', 1473, 37292,  'Proprietary',  5,     25,    200000  ],
+  ['gpt-5.6-luna',                           'OpenAI',    1472, 0,      'Proprietary',  1,     6,     1050000 ], // NEW — estimated ELO (GA 2026-07-09)
   ['glm-5.1',                                'Z.ai',      1471, 6274,   'MIT',          0.95,  3.15,  202800  ],
   ['grok-4.1-thinking',                      'xAI',       1470, 48508,  'Proprietary',  null,  null,  null    ],
   ['claude-opus-4-5',                        'Anthropic', 1469, 48318,  'Proprietary',  5,     25,    200000  ],
