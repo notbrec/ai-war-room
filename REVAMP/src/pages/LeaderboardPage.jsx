@@ -13,12 +13,76 @@ const SORTS = [
   { key: 'context',  label: 'Context'  },
 ];
 
-const CONTEXT_ORDER = { '2M':2000,'1.1M':1100,'1M':1000,'400K':400,'262K':262,
-  '256K':256,'204K':204,'202K':202,'200K':200,'196K':196,'163K':163,'131K':131,'128K':128 };
+/** "262K" / "1.1M" / "8K" → thousands of tokens. Parsed rather than looked up:
+ *  arena.ai emits a long tail of sizes (203K, 26K, 2.1M…) that no fixed table
+ *  covers, and unlisted values used to collapse to 0 and sink to the bottom. */
+function contextK(label) {
+  if (!label) return 0;
+  const m = String(label).trim().match(/^([\d.]+)\s*([MK])?$/i);
+  if (!m) return 0;
+  const n = parseFloat(m[1]);
+  if (!Number.isFinite(n)) return 0;
+  const unit = (m[2] ?? '').toUpperCase();
+  if (unit === 'M') return n * 1000;
+  if (unit === 'K') return n;
+  return n / 1000;
+}
 
-const ALL_ORGS = Object.entries(
-  MODELS.reduce((acc, m) => { acc[m.org] = (acc[m.org] || 0) + 1; return acc; }, {})
-).sort((a, b) => b[1] - a[1]).map(([org]) => org);
+/** Lab filter chips, built from whatever is on the board right now.
+ *  Derived from the hardcoded fallback previously, which meant labs that only
+ *  exist in live data (Nvidia, Tencent, Ai2, IBM…) had no chip at all. */
+function orgsFrom(models) {
+  const counts = models.reduce((acc, m) => { acc[m.org] = (acc[m.org] || 0) + 1; return acc; }, {});
+  return Object.entries(counts)
+    .filter(([org]) => org && org !== 'Unknown')
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+    .map(([org]) => org);
+}
+
+// ── OpenRouter price matching ─────────────────────────────────────────────
+// OpenRouter ids are "anthropic/claude-opus-4.5"; arena slugs are
+// "claude-opus-4-5-thinking". Reducing both to bare alphanumerics makes the
+// two comparable — the previous substring test ("claudeopus45" inside
+// "anthropic/claude-opus-4.5") never matched, so live pricing was dead.
+const PRICE_SUFFIXES = ['thinking', 'reasoning', 'preview', 'latest', 'chat', 'instruct', 'text', 'xhigh', 'high', 'low', 'beta', 'exp'];
+
+function priceKey(s) {
+  return String(s ?? '').toLowerCase().split('/').pop().split(':')[0].replace(/[^a-z0-9]/g, '');
+}
+
+/** Progressively shorter keys: full, then with trailing qualifiers removed. */
+function priceKeyVariants(s) {
+  const out = [];
+  let k = priceKey(s);
+  if (k) out.push(k);
+  for (let i = 0; i < 3; i++) {
+    const before = k;
+    for (const suf of PRICE_SUFFIXES) {
+      if (k.endsWith(suf) && k.length > suf.length + 3) { k = k.slice(0, -suf.length); break; }
+    }
+    if (k === before) break;
+    out.push(k);
+  }
+  return out;
+}
+
+function buildPriceIndex(meta) {
+  const index = {};
+  for (const [id, price] of Object.entries(meta ?? {})) {
+    if (price?.priceIn == null && price?.priceOut == null) continue;
+    for (const k of priceKeyVariants(id)) {
+      if (!index[k]) index[k] = price;
+    }
+  }
+  return index;
+}
+
+function lookupPrice(index, model) {
+  for (const k of priceKeyVariants(model.slug || model.name)) {
+    if (index[k]) return index[k];
+  }
+  return null;
+}
 
 function eloColor(v) {
   if (v >= 1490) return '#5E9E70';
@@ -48,7 +112,7 @@ function sortModels(models, sortKey) {
     if (sortKey === 'elo')     return b.elo - a.elo;
     if (sortKey === 'votes')   return b.votes - a.votes;
     if (sortKey === 'priceIn') return (a.priceIn ?? Infinity) - (b.priceIn ?? Infinity);
-    if (sortKey === 'context') return (CONTEXT_ORDER[b.context] ?? 0) - (CONTEXT_ORDER[a.context] ?? 0);
+    if (sortKey === 'context') return contextK(b.context) - contextK(a.context);
     return 0;
   });
 }
@@ -101,8 +165,12 @@ export default function LeaderboardPage({ liveModels, onNavigate }) {
   const [filterOpen, setFilterOpen]       = useState(false);
   const [filterThinking, setFilterThinking] = useState(false);
   const [filterOrg, setFilterOrg]         = useState('');
-  const [lastUpdated, setLastUpdated]     = useState(new Date());
+  const [lastUpdated, setLastUpdated]     = useState(null);
   const [loading, setLoading]             = useState(false);
+  // 'live' — fresh arena.ai data · 'stale' — server served its last good copy
+  // · 'offline' — the fetch failed and the table is the built-in snapshot.
+  const [dataState, setDataState]         = useState('live');
+  const [pricingLive, setPricingLive]     = useState(false);
   const [, setTick]                       = useState(0);
   const [expandedSlug, setExpandedSlug]   = useState(null);
   const intervalRef                       = useRef(null);
@@ -111,17 +179,22 @@ export default function LeaderboardPage({ liveModels, onNavigate }) {
     setLoading(true);
     try {
       const [fetched, meta] = await Promise.all([fetchLeaderboard(), fetchOpenRouterMeta()]);
+      const index = buildPriceIndex(meta);
+      let matched = 0;
       const enriched = fetched.map(m => {
-        const key = Object.keys(meta).find(k => k.toLowerCase().includes(m.slug.toLowerCase().replace(/-/g, '')));
-        if (!key) return m;
-        const live = meta[key];
+        const live = lookupPrice(index, m);
+        if (!live) return m;
+        matched++;
         return { ...m, priceIn: live.priceIn ?? m.priceIn, priceOut: live.priceOut ?? m.priceOut };
       });
       setModels(enriched);
-      setLastUpdated(new Date());
+      setPricingLive(matched > 0);
+      setDataState(fetched.stale ? 'stale' : 'live');
+      setLastUpdated(fetched.fetchedAt ? new Date(fetched.fetchedAt) : new Date());
     } catch {
+      // Keep whatever is on screen; never re-stamp the timestamp, and say so.
       setModels(prev => prev.length > 0 ? prev : (liveModels ?? MODELS));
-      setLastUpdated(new Date());
+      setDataState('offline');
     } finally {
       setLoading(false);
     }
@@ -160,6 +233,19 @@ export default function LeaderboardPage({ liveModels, onNavigate }) {
   const totalVotes  = models.reduce((s, m) => s + m.votes, 0);
   const topElo      = models.length ? Math.max(...models.map(m => m.elo)) : 0;
   const openCount   = models.filter(m => m.isOpen).length;
+  const allOrgs     = orgsFrom(models);
+
+  // The status chip has to be able to say "this is not live", otherwise an
+  // outage shows a green pulse and "Just now" over the built-in snapshot.
+  const status = dataState === 'offline'
+    ? { color: '#CD5C4E', pulse: false, label: 'Offline — snapshot',
+        source: 'cached data', title: 'Could not reach arena.ai. Showing the last data this browser loaded.' }
+    : dataState === 'stale'
+      ? { color: '#C89150', pulse: false, label: lastUpdated ? `Cached · ${timeAgo(lastUpdated)}` : 'Cached',
+          source: 'arena.ai (cached)', title: 'arena.ai is unreachable. Serving the most recent successful fetch.' }
+      : { color: '#5E9E70', pulse: true, label: lastUpdated ? timeAgo(lastUpdated) : 'Live',
+          source: pricingLive ? 'arena.ai + OpenRouter' : 'arena.ai',
+          title: 'Live ELO from arena.ai human battles.' };
 
   const clearFilters = () => { setFilterOpen(false); setFilterThinking(false); setFilterOrg(''); setQuery(''); };
 
@@ -194,15 +280,17 @@ export default function LeaderboardPage({ liveModels, onNavigate }) {
             display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap',
             opacity: 0, animation: `aiwar-fade-up 800ms ${EASE} 160ms both`,
           }}>
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '5px 10px', borderRadius: 980, background: 'var(--card)', border: '0.5px solid var(--sep)' }}>
+            <div title={status.title} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '5px 10px', borderRadius: 980, background: 'var(--card)', border: '0.5px solid var(--sep)' }}>
               {loading
                 ? <span style={{ width: 6, height: 6, borderRadius: 3, background: '#C89150' }} />
-                : <LivePulse color="#5E9E70" size={6} />}
+                : status.pulse
+                  ? <LivePulse color={status.color} size={6} />
+                  : <span style={{ width: 6, height: 6, borderRadius: 3, background: status.color }} />}
               <span style={{ fontSize: 12, color: 'var(--text)', letterSpacing: '-0.005em', fontFamily: MONO, fontWeight: 500 }}>
-                {loading ? 'Syncing…' : timeAgo(lastUpdated)}
+                {loading ? 'Syncing…' : status.label}
               </span>
             </div>
-            <span style={{ fontSize: 12, color: 'var(--muted)', fontFamily: MONO }}>arena.ai + OpenRouter</span>
+            <span style={{ fontSize: 12, color: 'var(--muted)', fontFamily: MONO }}>{status.source}</span>
             <button onClick={loadData} disabled={loading}
               className="aiwar-press-btn"
               style={{
@@ -318,7 +406,7 @@ export default function LeaderboardPage({ liveModels, onNavigate }) {
               border: `0.5px solid ${!filterOrg ? 'var(--text)' : 'var(--sep)'}`, cursor: 'pointer',
               letterSpacing: '-0.005em',
             }}>All</button>
-          {ALL_ORGS.map(org => {
+          {allOrgs.map(org => {
             const cfg = ORG_CONFIG[org] ?? { color: '#8E8E93' };
             const on  = filterOrg === org;
             return (
@@ -700,7 +788,8 @@ export default function LeaderboardPage({ liveModels, onNavigate }) {
         {/* ── Footer ───────────────────────────────────────────────── */}
         <div style={{ marginTop: 14, display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingInline: 2, flexWrap: 'wrap', gap: 4 }}>
           <p style={{ fontSize: 11, color: 'var(--muted2)', letterSpacing: '-0.01em' }}>
-            ELO from arena.ai human battles · Pricing from OpenRouter
+            {models.length} models · ELO from arena.ai human battles
+            {pricingLive ? ' · Pricing from OpenRouter' : ' · Pricing from arena.ai'}
           </p>
           <p style={{ fontSize: 11, color: 'var(--muted2)' }}>{RELEASE}</p>
         </div>

@@ -10,10 +10,11 @@ export const LEADERBOARD_URL       = '/api/leaderboard';
 export const AUTO_REFRESH_MS       = 30 * 60 * 1000; // 30 min
 export const RELEASE               = 'AI-WAR-LIVE';
 
-// ── Stable count snapshot (avoids the 63 → 280 flash on first paint) ─────
-// Default shows "280+" until a real live count loads or is read from localStorage.
+// ── Stable count snapshot (avoids a low → real count flash on first paint) ─
+// Shows "350+" until a real live count loads or is read from localStorage.
+// arena.ai currently rates 378 models, so 350 stays true as the board grows.
 const LAST_COUNT_KEY    = 'aiwar-last-model-count';
-const DEFAULT_COUNT     = 280;
+const DEFAULT_COUNT     = 350;
 
 export function readModelCountSnapshot() {
   try {
@@ -143,7 +144,66 @@ export const ORG_CONFIG = {
   'Meituan':      { color: '#FFD100', bg: '#FFFCE6', bgDark: '#2E2800' },
   'Cohere':       { color: '#39594D', bg: '#E6F2EE', bgDark: '#0E2119' },
   'Inception AI': { color: '#34C759', bg: '#EDFAF2', bgDark: '#0C2918' },
+  // Labs that only appear once the full arena.ai board (378 models) loads —
+  // without an entry here they render colourless and look broken.
+  'Nvidia':       { color: '#76B900', bg: '#F1F9E6', bgDark: '#182B00' },
+  'Tencent':      { color: '#0052D9', bg: '#E6EEFB', bgDark: '#001838' },
+  'Ai2':          { color: '#F0529C', bg: '#FDECF4', bgDark: '#330F20' },
+  'IBM':          { color: '#0F62FE', bg: '#E7EFFF', bgDark: '#001141' },
+  'StepFun':      { color: '#7C4DFF', bg: '#F0EBFF', bgDark: '#1A0D3D' },
+  'Thinky':       { color: '#FF375F', bg: '#FFECF0', bgDark: '#330711' },
+  'Ant Group':    { color: '#1677FF', bg: '#E8F1FF', bgDark: '#001A3D' },
+  'Reka':         { color: '#FF6A3D', bg: '#FFF0EB', bgDark: '#2E1006' },
+  'Databricks':   { color: '#FF3621', bg: '#FFEDEA', bgDark: '#2E0A05' },
+  'LMSYS':        { color: '#6E56CF', bg: '#EFECFB', bgDark: '#150F33' },
+  '01.AI':        { color: '#00B389', bg: '#E6F8F3', bgDark: '#00291F' },
+  'NexusFlow':    { color: '#3B82F6', bg: '#EAF2FE', bgDark: '#0A1B38' },
+  'Hugging Face': { color: '#FFD21E', bg: '#FFFBE6', bgDark: '#2E2700' },
+  'Arcee AI':     { color: '#0EA5E9', bg: '#E6F6FE', bgDark: '#03222E' },
+  'AI21 Labs':    { color: '#E23E57', bg: '#FDECEF', bgDark: '#2E0A11' },
+  'Together AI':  { color: '#0F6FFF', bg: '#E7F0FF', bgDark: '#001838' },
+  'Stability AI': { color: '#8B5CF6', bg: '#F3EFFE', bgDark: '#1E1133' },
+  'Nous Research':{ color: '#64748B', bg: '#EEF1F5', bgDark: '#151A21' },
+  'Prime Intellect': { color: '#111111', bg: '#EFEFEF', bgDark: '#1C1C1E' },
+  'Snowflake':    { color: '#29B5E8', bg: '#E8F7FD', bgDark: '#04242E' },
+  'Upstage':      { color: '#8155FF', bg: '#F1ECFF', bgDark: '#170D33' },
+  'Nomic AI':     { color: '#3B82F6', bg: '#EAF2FE', bgDark: '#0A1B38' },
+  'OpenChat':     { color: '#22C55E', bg: '#E9FAEF', bgDark: '#062915' },
+  'Stanford':     { color: '#8C1515', bg: '#FBECEC', bgDark: '#2E0707' },
+  'Berkeley':     { color: '#003262', bg: '#E6EDF3', bgDark: '#00131F' },
+  'Princeton NLP':{ color: '#E77500', bg: '#FFF3E6', bgDark: '#2E1800' },
+  'InternLM':     { color: '#2563EB', bg: '#E8EFFE', bgDark: '#06122E' },
+  'TII':          { color: '#00A3A1', bg: '#E6F6F6', bgDark: '#002A29' },
+  'OpenAssistant':{ color: '#3A86FF', bg: '#E8F0FF', bgDark: '#061A38' },
 };
+
+// Licence strings arena.ai actually publishes, grouped by what they mean for
+// the user. Anything unlisted falls back to a neutral "Other" badge rather
+// than being silently mislabelled as proprietary.
+const OPEN_LICENSE_RE = /^(mit|modified mit|apache[\s-]?2\.0|apache|open source|openmdw|gemma|qwen|qianwen|deepseek|llama|jamba open|nvidia open|nexusflow|dbrx|yi license|tencent-hunyuan-community|minimax community|ai2 impact|falcon|mrl|mistral research|cc-by|non-?commercial|other)/i;
+
+// Licences with real usage restrictions — open weights, but not open season.
+const RESTRICTED_LICENSE_RE = /^(cc-by-nc|non-?commercial|ai2 impact|mistral research|mrl|yi license|falcon)/i;
+
+/** Short badge label for any licence string arena.ai returns. */
+export function licenseLabel(lic) {
+  const s = (lic ?? '').trim();
+  if (!s || /^proprietary$/i.test(s)) return 'Prop';
+  if (/^mit$/i.test(s))               return 'MIT';
+  if (/^modified mit$/i.test(s))      return 'Mod MIT';
+  if (/^apache/i.test(s))             return 'Apache';
+  if (/^llama/i.test(s))              return 'Llama';
+  if (/^gemma/i.test(s))              return 'Gemma';
+  if (/^(qwen|qianwen)/i.test(s))     return 'Qwen';
+  if (/^deepseek/i.test(s))           return 'DeepSeek';
+  if (/^nvidia/i.test(s))             return 'NVIDIA';
+  if (/^cc-by-nc/i.test(s))           return 'CC NC';
+  if (/^cc-by/i.test(s))              return 'CC BY';
+  if (/^non-?commercial/i.test(s))    return 'Non-comm';
+  if (/^openmdw/i.test(s))            return 'OpenMDW';
+  if (s.length <= 10) return s;
+  return s.split(/[\s-]/)[0].slice(0, 10);
+}
 
 export const LICENSE_CONFIG = {
   'Proprietary':   { label: 'Prop',   color: '#8E8E93', bg: 'rgba(142,142,147,0.12)' },
@@ -152,6 +212,16 @@ export const LICENSE_CONFIG = {
   'Modified MIT':  { label: 'Mod MIT',color: '#FF9500', bg: 'rgba(255,149,0,0.12)'   },
   'Open Source':   { label: 'Open',   color: '#34C759', bg: 'rgba(52,199,89,0.12)'   },
 };
+
+/** Badge styling for any licence, derived when it isn't in LICENSE_CONFIG. */
+export function licenseStyle(lic) {
+  const exact = LICENSE_CONFIG[lic];
+  if (exact) return exact;
+  const label = licenseLabel(lic);
+  if (RESTRICTED_LICENSE_RE.test(lic ?? '')) return { label, color: '#FF9500', bg: 'rgba(255,149,0,0.12)' };
+  if (OPEN_LICENSE_RE.test(lic ?? ''))       return { label, color: '#34C759', bg: 'rgba(52,199,89,0.12)' };
+  return { label, color: '#8E8E93', bg: 'rgba(142,142,147,0.12)' };
+}
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 function fmtVotes(n) {
@@ -207,16 +277,23 @@ function cleanName(raw, org) {
   return s.trim();
 }
 
+/** True when the weights are downloadable, whatever the licence's exact wording.
+ *  arena.ai publishes ~38 distinct licence strings; an exact-match whitelist
+ *  (the previous approach) marked most open models as proprietary. */
+export function isOpenWeights(lic) {
+  const s = (lic ?? '').trim();
+  if (!s || /^(proprietary|other|unknown)/i.test(s)) return false;
+  return true;
+}
+
 /** Transform arena.ai model object → our app model shape */
 export function normaliseModel(m, rank) {
-  const lic = (m.license ?? '').trim();
-  const isOpen = /^(MIT|Apache[\s-]?2\.0|Open Source|Modified MIT|Jamba Open|Nvidia Open|NVIDIA Open Model|Apache-2\.0)$/i.test(lic)
-    || /^Llama[\s-]?[34]/i.test(lic);
   const cleaned = cleanName(m.name, m.org);
   const name   = cleaned ? formatName(cleaned) : formatName(m.slug ?? '');
+  const slug   = (m.slug || '').trim() || String(rank ?? m.rank ?? '');
   return {
     rank:        rank ?? m.rank ?? 1,
-    slug:        m.slug ?? String(rank),
+    slug,
     name,
     org:         m.org  ?? 'Unknown',
     license:     m.license ?? 'Proprietary',
@@ -227,40 +304,34 @@ export function normaliseModel(m, rank) {
     priceIn:     m.priceIn  ?? null,
     priceOut:    m.priceOut ?? null,
     context:     m.context  ?? null,
-    isThinking:  /thinking/i.test(name),
-    isOpen,
+    url:         m.url ?? null,
+    isNew:       m.isNew ?? false,
+    // arena.ai names reasoning variants both "…-thinking" and "…-reasoning"
+    isThinking:  /thinking|reasoning/i.test(name),
+    isOpen:      isOpenWeights(m.license),
     initials:    initials(name),
   };
 }
 
-// Slugs of NEW fallback entries injected into live arena.ai data until arena
-// picks them up. Matched fuzzily against live names/slugs; inserted by ELO.
-const MANUAL_NEW_SLUGS = ['claude-opus-4-7', 'gpt-5.6-sol', 'gpt-5.6-terra', 'gpt-5.6-luna'];
+// Note: an earlier revision spliced hand-written entries (claude-opus-4-7,
+// gpt-5.6-*) into the live response with *estimated* ELOs and votes: 0. arena
+// now rates those models for real, so the injection produced duplicate rows
+// that outranked the genuine ones. A board that claims live arena ELO must
+// only contain models arena has actually rated — no manual entries.
 
-function mergeManualNew(models) {
-  const seen = new Set();
-  for (const m of models) {
-    for (const v of variants(m.name))       seen.add(v);
-    for (const v of variants(m.slug ?? '')) seen.add(v);
-  }
-  const missing = MODELS.filter(m => MANUAL_NEW_SLUGS.includes(m.slug) && !seen.has(descKey(m.slug)));
-  if (missing.length === 0) return models;
-  const out = [...models];
-  for (const add of missing) {
-    let i = out.findIndex(m => (m.elo ?? 0) < add.elo);
-    if (i < 0) i = out.length;
-    out.splice(i, 0, add);
-  }
-  return out.map((m, i) => ({ ...m, rank: i + 1 }));
-}
-
-/** Fetch live leaderboard from our Netlify Function */
+/** Fetch live leaderboard from our Netlify Function.
+ *  Returns { models, fetchedAt, stale } so the UI can be honest about age. */
 export async function fetchLeaderboard() {
   const res  = await fetch(LEADERBOARD_URL);
   if (!res.ok) throw new Error(`Leaderboard fetch failed: ${res.status}`);
   const json = await res.json();
-  if (!Array.isArray(json.models)) throw new Error('Invalid leaderboard response');
-  return mergeManualNew(json.models.map((m, i) => normaliseModel(m, i + 1)));
+  if (!Array.isArray(json.models) || json.models.length === 0) {
+    throw new Error('Invalid leaderboard response');
+  }
+  const models = json.models.map((m, i) => normaliseModel(m, i + 1));
+  models.fetchedAt = json.fetchedAt ?? null;
+  models.stale     = json.stale === true;
+  return models;
 }
 
 /** Fetch live pricing from OpenRouter */

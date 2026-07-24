@@ -230,7 +230,7 @@ export default function HomePage({ onNavigate, liveModels, countSnapshot }) {
   const orgs       = new Set(data.map(m => m.org)).size;
   const openCount  = data.filter(m => m.isOpen).length;
 
-  const snap = countSnapshot ?? { count: 280, exact: false };
+  const snap = countSnapshot ?? { count: 350, exact: false };
 
   // Lab leaderboard: avg ELO of each lab's top model
   const labStats = (() => {
@@ -603,7 +603,7 @@ export default function HomePage({ onNavigate, liveModels, countSnapshot }) {
                   letterSpacing: '-0.012em', margin: '0 auto 36px', maxWidth: 560,
                   lineHeight: 1.5,
                 }}>
-                  Sort, filter and compare {snap.count}+ models by ELO, price, context
+                  Sort, filter and compare {snap.exact ? snap.count : `${snap.count}+`} models by ELO, price, context
                   window, licence or lab. Pricing live every 30 minutes.
                 </p>
                 <Magnetic strength={0.18}>

@@ -58,7 +58,7 @@ export default function MethodologyPage({ liveModels, countSnapshot }) {
   const maxElo     = Math.max(...data.map(m => m.elo));
   const totalVotes = data.reduce((s, m) => s + m.votes, 0);
 
-  const snap          = countSnapshot ?? { count: 280, exact: false };
+  const snap          = countSnapshot ?? { count: 350, exact: false };
   const modelCount    = snap.count;
   const modelSuffix   = snap.exact ? '' : '+';
 
