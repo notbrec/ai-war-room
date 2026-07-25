@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { RobotMascot } from './Robot.jsx';
+import { useMobile } from '../hooks/useTheme.js';
 
 const SF = "-apple-system,'SF Pro Display','SF Pro Text',BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif";
 const EASE = 'cubic-bezier(0.16,1,0.3,1)';
@@ -50,6 +51,11 @@ function MoonIcon() {
 
 export default function NavBar({ page, onNavigate, dark, onToggleTheme }) {
   const scrolled = useScrolled(20);
+  /* Brand wordmark + five links + toggle is ~500px of content, so below
+     roughly 600px it pushed the page into horizontal scroll. The wordmark
+     collapses to the mascot and the links tighten up, which keeps every
+     destination reachable in one row rather than hiding them behind a menu. */
+  const mobile = useMobile();
   return (
     <div style={{
       position: 'sticky', top: 0, zIndex: 100,
@@ -66,7 +72,7 @@ export default function NavBar({ page, onNavigate, dark, onToggleTheme }) {
       transition: `background 350ms ${EASE}, backdrop-filter 350ms ${EASE}, border-color 350ms ${EASE}, box-shadow 500ms ${EASE}`,
     }}>
       <div style={{
-        maxWidth: 1100, margin: '0 auto', padding: '0 24px',
+        maxWidth: 1100, margin: '0 auto', padding: mobile ? '0 12px' : '0 24px',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         height: scrolled ? 44 : 52,
         transition: `height 350ms ${EASE}`,
@@ -78,14 +84,16 @@ export default function NavBar({ page, onNavigate, dark, onToggleTheme }) {
           background: 'none', border: 'none', cursor: 'pointer', padding: 0,
         }}>
           <RobotMascot variant="classic" size={22} color="var(--accent)" />
-          <span style={{ fontSize: 16, fontWeight: 700, letterSpacing: '-0.03em', color: 'var(--text)', whiteSpace: 'nowrap' }}>
-            AI WAR ROOM
-          </span>
+          {!mobile && (
+            <span style={{ fontSize: 16, fontWeight: 700, letterSpacing: '-0.03em', color: 'var(--text)', whiteSpace: 'nowrap' }}>
+              AI WAR ROOM
+            </span>
+          )}
         </button>
 
         {/* Right side: links + theme toggle */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <nav style={{ display: 'flex', gap: 2, marginRight: 6 }}>
+          <nav style={{ display: 'flex', gap: mobile ? 0 : 2, marginRight: mobile ? 2 : 6 }}>
             {LINKS.map(link => (
               <button
                 key={link.id}
@@ -93,11 +101,12 @@ export default function NavBar({ page, onNavigate, dark, onToggleTheme }) {
                 className="aiwar-nav-link"
                 data-active={page === link.id}
                 style={{
-                  height: 32, paddingInline: 12, borderRadius: 8,
+                  height: 32, paddingInline: mobile ? 6 : 12, borderRadius: 8,
                   background: 'none',
                   color: page === link.id ? 'var(--text)' : 'var(--muted)',
-                  fontSize: 14, fontWeight: page === link.id ? 600 : 500,
+                  fontSize: mobile ? 12.5 : 14, fontWeight: page === link.id ? 600 : 500,
                   border: 'none', cursor: 'pointer', letterSpacing: '-0.015em',
+                  whiteSpace: 'nowrap',
                   transition: `background 0.15s, color 0.15s`,
                 }}
                 onMouseEnter={e => { e.currentTarget.style.color = 'var(--text)'; }}
@@ -113,7 +122,8 @@ export default function NavBar({ page, onNavigate, dark, onToggleTheme }) {
             onClick={onToggleTheme}
             title={dark ? 'Switch to light mode' : 'Switch to dark mode'}
             style={{
-              width: 34, height: 34, borderRadius: 10,
+              width: mobile ? 30 : 34, height: mobile ? 30 : 34, borderRadius: 10,
+              flexShrink: 0,
               background: 'var(--pill)',
               border: 'none', cursor: 'pointer',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
