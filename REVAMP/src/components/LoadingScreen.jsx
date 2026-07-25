@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { MONO, SF } from './design.jsx';
-import { RobotAnim } from './RobotAnim.jsx';
+import FightArena from './FightArena.jsx';
 
 /* ─────────────────────────────────────────────────────────────────────────
    <LoadingScreen/> — the AI WAR ROOM intro.
@@ -81,7 +81,7 @@ export default function LoadingScreen({ onDone }) {
         overflow: 'hidden',
       }}
     >
-      <div style={{ position: 'relative', width: 'min(440px, 86vw)', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+      <div style={{ position: 'relative', width: 'min(620px, 90vw)', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
 
         {/* brand mark */}
         <div style={{
@@ -95,11 +95,12 @@ export default function LoadingScreen({ onDone }) {
           }}>AI WAR ROOM</span>
         </div>
 
-        {/* the clash — red champion vs white challenger (the moving art) */}
+        {/* the clash — red champion vs white challenger, the full exchange */}
         <div style={{
+          width: '100%',
           opacity: 0, animation: 'aiwar-fade-up 700ms cubic-bezier(0.16,1,0.3,1) 120ms both',
         }}>
-          <RobotAnim kind="brawl" width="clamp(300px, 84vw, 440px)" alt="Two robots fighting" />
+          <FightArena clip="clash" border={false} surface="var(--bg)" alt="Two robots fighting" />
         </div>
 
         {/* boot log line */}
