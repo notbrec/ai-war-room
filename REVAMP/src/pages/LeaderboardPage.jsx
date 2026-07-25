@@ -311,6 +311,7 @@ export default function LeaderboardPage({ liveModels, onNavigate }) {
                 models={[...models].sort((a, b) => b.elo - a.elo).slice(0, 2)}
                 onNavigate={onNavigate}
                 mobile={mobile}
+                variant="compact"
               />
             </div>
           </Reveal>

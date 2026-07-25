@@ -8,9 +8,19 @@ import FightArena from './FightArena.jsx';
    combatants in the war room. Makes the robots literal: rank #1 (the
    reigning champion, in accent) clashes with rank #2 (the challenger).
    Flat surfaces, hairline borders, no gradients.
+
+   Two sizes, because the card lives in columns of very different widths:
+
+     arena   — the hero slot, ~520px. The bout gets a full-bleed strip.
+     compact — the leaderboard, where the column is twice as wide. A
+               full-bleed strip there becomes a ~1050px billboard and a
+               short loop repeating at that size is impossible to ignore,
+               so the fight shrinks to a token between the two names and
+               the ranking stays the point of the page.
    ────────────────────────────────────────────────────────────────────── */
-export default function ChampionBout({ models, onNavigate, mobile }) {
+export default function ChampionBout({ models, onNavigate, mobile, variant = 'arena' }) {
   if (!models || models.length < 2) return null;
+  const compact = variant === 'compact';
   const champ = models[0];
   const chall = models[1];
   const champOrg = ORG_CONFIG[champ.org] ?? { color: 'var(--accent)' };
@@ -87,29 +97,46 @@ export default function ChampionBout({ models, onNavigate, mobile }) {
         }}>Δ {Math.round(gap)} ELO</span>
       </div>
 
-      {/* the arena — the combatants trading blows, edge to edge */}
-      <FightArena
-        clip="jab"
-        aspect={mobile ? '2 / 1' : '2.3 / 1'}
-        radius={0}
-        border={false}
-        alt={`${champ.name} versus ${chall.name}`}
-      />
+      {/* the arena — full-bleed only in the hero slot */}
+      {!compact && (
+        <FightArena
+          clip="jab"
+          aspect={mobile ? '2 / 1' : '2.3 / 1'}
+          radius={0}
+          border={false}
+          alt={`${champ.name} versus ${chall.name}`}
+        />
+      )}
 
-      {/* the tale of the tape */}
+      {/* the tale of the tape — compact puts the fight itself in the middle
+          slot, at a size where the loop reads as a detail rather than a
+          billboard; the wide layout has already shown it above, so that one
+          gets a plain VS */}
       <div style={{
         display: 'grid',
         gridTemplateColumns: '1fr auto 1fr',
         alignItems: 'center',
         gap: mobile ? 8 : 14,
         padding: mobile ? '16px 14px 18px' : '18px 20px 20px',
-        borderTop: '0.5px solid var(--sep)',
+        borderTop: compact ? 'none' : '0.5px solid var(--sep)',
       }}>
         <Fighter m={champ} org={champOrg} side="left" color="var(--accent)" />
-        <span style={{
-          fontFamily: MONO, fontSize: 11, fontWeight: 700, letterSpacing: '0.12em',
-          color: 'var(--muted2)', flexShrink: 0,
-        }}>VS</span>
+        {compact ? (
+          <FightArena
+            clip="jab"
+            aspect="16 / 9"
+            border={false}
+            /* melts into the card rather than sitting on it as a panel */
+            surface="var(--card)"
+            alt={`${champ.name} versus ${chall.name}`}
+            style={{ width: mobile ? 132 : 248, flexShrink: 0 }}
+          />
+        ) : (
+          <span style={{
+            fontFamily: MONO, fontSize: 11, fontWeight: 700, letterSpacing: '0.12em',
+            color: 'var(--muted2)', flexShrink: 0,
+          }}>VS</span>
+        )}
         <Fighter m={chall} org={challOrg} side="right" color="var(--muted)" />
       </div>
     </div>
