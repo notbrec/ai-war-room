@@ -103,13 +103,36 @@ button, input, a, .page-enter, .aiwar-marquee-track, .aiwar-marquee-track * {
   position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden;
 }
 
-/* Very subtle static grain — adds texture without busy motion. Dark mode only. */
-html.dark .aiwar-bg::before {
+/* Very subtle static grain — adds texture without busy motion.
+
+   The tile MUST be sized. An SVG with a viewBox but no intrinsic dimensions
+   resolves `background-size: auto` to the whole layer, so the noise field was
+   being stretched across the viewport — roughly 7x — which is what made the
+   background read as an upscaled thumbnail rather than grain. Sized to its
+   own viewBox it tiles at 1 noise cell per pixel, and stitchTiles keeps the
+   repeat seam invisible. */
+.aiwar-bg::before {
   content: '';
   position: absolute; inset: 0;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.92' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.04 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 128 128' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.06 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 128px 128px;
+  background-repeat: repeat;
   mix-blend-mode: overlay;
   opacity: 0.5;
+}
+
+/* On HiDPI the tile still rasterises at 2 device px per cell, so halve it —
+   one noise cell per device pixel is what reads as fine film grain instead
+   of soft mush. */
+@media (min-resolution: 2dppx) {
+  .aiwar-bg::before { background-size: 64px 64px; }
+}
+
+/* Light mode carries the same texture, dialled well back — the near-white
+   surface shows noise far more readily than the near-black one. */
+html:not(.dark) .aiwar-bg::before {
+  mix-blend-mode: multiply;
+  opacity: 0.28;
 }
 
 /* No grid. The background is a sparse, drifting field of faint robot
