@@ -6,6 +6,11 @@
 [build.environment]
   NODE_VERSION = "20"
 
+# The functions import shared/ (outside the functions directory); esbuild
+# bundles those relative imports into each function.
+[functions]
+  node_bundler = "esbuild"
+
 [dev]
   command    = "npm run dev"
   targetPort = 5173

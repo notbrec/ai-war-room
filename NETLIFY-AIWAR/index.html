@@ -3,8 +3,8 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="description" content="AI WAR ROOM ranks 350+ AI models by live arena ELO. Daily-updated leaderboard, plain-English guide, FAQ, blog, and pricing for OpenAI, Anthropic, Google, xAI, DeepSeek, Qwen, Kimi and more. aiwarroom.app" />
-    <meta name="keywords" content="AI leaderboard, LLM ranking, arena ELO, GPT-5, Claude Opus, Gemini 3, Grok 4, DeepSeek, Qwen, AI model comparison, AI pricing" />
+    <meta name="description" content="AI WAR ROOM: the AI command center. 350+ language models ranked by live arena ELO with intelligence index, pricing, context, speed — plus coding agents, image, video and voice arenas, provider comparison, benchmarks, Battle Mode, Speed Race and a Mission Planner. aiwarroom.app" />
+    <meta name="keywords" content="AI leaderboard, LLM ranking, arena ELO, GPT-5, Claude Opus, Gemini 3, Grok 4, DeepSeek, Qwen, AI model comparison, AI pricing, coding agents, SWE-bench, text-to-image ranking, text-to-video ranking, speech-to-text WER, inference providers, AI benchmarks" />
     <meta name="author" content="AI WAR ROOM" />
     <link rel="canonical" href="https://aiwarroom.app/" />
 
@@ -91,7 +91,8 @@
     <!-- Google AdSense -->
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3759864674720930"
      crossorigin="anonymous"></script>
-    <script type="module" crossorigin src="/assets/index-DpPyWnQ1.js"></script>
+    <script type="module" crossorigin src="/assets/index-2dQQpnA3.js"></script>
+    <link rel="modulepreload" crossorigin href="/assets/react-jVyfcstf.js">
     <link rel="stylesheet" crossorigin href="/assets/index-DVXys4eH.css">
   </head>
   <body>
@@ -118,7 +119,14 @@
 
         <h2>What you'll find here</h2>
         <ul>
-          <li><strong>Leaderboard</strong> — every active model ranked by ELO, with confidence intervals, votes, live pricing, context length, licence, and per-model descriptions.</li>
+          <li><strong>War Room</strong> — the command-center overview: strongest, fastest, cheapest and best-value models across language, code, image, video and voice, with 7-day movement.</li>
+          <li><strong>LLM Rankings</strong> — every active model ranked by arena ELO, with confidence intervals, votes, Intelligence Index, live input / output / cached pricing, context window, max output, speed and latency. Sort, filter, choose columns, or switch to interactive charts (intelligence vs price, ELO vs price, context vs price, Pareto frontier).</li>
+          <li><strong>Code Ops</strong> — coding agents and models on SWE-bench (Verified, Lite, Multimodal, Multilingual): resolved rate, cost per task, calls per task, with agent and model kept separate and a model-by-harness matrix.</li>
+          <li><strong>Image Arena &amp; Video Arena</strong> — text-to-image, image editing, text-to-video and image-to-video models ranked by quality ELO with price per image / per second, audio support and a side-by-side Battle Mode.</li>
+          <li><strong>Voice Comms</strong> — speech-to-text word error rate and throughput from the Open ASR Leaderboard; text-to-speech and speech-to-speech boards when a measurement source is configured.</li>
+          <li><strong>Provider War</strong> — the same model across inference providers: price, context, quantisation and uptime, with the cheapest and best-value host marked.</li>
+          <li><strong>Benchmarks</strong> — a capability matrix across human preference, composite indexes, coding, agentic, design, reasoning, math, long context, multimodal and speech, each with source and methodology.</li>
+          <li><strong>Battle Mode, Speed Race, Mission Planner</strong> — compare up to four models head to head, watch real measurements as a race, or get a mathematically derived recommendation for your workload.</li>
           <li><strong>The Guide</strong> — a plain-English walkthrough of how arena ELO works, the 2026 lab landscape, how to pick a model, and common pitfalls.</li>
           <li><strong>FAQ</strong> — honest answers to the questions we get most often about ratings, pricing, thinking variants, open-weight models, and arena mechanics.</li>
           <li><strong>Blog</strong> — long-form analysis on reading ELO leaderboards, open vs closed weights in 2026, and when thinking models help or hurt.</li>
@@ -139,16 +147,27 @@
 
         <h2>How the data is sourced</h2>
         <p>
-          ELO ratings come live from arena.ai, refreshed every 30 minutes. Pricing comes live from
-          OpenRouter, refreshed on the same cadence. Model descriptions are maintained by hand
-          from public lab announcements and model cards. AI WAR ROOM is not affiliated with any
-          AI lab, with arena.ai, or with OpenRouter — we surface their public data and add
-          editorial context.
+          ELO ratings come from arena.ai's public leaderboards (text, vision, search, image and
+          video arenas), refreshed every six hours. Pricing, context and provider data come from
+          OpenRouter's public catalogue. Coding results come from the SWE-bench leaderboard,
+          speech-recognition results from the Hugging Face Open ASR Leaderboard, and intelligence
+          indexes from Artificial Analysis (relayed via OpenRouter, or directly when its Data API
+          is configured). Every metric carries its source; values we cannot obtain from a permitted
+          source are shown as N/A, never estimated. Model descriptions are maintained by hand from
+          public lab announcements and model cards. AI WAR ROOM is not affiliated with any AI lab
+          or any of these data providers — we surface their public data and add editorial context.
         </p>
 
         <h2>Start exploring</h2>
         <p>
+          <a href="#/warroom">Enter the War Room</a> ·
           <a href="#leaderboard">Open the leaderboard</a> ·
+          <a href="#/coding">Code Ops</a> ·
+          <a href="#/images">Image Arena</a> ·
+          <a href="#/videos">Video Arena</a> ·
+          <a href="#/speech">Voice Comms</a> ·
+          <a href="#/providers">Provider War</a> ·
+          <a href="#/benchmarks">Benchmarks</a> ·
           <a href="#guide">Read the guide</a> ·
           <a href="#faq">Browse the FAQ</a> ·
           <a href="#/blog">Visit the blog</a> ·

@@ -42,13 +42,25 @@ export default function Footer({ onNavigate }) {
         </div>
         <div style={{
           display: 'grid',
-          gridTemplateColumns: mobile ? '1fr 1fr' : 'repeat(4, 1fr)',
+          gridTemplateColumns: mobile ? '1fr 1fr' : 'repeat(5, 1fr)',
           gap: mobile ? 24 : 32, marginBottom: 32,
         }}>
 
-          <Column title="Site">
-            <FooterLink onClick={() => onNavigate('home')}>Home</FooterLink>
-            <FooterLink onClick={() => onNavigate('leaderboard')}>Leaderboard</FooterLink>
+          <Column title="Command">
+            <FooterLink onClick={() => onNavigate('warroom')}>War Room</FooterLink>
+            <FooterLink onClick={() => onNavigate('leaderboard')}>LLM Rankings</FooterLink>
+            <FooterLink onClick={() => onNavigate('coding')}>Code Ops</FooterLink>
+            <FooterLink onClick={() => onNavigate('images')}>Image Arena</FooterLink>
+            <FooterLink onClick={() => onNavigate('videos')}>Video Arena</FooterLink>
+            <FooterLink onClick={() => onNavigate('speech')}>Voice Comms</FooterLink>
+            <FooterLink onClick={() => onNavigate('providers')}>Provider War</FooterLink>
+            <FooterLink onClick={() => onNavigate('benchmarks')}>Benchmarks</FooterLink>
+          </Column>
+
+          <Column title="Tools & reading">
+            <FooterLink onClick={() => onNavigate('compare')}>Battle Mode</FooterLink>
+            <FooterLink onClick={() => onNavigate('race')}>Speed Race</FooterLink>
+            <FooterLink onClick={() => onNavigate('planner')}>Mission Planner</FooterLink>
             <FooterLink onClick={() => onNavigate('guide')}>Guide</FooterLink>
             <FooterLink onClick={() => onNavigate('faq')}>FAQ</FooterLink>
             <FooterLink onClick={() => onNavigate('methodology')}>Methodology</FooterLink>
@@ -90,7 +102,7 @@ export default function Footer({ onNavigate }) {
           flexWrap: 'wrap', gap: 8,
         }}>
           <span>© {new Date().getFullYear()} AI WAR ROOM · aiwarroom.app</span>
-          <span>Data: arena.ai · OpenRouter · public sources</span>
+          <span>Data: arena.ai · OpenRouter · SWE-bench · Open ASR Leaderboard · Artificial Analysis (when configured)</span>
         </div>
       </div>
     </footer>

@@ -1,5 +1,6 @@
 import { MODELS, RELEASE } from '../models-data.js';
 import { useMobile } from '../hooks/useTheme.js';
+import MethodologySources from '../components/MethodologySources.jsx';
 import {
   SF, MONO, EASE,
   Reveal, AnimatedNumber, Eyebrow, GlobalMotion,
@@ -21,9 +22,9 @@ const ELO_TIERS = [
 ];
 
 const PRICING_ROWS = [
-  { label: 'Source',    value: 'OpenRouter API',   note: 'Live model pricing fetched every 30 minutes.' },
+  { label: 'Source',    value: 'OpenRouter API',   note: 'Live model pricing (input, output, cached) from the public catalogue; arena listing as fallback.' },
   { label: 'Unit',      value: '$ per 1M tokens',  note: 'Input price / output price shown separately.' },
-  { label: 'Refresh',   value: 'Every 30 minutes', note: 'Pricing updates silently in the background.' },
+  { label: 'Refresh',   value: 'Every 3 hours',    note: 'Server-side cache; the last good copy is served if the source is down.' },
 ];
 
 function StatCard({ value, label, mobile, format, suffix }) {
@@ -275,6 +276,8 @@ export default function MethodologyPage({ liveModels, countSnapshot }) {
             </div>
           </Reveal>
         </section>
+
+        <MethodologySources mobile={mobile} />
 
         {/* ── Footer ─────────────────────────────────────────────── */}
         <Reveal>

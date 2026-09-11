@@ -1,7 +1,9 @@
 # Serve the REVAMP build. The frontend is prebuilt and committed in
-# NETLIFY-AIWAR/, so there's no frontend build step here — Netlify just
-# publishes that folder. The leaderboard Netlify Function is still bundled
-# from netlify/functions (it self-registers the /api/leaderboard route).
+# NETLIFY-AIWAR/ (run `npm run deploy-prep` inside REVAMP/), so there is no
+# frontend build step here — Netlify just publishes that folder. The Netlify
+# Functions (/api/leaderboard, /api/warroom/:domain and the scheduled history
+# snapshot) are bundled from netlify/functions, which deploy-prep syncs from
+# REVAMP/netlify/functions together with the shared/ modules they import.
 [build]
   command   = "echo 'Serving prebuilt REVAMP (NETLIFY-AIWAR)'"
   publish   = "NETLIFY-AIWAR"
@@ -9,6 +11,9 @@
 
 [build.environment]
   NODE_VERSION = "20"
+
+[functions]
+  node_bundler = "esbuild"
 
 [dev]
   command    = "npm run dev"

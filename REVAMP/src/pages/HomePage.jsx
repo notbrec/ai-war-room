@@ -1,5 +1,7 @@
+import { lazy, Suspense } from 'react';
 import { MODELS, ORG_CONFIG, RELEASE } from '../models-data.js';
 import { useDark, useMobile } from '../hooks/useTheme.js';
+const WarRoomBoard = lazy(() => import('../components/WarRoomBoard.jsx'));
 import ChampionBout from '../components/ChampionBout.jsx';
 import { LabLogo } from '../components/LabLogo.jsx';
 import {
@@ -390,6 +392,27 @@ export default function HomePage({ onNavigate, liveModels, countSnapshot }) {
               />
             </Parallax>
           </div>
+        </section>
+
+        {/* ═════════════════════════════════════════════════════════
+           SITUATION BOARD — who is strongest / fastest / cheapest,
+           across every theatre. Full board lives at #/warroom.
+           ═════════════════════════════════════════════════════════ */}
+        <section style={{ marginBottom: mobile ? 56 : 96 }}>
+          <Reveal>
+            <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 20, paddingLeft: 2, flexWrap: 'wrap', gap: 10 }}>
+              <div>
+                <p style={{ fontSize: 11, fontWeight: 600, color: 'var(--muted2)', textTransform: 'uppercase', letterSpacing: '0.10em', margin: '0 0 8px', fontFamily: MONO }}>Situation board</p>
+                <h2 style={{ fontSize: mobile ? 28 : 38, fontWeight: 700, letterSpacing: '-0.04em', color: 'var(--text)', margin: 0, lineHeight: 1.05 }}>Who holds every front.</h2>
+              </div>
+              <button onClick={() => onNavigate('warroom')} className="aiwar-press-btn" style={{ background: 'transparent', border: '0.5px solid var(--sep)', cursor: 'pointer', color: 'var(--text)', fontSize: 12, fontWeight: 600, fontFamily: MONO, letterSpacing: '0.04em', height: 32, paddingInline: 14 }}>
+                FULL WAR ROOM →
+              </button>
+            </div>
+          </Reveal>
+          <Suspense fallback={<div style={{ display: 'grid', gridTemplateColumns: mobile ? '1fr 1fr' : 'repeat(4, 1fr)', gap: 10 }}>{Array.from({ length: mobile ? 6 : 8 }).map((_, i) => <Skeleton key={i} height={110} />)}</div>}>
+            <WarRoomBoard onNavigate={onNavigate} mobile={mobile} compact />
+          </Suspense>
         </section>
 
         {/* ═════════════════════════════════════════════════════════
