@@ -15,6 +15,8 @@ import { fmtMetric, fmtDate, isNum, NA } from '../../shared/metrics.js';
 import { AddToBattle } from '../domains/comparison/BattleControls.jsx';
 import { useBattle, addToBattle, removeFromBattle, clearBattle } from '../domains/comparison/battleStore.js';
 import MediaBattle from '../domains/comparison/MediaBattle.jsx';
+import BattleReplay from '../domains/comparison/BattleReplay.jsx';
+import { useReplays, useSamples, attachSamples } from '../data/samples.js';
 
 const ScatterChart = lazy(() => import('../components/charts/ScatterChart.jsx'));
 
@@ -44,7 +46,7 @@ export default function MediaArenaPage({ onNavigate, kind = 'image', slug }) {
   const media = useMedia();
   const status = useDomain('status');
   const [board, setBoard] = useState(K.boards[0].id);
-  const [view, setView] = useState('table');
+  const [view, setView] = useState(slug === 'replay' ? 'replay' : 'table');
   const [chart, setChart] = useState(CHARTS[kind][0].id);
   const [query, setQuery] = useState('');
   const [audio, setAudio] = useState(null);      // null | true | false
@@ -53,11 +55,13 @@ export default function MediaArenaPage({ onNavigate, kind = 'image', slug }) {
   const [sort, setSort] = useState({ key: 'elo', dir: 'desc' });
   const [expanded, setExpanded] = useState(null);
   const battle = useBattle();
+  const replays = useReplays();
+  const samples = useSamples();
 
   useEffect(() => { setBoard(K.boards[0].id); setChart(CHARTS[kind][0].id); setAudio(null); }, [kind]); // eslint-disable-line
-  useEffect(() => { if (slug) setExpanded(slug); }, [slug]);
+  useEffect(() => { if (slug === 'replay') setView('replay'); else if (slug) setExpanded(slug); }, [slug]);
 
-  const rows = media.boards?.[board] ?? [];
+  const rows = useMemo(() => attachSamples(media.boards?.[board] ?? [], samples.byModel, board), [media.boards, board, samples.byModel]);
   const q = query.trim().toLowerCase();
   const filtered = useMemo(() => rows.filter(r => {
     if (q && !`${r.name} ${r.org}`.toLowerCase().includes(q)) return false;
@@ -121,7 +125,7 @@ export default function MediaArenaPage({ onNavigate, kind = 'image', slug }) {
 
       <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
         <Segmented small value={board} onChange={setBoard} options={K.boards.map(b => ({ value: b.id, label: b.label, count: media.boards?.[b.id]?.length }))} />
-        <Segmented small value={view} onChange={setView} options={[{ value: 'table', label: 'Table' }, { value: 'charts', label: 'Charts' }, { value: 'battle', label: `Battle${roster.length ? ` ${roster.length}` : ''}` }]} />
+        <Segmented small value={view} onChange={setView} options={[{ value: 'table', label: 'Table' }, { value: 'charts', label: 'Charts' }, { value: 'battle', label: `Battle${roster.length ? ` ${roster.length}` : ''}` }, { value: 'replay', label: 'Replay', count: Object.entries(replays.boards).filter(([b]) => (kind === 'video' ? /video/ : /image/).test(b)).reduce((s, [, a]) => s + a.length, 0) || undefined }]} />
       </div>
 
       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center', marginBottom: 12 }}>
@@ -153,6 +157,8 @@ export default function MediaArenaPage({ onNavigate, kind = 'image', slug }) {
           )}
           <p style={{ fontSize: 11, color: 'var(--muted2)', fontFamily: MONO, marginTop: 10 }}>Quality ELO © arena.ai · listed prices from the arena board{aa ? ' · generation times © Artificial Analysis' : ' · generation time over time needs Artificial Analysis + history'}.</p>
         </Panel>
+      ) : view === 'replay' ? (
+        <BattleReplay boards={replays.boards} kind={kind} loading={replays.loading} license={replays.license} attribution={replays.attribution} mobile={mobile} initialBoard={board} />
       ) : (
         <MediaBattle kind={kind} roster={roster} candidates={rows} priceKey={priceKey} mobile={mobile} liveBattle={!!status.data?.capabilities?.liveBattle}
           onAdd={r => addToBattle({ id: r.id, kind, name: r.name, org: r.org, board })} onRemove={removeFromBattle} onClear={clearBattle} />

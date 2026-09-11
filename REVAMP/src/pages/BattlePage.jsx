@@ -9,6 +9,8 @@ import { ORG_CONFIG } from '../models-data.js';
 import { useLLMs, useMedia, useSpeech, useCoding, useDomain } from '../data/useDomain.js';
 import { useBattle, removeFromBattle, clearBattle, addToBattle, KIND_LABEL } from '../domains/comparison/battleStore.js';
 import MediaBattle from '../domains/comparison/MediaBattle.jsx';
+import AudioLanes from '../domains/comparison/AudioLanes.jsx';
+import { useSamples, attachSamples } from '../data/samples.js';
 import { PageFrame, PageTitle, Panel, Label, Btn, Chip, EmptyState, BadgeTag, SourceTag, Segmented, GREEN, GOLD, RED, BLUE, PURPLE } from '../components/ui.jsx';
 import { metric, fmtMetric, fmtDate, isNum, NA, normalise, extent } from '../../shared/metrics.js';
 
@@ -54,6 +56,7 @@ export default function BattlePage({ onNavigate }) {
   const llms = useLLMs(); const media = useMedia(); const speech = useSpeech(); const coding = useCoding(); const status = useDomain('status');
   const kind = battle.kind;
   const [pick, setPick] = useState('');
+  const samples = useSamples();
 
   const resolve = useMemo(() => {
     const mediaAll = Object.values(media.boards ?? {}).flat();
@@ -70,7 +73,7 @@ export default function BattlePage({ onNavigate }) {
     };
   }, [llms.models, media.boards, speech.stt, speech.tts, coding.boards]);
 
-  const contestants = battle.items.map(i => ({ item: i, rec: resolve(i) }));
+  const contestants = battle.items.map(i => ({ item: i, rec: resolve(i) })).map(c => ({ ...c, rec: c.rec ? attachSamples([c.rec], samples.byModel, c.item.board)[0] : null }));
   const loading = (kind === 'llm' && llms.loading && !llms.models.length) || ((kind === 'image' || kind === 'video') && media.loading && !Object.keys(media.boards).length) || (kind === 'stt' && speech.loading && !speech.stt.length) || (kind === 'coding' && coding.loading && !Object.keys(coding.boards).length);
   const recs = contestants.map(c => c.rec).filter(Boolean);
 
@@ -137,6 +140,10 @@ export default function BattlePage({ onNavigate }) {
               <MediaBattle kind={kind} roster={recs} candidates={Object.values(media.boards ?? {}).flat().filter(m => m.kind === kind)} priceKey={kind === 'image' ? 'pricePerImage' : 'pricePerSecond'} mobile={mobile} liveBattle={!!status.data?.capabilities?.liveBattle}
                 onAdd={r => addToBattle({ id: r.id, kind, name: r.name, org: r.org, board: r.board })} onRemove={removeFromBattle} onClear={clearBattle} />
             </div>
+          )}
+
+          {recs.length >= 2 && kind === 'tts' && (
+            <div style={{ marginBottom: 16 }}><AudioLanes rows={recs.map(r => ({ ...r, id: r.modelId ?? r.id }))} mobile={mobile} prompt={recs.find(r => r.samplePrompt)?.samplePrompt} /></div>
           )}
 
           {recs.length >= 2 ? (

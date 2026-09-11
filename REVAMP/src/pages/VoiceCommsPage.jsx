@@ -9,12 +9,15 @@ import DataTable, { useColumnSelection, ColumnPicker } from '../components/table
 import { PageFrame, PageTitle, DataStatus, Panel, Label, Chip, Segmented, StatTile, EmptyState, BadgeTag, Btn, Unavailable, GREEN, GOLD, BLUE, PURPLE } from '../components/ui.jsx';
 import { fmtMetric, isNum, NA, METRICS } from '../../shared/metrics.js';
 import { AddToBattle } from '../domains/comparison/BattleControls.jsx';
+import AudioLanes from '../domains/comparison/AudioLanes.jsx';
+import { useSamples, attachSamples } from '../data/samples.js';
 
 const ScatterChart = lazy(() => import('../components/charts/ScatterChart.jsx'));
 
 export default function VoiceCommsPage({ onNavigate, slug }) {
   const mobile = useMobile();
   const speech = useSpeech();
+  const samples = useSamples();
   const [cat, setCat] = useState(slug === 'tts' || slug === 's2s' ? slug : 'stt');
   const [view, setView] = useState('table');
   const [query, setQuery] = useState('');
@@ -113,7 +116,7 @@ export default function VoiceCommsPage({ onNavigate, slug }) {
       )}
 
       {cat === 'tts' && (
-        speech.tts.length ? <MediaLikeTable rows={speech.tts} kind="tts" mobile={mobile} /> : (
+        speech.tts.length ? (<><div style={{ marginBottom: 14 }}><AudioLanes rows={attachSamples(speech.tts.map(r => ({ ...r, id: r.modelId ?? r.id })), samples.byModel).slice(0, 12)} mobile={mobile} /></div><MediaLikeTable rows={speech.tts} kind="tts" mobile={mobile} /></>) : (
           <SchemaReady title="Text to speech" metrics={['ttsQuality', 'pricePer1mChars', 'ttft']} extra={['Characters / second', 'Provider', 'Language support']} note="Voice-quality ELO comes from the Artificial Analysis Speech Arena; this deployment has no AA key configured." />
         )
       )}

@@ -16,6 +16,9 @@ const root = path.resolve(revamp, '..');
 function rmrf(p) { fs.rmSync(p, { recursive: true, force: true }); }
 function copyDir(src, dst) { fs.mkdirSync(dst, { recursive: true }); fs.cpSync(src, dst, { recursive: true }); }
 
+console.log('› fetching replay archive');
+try { execSync('node scripts/fetch-replays.mjs', { cwd: revamp, stdio: 'inherit' }); } catch { console.warn('  (kept previous replays.json)'); }
+
 console.log('› building');
 execSync('npx vite build', { cwd: revamp, stdio: 'inherit' });
 

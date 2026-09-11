@@ -23,6 +23,7 @@ const GROUPS = [
   { id: 'tools', label: 'Tools', items: [
     { id: 'compare', label: 'Battle Mode',    hint: 'Up to four, head to head' },
     { id: 'race',    label: 'Speed Race',     hint: 'Real metrics, animated' },
+    { id: 'replay',  label: 'Battle Replay',  hint: 'Crowd-voted image & video duels', route: { type: 'videos', slug: 'replay' } },
     { id: 'planner', label: 'Mission Planner', hint: 'Recommendation engine' },
   ] },
   { id: 'guide', label: 'Guide' },
@@ -116,7 +117,7 @@ function Dropdown({ group, page, onNavigate }) {
           animation: `aiwar-pop-in 220ms ${EASE} both`, transformOrigin: 'top left',
         }}>
           {group.items.map(item => (
-            <button key={item.id} role="menuitem" onClick={() => { setOpen(false); onNavigate(item.id); }} onMouseEnter={() => item.prefetch && prefetch(item.prefetch)}
+            <button key={item.id} role="menuitem" onClick={() => { setOpen(false); onNavigate(item.route ?? item.id); }} onMouseEnter={() => item.prefetch && prefetch(item.prefetch)}
               style={{
                 display: 'flex', flexDirection: 'column', alignItems: 'flex-start', width: '100%', padding: '8px 10px', gap: 1,
                 background: page === item.id ? 'var(--hover)' : 'transparent', border: 'none', cursor: 'pointer', textAlign: 'left', fontFamily: SF,
@@ -208,7 +209,7 @@ export default function NavBar({ page, onNavigate, dark, onToggleTheme }) {
               <div key={sec.title}>
                 <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--muted2)', textTransform: 'uppercase', letterSpacing: '0.08em', fontFamily: MONO, marginBottom: 6, padding: '0 6px' }}>{sec.title}</div>
                 {sec.items.map(item => (
-                  <button key={item.id} onClick={() => onNavigate(item.id)} style={{
+                  <button key={item.id} onClick={() => onNavigate(item.route ?? item.id)} style={{
                     display: 'block', width: '100%', textAlign: 'left', padding: '8px 6px', background: page === item.id ? 'var(--hover)' : 'transparent',
                     border: 'none', cursor: 'pointer', fontFamily: SF, fontSize: 13.5, fontWeight: page === item.id ? 600 : 500, color: 'var(--text)', letterSpacing: '-0.02em',
                   }}>{item.label}</button>

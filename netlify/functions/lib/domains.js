@@ -9,6 +9,7 @@ import { fetchORModels, fetchOREndpoints } from '../adapters/openrouter.js';
 import { aaConfigured, fetchAALLMs, fetchAAMedia, fetchAASpeech } from '../adapters/artificialanalysis.js';
 import { fetchSWEBench } from '../adapters/swebench.js';
 import { fetchOpenASR } from '../adapters/openasr.js';
+import { fetchGenAIBench } from '../adapters/genaibench.js';
 import { mergeLLMs, mergeMedia, summariseProviders } from './merge.js';
 import { dateKey, snapshotLLMs, snapshotMedia, snapshotsEqual, diffRows, snapshotAtLeast, pruneKeys } from '../../../shared/history.js';
 import { isNum } from '../../../shared/metrics.js';
@@ -42,6 +43,7 @@ const aaSpeech = (kind) => aaConfigured()
 
 const swe = () => cached(key('swebench'), HOURS(12), fetchSWEBench, { minValid: d => d && Array.isArray(d.Verified) && d.Verified.length > 10 });
 const asr = () => cached(key('openasr'), HOURS(24), fetchOpenASR, { minValid: d => Array.isArray(d) && d.length > 5 });
+const genai = () => cached(key('genaibench'), HOURS(24), () => fetchGenAIBench(), { minValid: d => d && d.boards && Object.keys(d.boards).length > 0 });
 
 // ── LLMs ───────────────────────────────────────────────────────────────────
 export async function loadLLMs() {
@@ -162,6 +164,18 @@ export async function loadSpeech() {
   };
 }
 
+// ── Replays (open human-preference battles with media) ─────────────────────
+export async function loadReplays() {
+  const g = await genai();
+  return {
+    ok: !!g.data, fetchedAt: g.fetchedAt, stale: g.stale,
+    sources: { genaibench: status(g) },
+    license: g.data?.license ?? null, attribution: g.data?.attribution ?? null,
+    boards: g.data?.boards ?? {},
+    counts: Object.fromEntries(Object.entries(g.data?.boards ?? {}).map(([b, a]) => [b, a.length])),
+  };
+}
+
 // ── History ────────────────────────────────────────────────────────────────
 const HIST_PREFIX = key('history:');
 
@@ -244,5 +258,5 @@ export async function loadStatus() {
 }
 
 export const DOMAINS = {
-  llms: loadLLMs, media: loadMedia, providers: loadProviders, coding: loadCoding, speech: loadSpeech, history: loadHistory, status: loadStatus,
+  llms: loadLLMs, media: loadMedia, providers: loadProviders, coding: loadCoding, speech: loadSpeech, history: loadHistory, status: loadStatus, replays: loadReplays,
 };

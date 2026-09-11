@@ -27,6 +27,7 @@ const PAGES = [
   ['speech', '/#/speech'], ['providers', '/#/providers'], ['benchmarks', '/#/benchmarks'], ['compare', '/#/compare'], ['planner', '/#/planner'], ['race', '/#/race'], ['methodology', '/#methodology'],
 ];
 const only = process.env.ONLY ? process.env.ONLY.split(',') : null;
+if (process.env.PAGES) PAGES.splice(0, PAGES.length, ...process.env.PAGES.split(',').map(p => [p.replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, ''), p]));
 const errors = [];
 for (const [name, p] of PAGES) {
   if (only && !only.includes(name)) continue;

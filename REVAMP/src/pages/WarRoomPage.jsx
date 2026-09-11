@@ -20,6 +20,7 @@ const SECTIONS = [
   { id: 'providers',   label: 'Provider War', desc: 'Who hosts each model cheapest, with the most context and uptime.' },
   { id: 'benchmarks',  label: 'Benchmarks',   desc: 'The benchmark matrix — pick a test, compare models, read the methodology.' },
   { id: 'compare',     label: 'Battle Mode',  desc: 'Up to four contestants, head to head, metric by metric.' },
+  { id: { type: 'videos', slug: 'replay' }, label: 'Battle Replay', desc: 'Real crowd-voted image and video battles — guess the winner, watch side by side.' },
   { id: 'race',        label: 'Speed Race',   desc: 'Real measurements as an animated race.' },
   { id: 'planner',     label: 'Mission Planner', desc: 'Tell it your mission; get a mathematically ranked shortlist.' },
 ];
