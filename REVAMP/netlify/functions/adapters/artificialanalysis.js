@@ -27,6 +27,8 @@ async function get(path) {
 
 const num = v => (typeof v === 'number' && Number.isFinite(v) ? v : (typeof v === 'string' && v.trim() !== '' && Number.isFinite(+v) ? +v : null));
 const pick = (obj, ...keys) => { for (const k of keys) { const v = num(obj?.[k]); if (v != null) return v; } return null; };
+// A measurement of exactly 0 tokens/s or 0 s is the API's way of saying 'not measured'.
+const pos = (obj, ...keys) => { const v = pick(obj, ...keys); return v != null && v > 0 ? v : null; };
 
 /** LLM rows → normalised. Field names follow the v2 schema; each read is defensive. */
 export function normaliseAALLM(m) {
@@ -55,10 +57,10 @@ export function normaliseAALLM(m) {
     priceIn: pick(pr, 'price_1m_input_tokens'),
     priceOut: pick(pr, 'price_1m_output_tokens'),
     priceBlended: pick(pr, 'price_1m_blended_3_to_1'),
-    speed: pick(m, 'median_output_tokens_per_second'),
-    ttft: pick(m, 'median_time_to_first_token_seconds'),
-    ttfat: pick(m, 'median_time_to_first_answer_token'),
-    e2e: pick(m, 'median_end_to_end_response_time_seconds', 'median_total_response_time_seconds'),
+    speed: pos(m, 'median_output_tokens_per_second'),
+    ttft: pos(m, 'median_time_to_first_token_seconds'),
+    ttfat: pos(m, 'median_time_to_first_answer_token', 'median_time_to_first_answer_token_seconds'),
+    e2e: pos(m, 'median_end_to_end_response_time_seconds', 'median_total_response_time_seconds'),
   };
 }
 

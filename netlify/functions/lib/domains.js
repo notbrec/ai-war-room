@@ -34,12 +34,38 @@ const orModels = () =>
 // the published leaderboard pages (adapters/aaweb.js), else nothing.
 const AA_OFF = { data: null, cache: 'NONE', stale: true, error: 'Artificial Analysis source disabled (no ARTIFICIAL_ANALYSIS_API_KEY and AA_WEB=0)' };
 export const aaAvailable = () => aaConfigured() || aaWebEnabled();
-const aaKeyName = name => key(aaConfigured() ? `aa:${name}` : `aa-web:${name}`);
 const isList = min => d => Array.isArray(d) && d.length > min;
 
-const aaLLMs = () => aaConfigured()
-  ? cached(aaKeyName('llms'), HOURS(3), fetchAALLMs, { minValid: isList(10) })
-  : aaWebEnabled() ? cached(aaKeyName('llms'), HOURS(3), fetchAAWebLLMs, { minValid: isList(10) }) : Promise.resolve(AA_OFF);
+// LLMs: the Data API when a key is configured. If the API fails — quota spent,
+// outage, key revoked — the published pages answer instead, and only if those
+// fail too does the cache serve the last good copy (never an empty board, never
+// a paid call). The pages' `deprecated` flags are copied onto API rows, which
+// lack them, so retired models join the arena board but are not listed alone.
+async function loadAALLMs() {
+  if (!aaConfigured()) {
+    if (aaWebEnabled()) return fetchAAWebLLMs();
+    throw new Error('Artificial Analysis source disabled');
+  }
+  let rows = null;
+  try { rows = await fetchAALLMs(); }
+  catch (err) {
+    if (!aaWebEnabled()) throw err;
+    console.warn('[aa] Data API failed, reading the published pages instead:', err.message);
+    return fetchAAWebLLMs();
+  }
+  if (!rows) return aaWebEnabled() ? fetchAAWebLLMs() : null;
+  if (aaWebEnabled()) {
+    try {
+      const web = await fetchAAWebLLMs();
+      const retired = new Set(web.filter(r => r.deprecated).map(r => r.slug));
+      for (const r of rows) if (retired.has(r.slug)) r.deprecated = true;
+    } catch { /* the flags are a nicety; the API rows stand on their own */ }
+  }
+  return rows;
+}
+const aaLLMs = () => (aaConfigured() || aaWebEnabled())
+  ? cached(key('aa:llms'), HOURS(3), loadAALLMs, { minValid: isList(10) })
+  : Promise.resolve(AA_OFF);
 
 // Media, voices and transcription: the Data API returns only ELO / rank / CI
 // for these (no prices, no generation times) and has no speech-to-text
@@ -252,7 +278,7 @@ export async function loadHistory() {
 // ── Status ─────────────────────────────────────────────────────────────────
 export async function loadStatus() {
   const entries = await Promise.all([
-    readBlob(key('arena:text')), readBlob(key('openrouter:models')), readBlob(key('swebench')), readBlob(key('openasr')), readBlob(aaKeyName('llms')),
+    readBlob(key('arena:text')), readBlob(key('openrouter:models')), readBlob(key('swebench')), readBlob(key('openasr')), readBlob(key('aa:llms')),
   ]);
   const [a, o, s, r, aa] = entries;
   const st = e => e?.fetchedAt ? { status: 'cached', fetchedAt: e.fetchedAt } : { status: 'cold', fetchedAt: null };
