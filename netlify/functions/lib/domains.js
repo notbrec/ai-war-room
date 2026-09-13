@@ -41,13 +41,16 @@ const aaLLMs = () => aaConfigured()
   ? cached(aaKeyName('llms'), HOURS(3), fetchAALLMs, { minValid: isList(10) })
   : aaWebEnabled() ? cached(aaKeyName('llms'), HOURS(3), fetchAAWebLLMs, { minValid: isList(10) }) : Promise.resolve(AA_OFF);
 
-const aaMedia = (board) => aaConfigured()
-  ? cached(aaKeyName(`media:${board}`), HOURS(6), () => fetchAAMedia(board), { minValid: isList(3) })
-  : aaWebEnabled() ? cached(aaKeyName(`media:${board}`), HOURS(6), () => fetchAAWebMedia(board), { minValid: isList(3) }) : Promise.resolve(AA_OFF);
+// Media, voices and transcription: the Data API returns only ELO / rank / CI
+// for these (no prices, no generation times) and has no speech-to-text
+// endpoint at all, so the published pages stay the source even with a key.
+const aaMedia = (board) => aaWebEnabled()
+  ? cached(key(`aa-web:media:${board}`), HOURS(6), () => fetchAAWebMedia(board), { minValid: isList(3) })
+  : aaConfigured() ? cached(key(`aa:media:${board}`), HOURS(6), () => fetchAAMedia(board), { minValid: isList(3) }) : Promise.resolve(AA_OFF);
 
-const aaSpeech = (kind) => aaConfigured()
-  ? cached(aaKeyName(`speech:${kind}`), HOURS(6), () => fetchAASpeech(kind), { minValid: isList(3) })
-  : aaWebEnabled() ? cached(aaKeyName(`speech:${kind}`), HOURS(6), () => fetchAAWebSpeech(kind), { minValid: isList(3) }) : Promise.resolve(AA_OFF);
+const aaSpeech = (kind) => aaWebEnabled()
+  ? cached(key(`aa-web:speech:${kind}`), HOURS(6), () => fetchAAWebSpeech(kind), { minValid: isList(3) })
+  : aaConfigured() ? cached(key(`aa:speech:${kind}`), HOURS(6), () => fetchAASpeech(kind), { minValid: isList(3) }) : Promise.resolve(AA_OFF);
 
 const swe = () => cached(key('swebench'), HOURS(12), fetchSWEBench, { minValid: d => d && Array.isArray(d.Verified) && d.Verified.length > 10 });
 const asr = () => cached(key('openasr'), HOURS(24), fetchOpenASR, { minValid: d => Array.isArray(d) && d.length > 5 });
