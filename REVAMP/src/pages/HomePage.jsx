@@ -11,6 +11,9 @@ import HeroArena from '../components/HeroArena.jsx';
 import FightArena from '../components/FightArena.jsx';
 import FrontBoard from '../components/FrontBoard.jsx';
 import Ticker from '../components/Ticker.jsx';
+import { BarPanel, HighlightGrid } from '../components/Highlights.jsx';
+import { useCoding, useMedia } from '../data/useDomain.js';
+import { fmtMetric, isNum } from '../../shared/metrics.js';
 import ReplayTeaser from '../components/ReplayTeaser.jsx';
 import { useWarRoomCards } from '../components/WarRoomBoard.jsx';
 import { DataStatus, Btn, eloColor, eloTier, GREEN, GOLD, RED } from '../components/ui.jsx';
@@ -35,101 +38,6 @@ function SectionHead({ eyebrow, title, action, mobile, sub }) {
         {action}
       </div>
     </Reveal>
-  );
-}
-
-const MEDAL = ['#C9A94E', '#A8A9AD', '#B0783F'];
-
-/* ─── Top 10 ─────────────────────────────────────────────────────────────── */
-function TopTen({ models, onNavigate, mobile, isLoaded }) {
-  const top = (models ?? MODELS).slice(0, 10);
-  const maxElo = top[0]?.elo ?? 1500;
-  const minElo = top[top.length - 1]?.elo ?? 1300;
-  const range  = Math.max(1, maxElo - minElo);
-  return (
-    <div style={{ background: 'var(--card)', border: '0.5px solid var(--sep)', overflow: 'hidden', height: '100%' }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: mobile ? '12px 14px' : '13px 18px', borderBottom: '0.5px solid var(--sep)' }}>
-        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 9 }}>
-          <LivePulse color={GREEN} size={7} />
-          <span style={{ fontSize: 10.5, fontWeight: 700, color: 'var(--text)', letterSpacing: '0.10em', fontFamily: MONO, textTransform: 'uppercase' }}>Top 10 · language</span>
-        </span>
-        <button onClick={() => onNavigate('leaderboard')} className="aiwar-press-btn" style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text)', fontSize: 11, fontWeight: 700, fontFamily: MONO, letterSpacing: '0.04em' }}>
-          ALL {(models ?? MODELS).length} →
-        </button>
-      </div>
-      {!isLoaded
-        ? Array.from({ length: 10 }).map((_, i) => <div key={i} style={{ padding: '12px 18px', borderBottom: i < 9 ? '0.5px solid var(--sep2)' : 'none' }}><Skeleton height={18} /></div>)
-        : top.map((m, i) => {
-          const tColor = eloColor(m.elo);
-          const norm = (m.elo - minElo) / range;
-          return (
-            <div key={m.slug} onClick={() => onNavigate({ type: 'model', slug: m.slug })}
-              style={{ display: 'grid', gridTemplateColumns: mobile ? '26px minmax(0,1fr) 56px' : '28px minmax(0,1.3fr) minmax(0,1fr) 72px', gap: mobile ? 10 : 14, alignItems: 'center', padding: mobile ? '10px 14px' : '10px 18px', borderBottom: i < top.length - 1 ? '0.5px solid var(--sep2)' : 'none', cursor: 'pointer', transition: 'background 200ms' }}
-              onMouseEnter={e => e.currentTarget.style.background = 'var(--hover)'}
-              onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
-              <span style={{ fontSize: 11.5, fontWeight: 700, color: MEDAL[i] ?? 'var(--muted2)', fontFamily: MONO, fontVariantNumeric: 'tabular-nums' }}>{String(i + 1).padStart(2, '0')}</span>
-              <div style={{ minWidth: 0 }}>
-                <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', letterSpacing: '-0.02em', lineHeight: 1.25, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{m.name}</div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 }}>
-                  <LabLogo org={m.org} size={11} />
-                  <span style={{ fontSize: 10.5, color: 'var(--muted)' }}>{m.org}</span>
-                  <span style={{ fontSize: 9, fontWeight: 700, color: tColor, letterSpacing: '0.05em', fontFamily: MONO }}>{eloTier(m.elo)}</span>
-                </div>
-              </div>
-              {!mobile && <ComparisonBar width={0.18 + norm * 0.82} color={tColor} height={3} />}
-              <div style={{ textAlign: 'right', fontFamily: MONO, fontSize: 14.5, fontWeight: 700, color: 'var(--text)', letterSpacing: '-0.02em', fontVariantNumeric: 'tabular-nums' }}>
-                <AnimatedNumber value={m.elo} format={v => Math.round(v).toString()} />
-                {!mobile && <span style={{ marginLeft: 5 }}><TrendArrow seed={m.elo + i} size={8} /></span>}
-              </div>
-            </div>
-          );
-        })}
-    </div>
-  );
-}
-
-/* ─── Labs ───────────────────────────────────────────────────────────────── */
-function Labs({ models, onNavigate, mobile, isLoaded }) {
-  const labs = useMemo(() => {
-    const by = {};
-    for (const m of models ?? MODELS) {
-      const e = by[m.org] ?? { org: m.org, count: 0, top: null };
-      e.count++; if (!e.top || m.elo > e.top.elo) e.top = m;
-      by[m.org] = e;
-    }
-    return Object.values(by).sort((a, b) => b.top.elo - a.top.elo).slice(0, 10);
-  }, [models]);
-  const maxElo = labs[0]?.top.elo ?? 1500;
-  return (
-    <div style={{ background: 'var(--card)', border: '0.5px solid var(--sep)', overflow: 'hidden', height: '100%' }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: mobile ? '12px 14px' : '13px 18px', borderBottom: '0.5px solid var(--sep)' }}>
-        <span style={{ fontSize: 10.5, fontWeight: 700, color: 'var(--text)', letterSpacing: '0.10em', fontFamily: MONO, textTransform: 'uppercase' }}>Labs · by top model</span>
-        <span style={{ fontSize: 10, color: 'var(--muted2)', fontFamily: MONO, letterSpacing: '0.04em' }}>{isLoaded ? `${new Set((models ?? MODELS).map(m => m.org)).size} LABS` : ''}</span>
-      </div>
-      {!isLoaded
-        ? Array.from({ length: 10 }).map((_, i) => <div key={i} style={{ padding: '12px 18px', borderBottom: i < 9 ? '0.5px solid var(--sep2)' : 'none' }}><Skeleton height={18} /></div>)
-        : labs.map((l, i) => {
-          const color = (ORG_CONFIG[l.org] ?? { color: '#8E8E93' }).color;
-          const w = Math.max(0.06, (l.top.elo - 1300) / Math.max(1, maxElo - 1300));
-          return (
-            <div key={l.org} onClick={() => onNavigate({ type: 'model', slug: l.top.slug })}
-              style={{ display: 'grid', gridTemplateColumns: mobile ? '26px minmax(0,1fr) 52px' : '28px minmax(0,1fr) minmax(0,0.9fr) 52px', gap: mobile ? 10 : 14, alignItems: 'center', padding: mobile ? '10px 14px' : '10px 18px', borderBottom: i < labs.length - 1 ? '0.5px solid var(--sep2)' : 'none', cursor: 'pointer', transition: 'background 200ms' }}
-              onMouseEnter={e => e.currentTarget.style.background = 'var(--hover)'}
-              onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
-              <span style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--muted2)', fontFamily: MONO }}>{String(i + 1).padStart(2, '0')}</span>
-              <div style={{ minWidth: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
-                <LabLogo org={l.org} size={14} />
-                <div style={{ minWidth: 0 }}>
-                  <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', letterSpacing: '-0.02em', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{l.org} <span style={{ fontFamily: MONO, fontSize: 10, color: 'var(--muted2)', fontWeight: 500 }}>×{l.count}</span></div>
-                  <div style={{ fontSize: 10.5, color: 'var(--muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{l.top.name}</div>
-                </div>
-              </div>
-              {!mobile && <ComparisonBar width={Math.min(1, w)} color={color === '#FFFFFF' ? 'var(--text)' : color} height={3} />}
-              <span style={{ textAlign: 'right', fontFamily: MONO, fontSize: 13.5, fontWeight: 700, color: eloColor(l.top.elo), fontVariantNumeric: 'tabular-nums' }}>{l.top.elo}</span>
-            </div>
-          );
-        })}
-    </div>
   );
 }
 
@@ -180,6 +88,27 @@ export default function HomePage({ onNavigate, liveModels, countSnapshot }) {
   const snap = countSnapshot ?? { count: 350, exact: false };
   const gapY = mobile ? 52 : 84;
 
+  // Highlights — the same numbers the board reads, as bars
+  const coding = useCoding(), media = useMedia();
+  const hl = useMemo(() => {
+    const ranked = wr.models.filter(m => m.inArena);
+    const top = ranked.slice(0, 10);
+    const labs = {};
+    for (const m of ranked) if (!labs[m.org]) labs[m.org] = m;
+    const swe = (coding.boards?.Verified ?? []).slice(0, 10);
+    const t2i = (media.boards?.['text-to-image'] ?? []).slice(0, 10);
+    const t2v = (media.boards?.['text-to-video'] ?? []).slice(0, 10);
+    return {
+      elo:   top.map(m => ({ id: m.id, name: m.name, org: m.org, slug: m.slug, value: m.arena.elo, label: String(m.arena.elo) })),
+      labs:  Object.values(labs).slice(0, 10).map(m => ({ id: m.org, name: m.org, org: m.org, slug: m.slug, value: m.arena.elo, label: String(m.arena.elo) })),
+      price: top.filter(m => isNum(m.priceBlended)).sort((x, y) => x.priceBlended - y.priceBlended).map(m => ({ id: m.id, name: m.name, org: m.org, slug: m.slug, value: m.priceBlended, label: fmtMetric('priceBlended', m.priceBlended) })),
+      swe:   swe.map(r => ({ id: r.id, name: r.model ?? r.name, org: r.modelOrg, value: r.resolved, label: fmtMetric('resolved', r.resolved) })),
+      image: t2i.map(r => ({ id: r.id, name: r.name, org: r.org, kind: 'images', value: r.elo, label: String(r.elo) })),
+      video: t2v.map(r => ({ id: r.id, name: r.name, org: r.org, kind: 'videos', value: r.elo, label: String(r.elo) })),
+    };
+  }, [wr.models, coding.boards, media.boards]);
+  const openBar = it => it.slug ? onNavigate({ type: 'model', slug: it.slug }) : it.kind ? onNavigate({ type: it.kind, slug: it.id }) : onNavigate('coding');
+
   return (
     <div style={{ background: 'transparent', fontFamily: SF, minHeight: '100vh', position: 'relative' }}>
       <div style={{ position: 'relative', maxWidth: 1200, margin: '0 auto', padding: mobile ? '0 18px 80px' : '0 32px 112px' }}>
@@ -199,13 +128,17 @@ export default function HomePage({ onNavigate, liveModels, countSnapshot }) {
           <FrontBoard onNavigate={onNavigate} mobile={mobile} />
         </section>
 
-        {/* Top 10 + labs */}
+        {/* Highlights — six charts, one glance */}
         <section style={{ marginTop: gapY }}>
-          <SectionHead mobile={mobile} eyebrow="The ranking" title="Top of the arena." action={<Btn small onClick={() => onNavigate('leaderboard')}>Full ranking →</Btn>} />
-          <div style={{ display: 'grid', gridTemplateColumns: mobile ? '1fr' : '1.15fr 1fr', gap: 12 }}>
-            <Reveal><TopTen models={liveModels} onNavigate={onNavigate} mobile={mobile} isLoaded={isLoaded} /></Reveal>
-            <Reveal delay={80}><Labs models={liveModels} onNavigate={onNavigate} mobile={mobile} isLoaded={isLoaded} /></Reveal>
-          </div>
+          <SectionHead mobile={mobile} eyebrow="Highlights" title="The numbers, at a glance." action={<Btn small onClick={() => onNavigate('leaderboard')}>Full ranking →</Btn>} />
+          <HighlightGrid mobile={mobile}>
+            <Reveal><BarPanel mobile={mobile} title="Arena ELO" color={GREEN} subtitle="Top 10 language models · arena.ai" items={hl.elo} onSelect={openBar} /></Reveal>
+            <Reveal delay={60}><BarPanel mobile={mobile} title="Labs" color="var(--accent)" subtitle="Each lab's best model · arena.ai" items={hl.labs} onSelect={openBar} /></Reveal>
+            <Reveal delay={120}><BarPanel mobile={mobile} title="Price" color={GOLD} subtitle="Top 10 · $ per 1M blended · OpenRouter" items={hl.price} higherIsBetter={false} onSelect={openBar} /></Reveal>
+            <Reveal><BarPanel mobile={mobile} title="Coding" color={GREEN} subtitle="SWE-bench Verified · % resolved" items={hl.swe} onSelect={openBar} /></Reveal>
+            <Reveal delay={60}><BarPanel mobile={mobile} title="Image" color={GOLD} subtitle="Text-to-image ELO · arena.ai" items={hl.image} onSelect={openBar} /></Reveal>
+            <Reveal delay={120}><BarPanel mobile={mobile} title="Video" color={GOLD} subtitle="Text-to-video ELO · arena.ai" items={hl.video} onSelect={openBar} /></Reveal>
+          </HighlightGrid>
         </section>
 
         {/* Tools — the second fight clip earns its place here */}

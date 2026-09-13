@@ -27,8 +27,8 @@ function getMetric(m, key) {
   }
 }
 
-export default function LLMCharts({ models, aaConfigured, selected, onSelect, mobile }) {
-  const [chart, setChart] = useState(LLM_CHARTS[0].id);
+export default function LLMCharts({ models, aaConfigured, selected, onSelect, mobile, initial = LLM_CHARTS[0].id }) {
+  const [chart, setChart] = useState(initial);
   const [topOnly, setTopOnly] = useState(true);
   const cfg = LLM_CHARTS.find(c => c.id === chart);
   const points = useMemo(() => {

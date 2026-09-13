@@ -11,6 +11,7 @@ import { useCoding } from '../data/useDomain.js';
 import DataTable, { useColumnSelection, ColumnPicker } from '../components/table/DataTable.jsx';
 import { PageFrame, PageTitle, DataStatus, Panel, Label, Chip, Segmented, StatTile, EmptyState, BadgeTag, SourceTag, Btn, GREEN, GOLD, BLUE, PURPLE, RED } from '../components/ui.jsx';
 import { fmtMetric, fmtDate, isNum, NA } from '../../shared/metrics.js';
+import { BarPanel, HighlightGrid } from '../components/Highlights.jsx';
 import { AddToBattle } from '../domains/comparison/BattleControls.jsx';
 
 const ScatterChart = lazy(() => import('../components/charts/ScatterChart.jsx'));
@@ -125,6 +126,15 @@ export default function CodeOpsPage({ onNavigate, slug }) {
         <StatTile label="Best verified logs" value={verified ? fmtMetric('resolved', verified.resolved) : NA} sub={verified ? `${verified.model} via ${verified.agent}` : 'No checked submission'} color={BLUE} metricKey="resolved" />
         <StatTile label="Submissions" value={rows.length ? rows.length : NA} sub={`${matrix.agents.length} harnesses · ${matrix.models.length} models`} />
       </div>
+
+      {rows.length > 0 && (
+        <div style={{ marginBottom: 22 }}>
+          <HighlightGrid mobile={mobile} cols={2}>
+            <BarPanel mobile={mobile} title="Resolved" color={GREEN} subtitle={`${board} · % of tasks solved · SWE-bench`} items={[...rows].sort((a, b) => b.resolved - a.resolved).slice(0, 10).map(r => ({ id: r.id, name: `${r.model ?? r.name}`, org: r.modelOrg, value: r.resolved, label: fmtMetric('resolved', r.resolved) }))} />
+            <BarPanel mobile={mobile} title="Cost per task" color={GOLD} subtitle="Top 10 by resolved · $ per task" higherIsBetter={false} items={[...rows].sort((a, b) => b.resolved - a.resolved).filter(r => isNum(r.costPerTask)).slice(0, 10).sort((a, b) => a.costPerTask - b.costPerTask).map(r => ({ id: r.id, name: `${r.model ?? r.name}`, org: r.modelOrg, value: r.costPerTask, label: fmtMetric('costPerTask', r.costPerTask) }))} />
+          </HighlightGrid>
+        </div>
+      )}
 
       {/* Board + view */}
       <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>

@@ -1,15 +1,21 @@
+// ─── LLM RANKINGS — the models page ─────────────────────────────────────────
+// One set of filters at the top drives every section below it: the
+// highlights, the ELO chart, ELO vs price, cost, context, the AA sections
+// when that source is configured, and finally the full board as a table.
+// Same shape as the benchmark sites people already read, drawn our way.
+
 import { useState, useMemo, useCallback } from 'react';
 import { MODELS, ORG_CONFIG, RELEASE, getDescription } from '../models-data.js';
 import { useDark, useMobile } from '../hooks/useTheme.js';
 import { SF, MONO, EASE, Reveal, AnimatedNumber, Eyebrow, GlobalMotion, ComparisonBar } from '../components/design.jsx';
 import ChampionBout from '../components/ChampionBout.jsx';
 import { RobotMascot } from '../components/Robot.jsx';
-import { LabLogo } from '../components/LabLogo.jsx';
 import { useLLMs } from '../data/useDomain.js';
 import DataTable, { useColumnSelection, ColumnPicker } from '../components/table/DataTable.jsx';
 import { llmColumns, fromLegacy } from '../domains/models/columns.jsx';
 import LLMCharts from '../domains/models/LLMCharts.jsx';
-import { Chip, Segmented, DataStatus, eloColor, eloTier, Label, StatTile, Btn, GREEN, PURPLE, BLUE, GOLD } from '../components/ui.jsx';
+import { BarPanel, HighlightGrid, ChartSection } from '../components/Highlights.jsx';
+import { Chip, Segmented, DataStatus, eloColor, Label, StatTile, Btn, GREEN, PURPLE, BLUE, GOLD } from '../components/ui.jsx';
 import { AddToBattle } from '../domains/comparison/BattleControls.jsx';
 import { fmtMetric, isNum, NA, metric } from '../../shared/metrics.js';
 
@@ -24,6 +30,7 @@ const SORTS = [
 
 const PRICE_CAPS = [{ v: 1, l: '≤ $1/M' }, { v: 5, l: '≤ $5/M' }, { v: 15, l: '≤ $15/M' }];
 const CTX_MINS   = [{ v: 128_000, l: '≥ 128K' }, { v: 256_000, l: '≥ 256K' }, { v: 1_000_000, l: '≥ 1M' }];
+const LIMITS     = [10, 20, 40];
 
 /** Lab filter chips, built from whatever is on the board right now. */
 function orgsFrom(models) {
@@ -42,6 +49,8 @@ function StatCard({ label, value, color, animate = false, format, suffix }) {
   );
 }
 
+const bar = (m, value, label, extra = {}) => ({ id: m.id, name: m.name, org: m.org, m, value, label, ...extra });
+
 export default function LeaderboardPage({ liveModels, onNavigate }) {
   const dark   = useDark();
   const mobile = useMobile();
@@ -55,8 +64,8 @@ export default function LeaderboardPage({ liveModels, onNavigate }) {
     return legacy.map(fromLegacy);
   }, [llms.models, liveModels]);
   const usingFallback = !llms.models.length;
+  const aa = !!llms.capabilities?.aa;
 
-  const [view, setView]                   = useState('table');
   const [sort, setSort]                   = useState({ key: 'elo', dir: 'desc' });
   const [query, setQuery]                 = useState('');
   const [filterOpen, setFilterOpen]       = useState(false);
@@ -68,6 +77,7 @@ export default function LeaderboardPage({ liveModels, onNavigate }) {
   const [priceCap, setPriceCap]           = useState(null);
   const [ctxMin, setCtxMin]               = useState(null);
   const [filterOrg, setFilterOrg]         = useState('');
+  const [limit, setLimit]                 = useState(mobile ? 10 : 20);
   const [expandedId, setExpandedId]       = useState(null);
   const [selected, setSelected]           = useState(() => new Set());
 
@@ -98,6 +108,23 @@ export default function LeaderboardPage({ liveModels, onNavigate }) {
   const allOrgs    = orgsFrom(ranked);
   const boutModels = useMemo(() => [...ranked].sort((a, b) => (b.arena?.elo ?? 0) - (a.arena?.elo ?? 0)).slice(0, 2).map(m => ({ ...m, elo: m.arena.elo, ci: m.arena.ci, votes: m.arena.votes, votesLabel: fmtMetric('votes', m.arena.votes) })), [ranked]);
 
+  // The chart rows: the filtered set, best first, cut to the chosen size.
+  const chartRows = useMemo(() => [...filtered].filter(m => isNum(m.arena?.elo)).sort((a, b) => b.arena.elo - a.arena.elo).slice(0, limit), [filtered, limit]);
+  const charts = useMemo(() => ({
+    elo:      chartRows.map(m => bar(m, m.arena.elo, String(m.arena.elo))),
+    cost:     chartRows.filter(m => isNum(m.priceIn) && isNum(m.priceOut)).sort((a, b) => a.priceBlended - b.priceBlended)
+                .map(m => bar(m, m.priceIn + m.priceOut, fmtMetric('priceBlended', m.priceBlended), { parts: [{ value: m.priceIn, opacity: 1 }, { value: m.priceOut, opacity: 0.55 }] })),
+    context:  chartRows.filter(m => isNum(m.context)).sort((a, b) => b.context - a.context).map(m => bar(m, m.context, fmtMetric('context', m.context))),
+    intel:    [...filtered].filter(m => isNum(m.aa?.intelligence)).sort((a, b) => b.aa.intelligence - a.aa.intelligence).slice(0, limit).map(m => bar(m, m.aa.intelligence, fmtMetric('intelligence', m.aa.intelligence))),
+    speed:    [...filtered].filter(m => isNum(m.aa?.speed)).sort((a, b) => b.aa.speed - a.aa.speed).slice(0, limit).map(m => bar(m, m.aa.speed, fmtMetric('speed', m.aa.speed))),
+    ttft:     [...filtered].filter(m => isNum(m.aa?.ttft)).sort((a, b) => a.aa.ttft - b.aa.ttft).slice(0, limit).map(m => bar(m, m.aa.ttft, fmtMetric('ttft', m.aa.ttft))),
+  }), [chartRows, filtered, limit]);
+  const hl = useMemo(() => ({
+    elo:     charts.elo.slice(0, 10),
+    price:   chartRows.slice(0, 10).filter(m => isNum(m.priceBlended)).sort((a, b) => a.priceBlended - b.priceBlended).map(m => bar(m, m.priceBlended, fmtMetric('priceBlended', m.priceBlended))),
+    context: chartRows.slice(0, 10).filter(m => isNum(m.context)).sort((a, b) => b.context - a.context).map(m => bar(m, m.context, fmtMetric('context', m.context))),
+  }), [charts.elo, chartRows]);
+
   const clearFilters = () => { setFilterOpen(false); setFilterThinking(false); setFilterVision(false); setFilterTools(false); setFilterIndexed(false); setIncludeUnranked(false); setPriceCap(null); setCtxMin(null); setFilterOrg(''); setQuery(''); };
   const setSortKey = key => {
     const col = columns.find(c => c.key === key);
@@ -105,9 +132,10 @@ export default function LeaderboardPage({ liveModels, onNavigate }) {
     setSort({ key, dir });
   };
 
-  const sourcesUsed = ['arena', ...(llms.sources?.openrouter?.status === 'live' || llms.sources?.openrouter?.status === 'stale' ? ['openrouter'] : []), ...(llms.capabilities?.aa ? ['aa'] : [])];
+  const sourcesUsed = ['arena', ...(llms.sources?.openrouter?.status === 'live' || llms.sources?.openrouter?.status === 'stale' ? ['openrouter'] : []), ...(aa ? ['aa'] : [])];
   const status = usingFallback ? (llms.status === 'loading' ? 'loading' : 'offline') : llms.status;
-  const isFeaturedView = !q && activeFilters === 0 && sort.key === 'elo' && view === 'table';
+  const open = it => openModel(it.m);
+  const scope = `${activeFilters > 0 || q ? 'Filtered' : 'Top'} ${chartRows.length}`;
 
   return (
     <div className="page-enter" style={{ background: 'transparent', fontFamily: SF, minHeight: '100vh' }}>
@@ -119,12 +147,15 @@ export default function LeaderboardPage({ liveModels, onNavigate }) {
           <div style={{ opacity: 0, animation: `aiwar-fade-up 700ms ${EASE} both` }}>
             <Eyebrow>LLM Rankings</Eyebrow>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: mobile ? 12 : 18, margin: '10px 0 18px', opacity: 0, animation: `aiwar-fade-up 800ms ${EASE} 80ms both` }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: mobile ? 12 : 18, margin: '10px 0 14px', opacity: 0, animation: `aiwar-fade-up 800ms ${EASE} 80ms both` }}>
             <h1 style={{ fontSize: mobile ? 'clamp(34px,8.5vw,46px)' : 'clamp(48px,5.4vw,72px)', fontWeight: 700, letterSpacing: '-0.05em', lineHeight: 0.98, color: 'var(--text)', margin: 0 }}>
               The ranking.
             </h1>
             <RobotMascot variant="eared" size={mobile ? 36 : 48} color="var(--accent)" style={{ flexShrink: 0 }} />
           </div>
+          <p style={{ fontSize: mobile ? 15 : 17, lineHeight: 1.45, color: 'var(--muted)', letterSpacing: '-0.015em', margin: '0 0 14px', maxWidth: 720, opacity: 0, animation: `aiwar-fade-up 800ms ${EASE} 120ms both` }}>
+            Every language model by arena ELO, price, context{aa ? ', intelligence, speed and latency' : ''}. Filter once at the top — every chart and the table below follow.
+          </p>
           <div style={{ opacity: 0, animation: `aiwar-fade-up 800ms ${EASE} 160ms both` }}>
             <DataStatus status={status} fetchedAt={llms.data?.fetchedAt} sources={sourcesUsed} loading={llms.loading} onRefresh={llms.reload} />
           </div>
@@ -149,109 +180,105 @@ export default function LeaderboardPage({ liveModels, onNavigate }) {
           </div>
         </Reveal>
 
-        {/* ── Search ───────────────────────────────────────────────── */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'var(--card)', padding: '12px 16px', marginBottom: 12, border: '0.5px solid var(--sep)' }}>
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ flexShrink: 0, opacity: 0.4 }}>
-            <circle cx="6" cy="6" r="4.5" stroke="currentColor" strokeWidth="1.4"/><path d="M9.5 9.5L12 12" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
-          </svg>
-          <input value={query} onChange={e => setQuery(e.target.value)} placeholder="Search model, family or lab…"
-            style={{ flex: 1, background: 'none', border: 'none', outline: 'none', fontSize: 14.5, color: 'var(--text)', letterSpacing: '-0.015em', fontFamily: SF }} />
-          {query && (
-            <button onClick={() => setQuery('')} className="aiwar-press-btn" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, opacity: 0.5 }}>
-              <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 2l8 8M10 2l-8 8" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></svg>
-            </button>
-          )}
-        </div>
-
-        {/* ── Sort + quick filters ─────────────────────────────────── */}
-        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 8, alignItems: 'center' }}>
-          <Label style={{ marginRight: 6 }}>Sort</Label>
-          {SORTS.map(s => <Chip key={s.key} active={sort.key === s.key} label={s.label} onClick={() => setSortKey(s.key)} />)}
-          <div style={{ width: '0.5px', height: 18, background: 'var(--sep)', marginInline: 6, flexShrink: 0 }} />
-          <Chip active={filterOpen}     color={GREEN}  label="Open"     icon="🔓" onClick={() => setFilterOpen(v => !v)} />
-          <Chip active={filterThinking} color={PURPLE} label="Thinking" icon="🧠" onClick={() => setFilterThinking(v => !v)} />
-          <Chip active={filterVision}   color={BLUE}   label="Vision"   icon="👁" onClick={() => setFilterVision(v => !v)} title="Accepts image input (OpenRouter modalities)" />
-          <Chip active={filterTools}    color={BLUE}   label="Tools"    icon="🔧" onClick={() => setFilterTools(v => !v)} title="Supports tool calling" />
-          <Chip active={filterIndexed}  color={GOLD}   label="Indexed"  icon="◆"  onClick={() => setFilterIndexed(v => !v)} title="Has an Intelligence Index" />
-          {activeFilters > 0 && (
-            <button onClick={clearFilters} className="aiwar-press-btn" style={{ height: 28, paddingInline: 12, borderRadius: 980, background: 'rgba(255,59,48,0.10)', color: '#CD5C4E', fontSize: 11.5, fontWeight: 600, border: '0.5px solid rgba(255,59,48,0.30)', cursor: 'pointer', flexShrink: 0, letterSpacing: '-0.005em' }}>Clear ×{activeFilters}</button>
-          )}
-        </div>
-        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 8, alignItems: 'center' }}>
-          <Label style={{ marginRight: 6 }}>Price</Label>
-          {PRICE_CAPS.map(p => <Chip key={p.v} small active={priceCap === p.v} label={p.l} onClick={() => setPriceCap(priceCap === p.v ? null : p.v)} />)}
-          <div style={{ width: '0.5px', height: 18, background: 'var(--sep)', marginInline: 6, flexShrink: 0 }} />
-          <Label style={{ marginRight: 6 }}>Context</Label>
-          {CTX_MINS.map(c => <Chip key={c.v} small active={ctxMin === c.v} label={c.l} onClick={() => setCtxMin(ctxMin === c.v ? null : c.v)} />)}
-          <div style={{ width: '0.5px', height: 18, background: 'var(--sep)', marginInline: 6, flexShrink: 0 }} />
-          <Chip small active={includeUnranked} label={`+ ${models.length - ranked.length} unranked`} onClick={() => setIncludeUnranked(v => !v)} title="Include models with an Intelligence Index that are not on the arena board" />
-        </div>
-
-        {/* ── Org strip ────────────────────────────────────────────── */}
-        <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap', marginBottom: 18, alignItems: 'center' }}>
-          <Label style={{ marginRight: 6 }}>Lab</Label>
-          <Chip small active={!filterOrg} label="All" onClick={() => setFilterOrg('')} />
-          {allOrgs.map(org => {
-            const cfg = ORG_CONFIG[org] ?? { color: '#8E8E93' };
-            return <Chip key={org} small active={filterOrg === org} color={cfg.color} dot={cfg.color} label={org} onClick={() => setFilterOrg(filterOrg === org ? '' : org)} />;
-          })}
-        </div>
-
-        {/* ── Featured top models with descriptions ────────────────── */}
-        {ranked.length > 0 && isFeaturedView && (
-          <section style={{ marginBottom: 22 }}>
-            <p style={{ fontSize: 11, fontWeight: 600, color: 'var(--muted2)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 10, paddingLeft: 2 }}>Featured — top 5 by ELO</p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              {ranked.slice(0, 5).map((m, fi) => {
-                const org    = ORG_CONFIG[m.org] ?? { color: '#8E8E93', bg: '#F2F2F7', bgDark: '#2C2C2E' };
-                const iconBg = dark ? (org.bgDark ?? '#2C2C2E') : org.bg;
-                const tColor = eloColor(m.arena.elo);
-                const desc   = getDescription(m.name);
-                return (
-                  <Reveal key={m.id} delay={fi * 90} y={26}>
-                    <article onClick={() => openModel(m)} style={{ background: 'var(--card)', padding: mobile ? '14px 14px 14px' : '16px 20px', boxShadow: 'var(--shadow)', borderLeft: `3px solid ${tColor}`, display: 'grid', gridTemplateColumns: mobile ? '1fr' : '40px 1fr auto', gap: mobile ? 10 : 16, alignItems: 'start', cursor: 'pointer' }}>
-                      <div style={{ width: 40, height: 40, background: iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><LabLogo org={m.org} size={22} /></div>
-                      <div style={{ minWidth: 0 }}>
-                        <h3 style={{ fontSize: 15, fontWeight: 600, color: 'var(--text)', letterSpacing: '-0.02em', margin: '0 0 4px', lineHeight: 1.3 }}>#{m.arena.rank} · {m.name}</h3>
-                        <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 8, letterSpacing: '-0.01em' }}>
-                          {m.org} · ELO <span style={{ color: tColor, fontWeight: 700 }}>{m.arena.elo}</span> · {fmtMetric('votes', m.arena.votes)} votes
-                          {isNum(m.aa?.intelligence) && <> · Intelligence <span style={{ color: 'var(--text)', fontWeight: 600 }}>{fmtMetric('intelligence', m.aa.intelligence)}</span></>}
-                          {isNum(m.priceIn) && <> · {fmtMetric('priceIn', m.priceIn)} / {fmtMetric('priceOut', m.priceOut)} per 1M</>}
-                        </div>
-                        <p style={{ fontSize: 13.5, lineHeight: 1.6, color: 'var(--text)', opacity: 0.78, letterSpacing: '-0.005em', margin: 0 }}>
-                          {desc ?? `${m.name} from ${m.org}. ELO ${m.arena.elo} from ${fmtMetric('votes', m.arena.votes)} arena battles. Tier ${eloTier(m.arena.elo)}.`}
-                        </p>
-                      </div>
-                      {!mobile && (
-                        <div style={{ textAlign: 'right', minWidth: 72 }}>
-                          <div style={{ fontSize: 22, fontWeight: 700, color: tColor, letterSpacing: '-0.04em', fontVariantNumeric: 'tabular-nums', lineHeight: 1 }}>{m.arena.elo}</div>
-                          <div style={{ fontSize: 10, color: 'var(--muted2)', marginTop: 3, letterSpacing: '0.04em', textTransform: 'uppercase' }}>Tier {eloTier(m.arena.elo)}</div>
-                          <div style={{ marginTop: 8 }}><AddToBattle item={{ id: m.id, kind: 'llm', name: m.name, org: m.org }} /></div>
-                        </div>
-                      )}
-                    </article>
-                  </Reveal>
-                );
-              })}
+        {/* ── Filters — drive everything below ─────────────────────── */}
+        <div style={{ background: 'var(--card)', border: '0.5px solid var(--sep)', padding: mobile ? '12px 12px 10px' : '14px 16px 12px', marginBottom: 12 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10, flexWrap: 'wrap' }}>
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ flexShrink: 0, opacity: 0.4 }}>
+              <circle cx="6" cy="6" r="4.5" stroke="currentColor" strokeWidth="1.4"/><path d="M9.5 9.5L12 12" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+            </svg>
+            <input value={query} onChange={e => setQuery(e.target.value)} placeholder="Search model, family or lab…"
+              style={{ flex: 1, minWidth: 160, background: 'none', border: 'none', outline: 'none', fontSize: 14.5, color: 'var(--text)', letterSpacing: '-0.015em', fontFamily: SF }} />
+            {query && (
+              <button onClick={() => setQuery('')} className="aiwar-press-btn" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, opacity: 0.5 }}>
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 2l8 8M10 2l-8 8" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></svg>
+              </button>
+            )}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+              <Label>Charts</Label>
+              <Segmented small value={limit} onChange={setLimit} options={LIMITS.map(n => ({ value: n, label: `Top ${n}` }))} />
             </div>
-          </section>
+          </div>
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center', marginBottom: 8 }}>
+            <Chip active={filterOpen}     color={GREEN}  label="Open weights" icon="🔓" onClick={() => setFilterOpen(v => !v)} />
+            <Chip active={filterThinking} color={PURPLE} label="Reasoning"    icon="🧠" onClick={() => setFilterThinking(v => !v)} />
+            <Chip active={filterVision}   color={BLUE}   label="Vision"       icon="👁" onClick={() => setFilterVision(v => !v)} title="Accepts image input (OpenRouter modalities)" />
+            <Chip active={filterTools}    color={BLUE}   label="Tools"        icon="🔧" onClick={() => setFilterTools(v => !v)} title="Supports tool calling" />
+            <Chip active={filterIndexed}  color={GOLD}   label="Indexed"      icon="◆"  onClick={() => setFilterIndexed(v => !v)} title="Has an Intelligence Index" />
+            <div style={{ width: '0.5px', height: 18, background: 'var(--sep)', marginInline: 4, flexShrink: 0 }} />
+            {PRICE_CAPS.map(p => <Chip key={p.v} small active={priceCap === p.v} label={p.l} onClick={() => setPriceCap(priceCap === p.v ? null : p.v)} />)}
+            <div style={{ width: '0.5px', height: 18, background: 'var(--sep)', marginInline: 4, flexShrink: 0 }} />
+            {CTX_MINS.map(c => <Chip key={c.v} small active={ctxMin === c.v} label={c.l} onClick={() => setCtxMin(ctxMin === c.v ? null : c.v)} />)}
+            <div style={{ width: '0.5px', height: 18, background: 'var(--sep)', marginInline: 4, flexShrink: 0 }} />
+            <Chip small active={includeUnranked} label={`+ ${models.length - ranked.length} unranked`} onClick={() => setIncludeUnranked(v => !v)} title="Include models with an Intelligence Index that are not on the arena board" />
+            {activeFilters > 0 && (
+              <button onClick={clearFilters} className="aiwar-press-btn" style={{ height: 28, paddingInline: 12, borderRadius: 980, background: 'rgba(255,59,48,0.10)', color: '#CD5C4E', fontSize: 11.5, fontWeight: 600, border: '0.5px solid rgba(255,59,48,0.30)', cursor: 'pointer', flexShrink: 0, letterSpacing: '-0.005em' }}>Clear ×{activeFilters}</button>
+            )}
+          </div>
+          <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap', alignItems: 'center' }}>
+            <Label style={{ marginRight: 6 }}>Lab</Label>
+            <Chip small active={!filterOrg} label="All" onClick={() => setFilterOrg('')} />
+            {allOrgs.map(org => {
+              const cfg = ORG_CONFIG[org] ?? { color: '#8E8E93' };
+              return <Chip key={org} small active={filterOrg === org} color={cfg.color} dot={cfg.color} label={org} onClick={() => setFilterOrg(filterOrg === org ? '' : org)} />;
+            })}
+          </div>
+        </div>
+
+        {/* ── Highlights ───────────────────────────────────────────── */}
+        {chartRows.length > 0 && (
+          <HighlightGrid mobile={mobile}>
+            <Reveal><BarPanel mobile={mobile} title="Arena ELO" color={GREEN} subtitle={`${scope} · arena.ai`} items={hl.elo} onSelect={open} /></Reveal>
+            <Reveal delay={60}><BarPanel mobile={mobile} title="Price" color={GOLD} subtitle="$ per 1M blended · OpenRouter" items={hl.price} higherIsBetter={false} onSelect={open} /></Reveal>
+            <Reveal delay={120}><BarPanel mobile={mobile} title="Context" color={BLUE} subtitle="Tokens · OpenRouter" items={hl.context} baseline={0} onSelect={open} /></Reveal>
+          </HighlightGrid>
         )}
 
-        {/* ── View switch + count + columns ─────────────────────────── */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 8, flexWrap: 'wrap' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <Segmented small value={view} onChange={setView} options={[{ value: 'table', label: 'Table' }, { value: 'charts', label: 'Charts' }]} />
-            <p style={{ fontSize: 11, fontWeight: 600, color: 'var(--muted2)', textTransform: 'uppercase', letterSpacing: '0.07em', margin: 0 }}>
-              {models.length === 0 ? 'Loading…' : (q || activeFilters > 0) ? `${filtered.length} result${filtered.length !== 1 ? 's' : ''}` : `${filtered.length} models`}
-            </p>
-          </div>
-          {view === 'table' && <ColumnPicker columns={columns} visible={colSel.visible} toggle={colSel.toggle} reset={colSel.reset} />}
-        </div>
+        {/* ── Arena ELO ────────────────────────────────────────────── */}
+        <ChartSection mobile={mobile} eyebrow="Quality" title="Arena ELO." sub="Human preference from anonymous side-by-side battles on arena.ai. Two models answer the same prompt, a person picks the better answer; thousands of those votes become a rating.">
+          <BarPanel wide mobile={mobile} title="Arena ELO" color={GREEN} subtitle={`${scope} · arena.ai`} items={charts.elo} limit={limit} onSelect={open} note="Confidence intervals overlap near the top — models within a few points are statistically tied." />
+        </ChartSection>
 
-        {view === 'charts' ? (
-          <LLMCharts models={filtered} aaConfigured={!!llms.capabilities?.aa} mobile={mobile}
+        {/* ── ELO vs price ─────────────────────────────────────────── */}
+        <ChartSection mobile={mobile} eyebrow="Quality vs cost" title="ELO vs price." sub="Up and to the left is the place to be. The dashed line is the Pareto frontier: nothing is both better and cheaper than a point on it.">
+          <LLMCharts models={filtered} aaConfigured={aa} mobile={mobile} initial="elo-price"
             selected={selected} onSelect={m => setSelected(s => { const n = new Set(s); n.has(m.id) ? n.delete(m.id) : n.add(m.id); return n; })} />
-        ) : (
+        </ChartSection>
+
+        {/* ── Cost ─────────────────────────────────────────────────── */}
+        <ChartSection mobile={mobile} eyebrow="Cost" title="Price per million tokens." sub="Input (solid) stacked with output (light) per 1M tokens from OpenRouter list prices; the label is the blended price at a 3:1 input:output mix.">
+          <BarPanel wide mobile={mobile} title="Input + output price" color={GOLD} subtitle={`${scope} · $ per 1M · OpenRouter`} items={charts.cost} limit={limit} higherIsBetter={false} baseline={0} onSelect={open} />
+        </ChartSection>
+
+        {/* ── Context ──────────────────────────────────────────────── */}
+        <ChartSection mobile={mobile} eyebrow="Context" title="Context window." sub="How much a model can read in one request. Listed by OpenRouter; the largest window a provider actually serves may be smaller — see Provider War.">
+          <BarPanel wide mobile={mobile} title="Context window" color={BLUE} subtitle={`${scope} · tokens · OpenRouter`} items={charts.context} limit={limit} baseline={0} onSelect={open} />
+        </ChartSection>
+
+        {/* ── Artificial Analysis sections, only when configured ───── */}
+        {aa && charts.intel.length > 0 && (
+          <ChartSection mobile={mobile} eyebrow="Intelligence" title="Intelligence Index." sub="Artificial Analysis' composite of reasoning, knowledge, maths and coding evaluations.">
+            <BarPanel wide mobile={mobile} title="Intelligence Index" color={PURPLE} subtitle={`${scope} · Artificial Analysis`} items={charts.intel} limit={limit} onSelect={open} />
+          </ChartSection>
+        )}
+        {aa && charts.speed.length > 0 && (
+          <ChartSection mobile={mobile} eyebrow="Speed" title="Output speed." sub="Median output tokens per second, measured by Artificial Analysis.">
+            <BarPanel wide mobile={mobile} title="Output speed" color={PURPLE} subtitle={`${scope} · tokens/s · Artificial Analysis`} items={charts.speed} limit={limit} baseline={0} onSelect={open} />
+          </ChartSection>
+        )}
+        {aa && charts.ttft.length > 0 && (
+          <ChartSection mobile={mobile} eyebrow="Latency" title="Time to first token." sub="Seconds until the first token arrives, measured by Artificial Analysis.">
+            <BarPanel wide mobile={mobile} title="Time to first token" color={PURPLE} subtitle={`${scope} · seconds · Artificial Analysis`} items={charts.ttft} limit={limit} higherIsBetter={false} baseline={0} onSelect={open} />
+          </ChartSection>
+        )}
+
+        {/* ── The full board ───────────────────────────────────────── */}
+        <ChartSection mobile={mobile} eyebrow="The full board" title={`${filtered.length === models.length ? 'Every model' : `${filtered.length} model${filtered.length !== 1 ? 's' : ''}`}, one table.`}
+          sub="Sort any column, pick the columns you need, open a row for the description and the numbers behind it."
+          action={<ColumnPicker columns={columns} visible={colSel.visible} toggle={colSel.toggle} reset={colSel.reset} />}>
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 10, alignItems: 'center' }}>
+            <Label style={{ marginRight: 6 }}>Sort</Label>
+            {SORTS.map(s => <Chip key={s.key} small active={sort.key === s.key} label={s.label} onClick={() => setSortKey(s.key)} />)}
+          </div>
           <DataTable
             columns={columns} rows={filtered} visible={colSel.visible} sort={sort} onSort={setSort} mobile={mobile}
             rowKey={m => m.id} onRowClick={m => setExpandedId(expandedId === m.id ? null : m.id)} expandedKey={expandedId}
@@ -259,12 +286,12 @@ export default function LeaderboardPage({ liveModels, onNavigate }) {
             emptyText={models.length === 0 ? 'Loading models…' : 'No models match — try adjusting filters'}
             renderExpanded={m => <ExpandedModel m={m} topElo={topElo} mobile={mobile} onNavigate={onNavigate} />}
           />
-        )}
+        </ChartSection>
 
         {/* ── Footer ───────────────────────────────────────────────── */}
         <div style={{ marginTop: 14, display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingInline: 2, flexWrap: 'wrap', gap: 4 }}>
           <p style={{ fontSize: 11, color: 'var(--muted2)', letterSpacing: '-0.01em' }}>
-            {ranked.length} models · ELO from arena.ai human battles · pricing & context via OpenRouter{llms.capabilities?.aa ? ' · performance via Artificial Analysis' : ' · Intelligence Index © Artificial Analysis (via OpenRouter)'}
+            {ranked.length} models · ELO from arena.ai human battles · pricing & context via OpenRouter{aa ? ' · performance via Artificial Analysis' : ' · Intelligence Index © Artificial Analysis (via OpenRouter)'}
           </p>
           <p style={{ fontSize: 11, color: 'var(--muted2)' }}>{RELEASE}</p>
         </div>

@@ -16,6 +16,7 @@ import { AddToBattle } from '../domains/comparison/BattleControls.jsx';
 import { useBattle, addToBattle, removeFromBattle, clearBattle } from '../domains/comparison/battleStore.js';
 import MediaBattle from '../domains/comparison/MediaBattle.jsx';
 import BattleReplay from '../domains/comparison/BattleReplay.jsx';
+import { BarPanel, HighlightGrid } from '../components/Highlights.jsx';
 import { useReplays, useSamples, attachSamples } from '../data/samples.js';
 
 const ScatterChart = lazy(() => import('../components/charts/ScatterChart.jsx'));
@@ -122,6 +123,16 @@ export default function MediaArenaPage({ onNavigate, kind = 'image', slug }) {
         <StatTile label="Fastest generation" value={fastest ? fmtMetric('genTime', fastest.genTime) : NA} sub={fastest ? fastest.name : 'Needs Artificial Analysis'} color={PURPLE} metricKey="genTime" />
         <StatTile label="Best open weights" value={topOpen ? topOpen.elo : NA} sub={topOpen ? `${topOpen.name} · #${topOpen.rank}` : 'None on this board'} color={BLUE} metricKey="elo" />
       </div>
+
+      {rows.length > 0 && (
+        <div style={{ marginBottom: 22 }}>
+          <HighlightGrid mobile={mobile}>
+            <BarPanel mobile={mobile} title="Quality ELO" color={GREEN} subtitle={`${K.boards.find(b => b.id === board)?.label} · arena.ai`} items={rows.slice(0, 10).map(r => ({ id: r.id, name: r.name, org: r.org, value: r.elo, label: String(r.elo) }))} onSelect={it => setExpanded(expanded === it.id ? null : it.id)} />
+            <BarPanel mobile={mobile} title="Price" color={GOLD} subtitle={`Top 10 · ${kind === 'image' ? '$ per image' : '$ per second'}`} higherIsBetter={false} items={rows.slice(0, 10).filter(r => isNum(r[priceKey])).sort((a, b) => a[priceKey] - b[priceKey]).map(r => ({ id: r.id, name: r.name, org: r.org, value: r[priceKey], label: fmtMetric(priceKey, r[priceKey]) }))} onSelect={it => setExpanded(expanded === it.id ? null : it.id)} />
+            <BarPanel mobile={mobile} title="Generation time" color={PURPLE} subtitle="Top 10 · seconds · Artificial Analysis" higherIsBetter={false} items={rows.slice(0, 10).filter(r => isNum(r.genTime)).sort((a, b) => a.genTime - b.genTime).map(r => ({ id: r.id, name: r.name, org: r.org, value: r.genTime, label: fmtMetric('genTime', r.genTime) }))} onSelect={it => setExpanded(expanded === it.id ? null : it.id)} />
+          </HighlightGrid>
+        </div>
+      )}
 
       <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
         <Segmented small value={board} onChange={setBoard} options={K.boards.map(b => ({ value: b.id, label: b.label, count: media.boards?.[b.id]?.length }))} />
