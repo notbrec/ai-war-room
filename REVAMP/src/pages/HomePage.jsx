@@ -9,22 +9,12 @@ import { SF, MONO, EASE, Reveal, AnimatedNumber, LivePulse, ComparisonBar, Skele
 import { LabLogo } from '../components/LabLogo.jsx';
 import HeroArena from '../components/HeroArena.jsx';
 import FightArena from '../components/FightArena.jsx';
-import PicksBoard from '../components/PicksBoard.jsx';
+import FrontBoard from '../components/FrontBoard.jsx';
+import Ticker from '../components/Ticker.jsx';
 import ReplayTeaser from '../components/ReplayTeaser.jsx';
-import WarRoomBoard, { useWarRoomCards } from '../components/WarRoomBoard.jsx';
+import { useWarRoomCards } from '../components/WarRoomBoard.jsx';
 import { DataStatus, Btn, eloColor, eloTier, GREEN, GOLD, RED } from '../components/ui.jsx';
 import { SOURCES } from '../../shared/metrics.js';
-
-const THEATRES = [
-  { id: 'leaderboard', label: 'LLM Rankings', desc: 'Arena ELO, intelligence, price, speed, context — every language model.', prefetch: 'llms' },
-  { id: 'coding',      label: 'Code Ops',     desc: 'Coding agents × models on SWE-bench, with cost per task.' },
-  { id: 'images',      label: 'Image Arena',  desc: 'Text-to-image and editing quality ELO, price per image.' },
-  { id: 'videos',      label: 'Video Arena',  desc: 'Text-to-video and image-to-video, price per second, audio.' },
-  { id: 'speech',      label: 'Voice Comms',  desc: 'Transcription accuracy (WER), speech quality, speed.' },
-  { id: 'providers',   label: 'Provider War', desc: 'Who hosts each model cheapest, with the most context and uptime.' },
-  { id: 'benchmarks',  label: 'Benchmarks',   desc: 'The benchmark matrix — pick a test, compare models, read the method.' },
-  { id: 'methodology', label: 'Methodology',  desc: 'Where every number comes from and how the merge works.' },
-];
 
 const TOOLS = [
   { id: 'compare', label: 'Battle Mode',     desc: 'Up to four models head to head, metric by metric.' },
@@ -36,10 +26,10 @@ const TOOLS = [
 function SectionHead({ eyebrow, title, action, mobile, sub }) {
   return (
     <Reveal>
-      <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: mobile ? 14 : 18, flexWrap: 'wrap', gap: 10 }}>
+      <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: mobile ? 16 : 22, flexWrap: 'wrap', gap: 10 }}>
         <div>
           <p style={{ fontSize: 11, fontWeight: 600, color: 'var(--muted2)', textTransform: 'uppercase', letterSpacing: '0.10em', margin: '0 0 6px', fontFamily: MONO }}>{eyebrow}</p>
-          <h2 style={{ fontSize: mobile ? 26 : 34, fontWeight: 700, letterSpacing: '-0.04em', color: 'var(--text)', margin: 0, lineHeight: 1.05 }}>{title}</h2>
+          <h2 style={{ fontSize: mobile ? 28 : 40, fontWeight: 700, letterSpacing: '-0.045em', color: 'var(--text)', margin: 0, lineHeight: 1.02 }}>{title}</h2>
           {sub && <p style={{ fontSize: 13.5, color: 'var(--muted)', margin: '8px 0 0', lineHeight: 1.5, maxWidth: 640 }}>{sub}</p>}
         </div>
         {action}
@@ -47,6 +37,8 @@ function SectionHead({ eyebrow, title, action, mobile, sub }) {
     </Reveal>
   );
 }
+
+const MEDAL = ['#C9A94E', '#A8A9AD', '#B0783F'];
 
 /* ─── Top 10 ─────────────────────────────────────────────────────────────── */
 function TopTen({ models, onNavigate, mobile, isLoaded }) {
@@ -75,7 +67,7 @@ function TopTen({ models, onNavigate, mobile, isLoaded }) {
               style={{ display: 'grid', gridTemplateColumns: mobile ? '26px minmax(0,1fr) 56px' : '28px minmax(0,1.3fr) minmax(0,1fr) 72px', gap: mobile ? 10 : 14, alignItems: 'center', padding: mobile ? '10px 14px' : '10px 18px', borderBottom: i < top.length - 1 ? '0.5px solid var(--sep2)' : 'none', cursor: 'pointer', transition: 'background 200ms' }}
               onMouseEnter={e => e.currentTarget.style.background = 'var(--hover)'}
               onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
-              <span style={{ fontSize: 11.5, fontWeight: 700, color: i < 3 ? GOLD : 'var(--muted2)', fontFamily: MONO, fontVariantNumeric: 'tabular-nums' }}>{String(i + 1).padStart(2, '0')}</span>
+              <span style={{ fontSize: 11.5, fontWeight: 700, color: MEDAL[i] ?? 'var(--muted2)', fontFamily: MONO, fontVariantNumeric: 'tabular-nums' }}>{String(i + 1).padStart(2, '0')}</span>
               <div style={{ minWidth: 0 }}>
                 <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', letterSpacing: '-0.02em', lineHeight: 1.25, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{m.name}</div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 }}>
@@ -194,19 +186,17 @@ export default function HomePage({ onNavigate, liveModels, countSnapshot }) {
 
         <HeroArena models={liveModels} isLoaded={isLoaded} onNavigate={onNavigate} mobile={mobile} snap={snap} stats={stats} />
 
-        {/* Situation board — every front, every card */}
-        <section style={{ marginTop: gapY }}>
-          <SectionHead mobile={mobile} eyebrow="Situation board" title="Who holds every front."
-            action={<DataStatus status={wr.status} fetchedAt={wr.fetchedAt} sources={['arena', 'openrouter', 'swebench', 'openasr', ...(wr.capabilities?.aa ? ['aa'] : [])]} loading={wr.loading} compact={mobile} />} />
-          <WarRoomBoard onNavigate={onNavigate} mobile={mobile} />
-        </section>
+        {/* the tape */}
+        <div style={{ margin: mobile ? '28px -18px 0' : '40px 0 0', opacity: 0, animation: `aiwar-fade-in 900ms ${EASE} 1200ms both` }}>
+          <Ticker models={liveModels} onNavigate={onNavigate} mobile={mobile} />
+        </div>
 
-        {/* Picks */}
+        {/* The board — who wins what, on every front */}
         <section style={{ marginTop: gapY }}>
-          <SectionHead mobile={mobile} eyebrow="Picks" title="Which model should I use?"
-            sub="The top pick and the best-value pick for each job, scored from the live data with the Mission Planner's default weights. Open a card to see the arithmetic or change the weights."
-            action={<Btn small onClick={() => onNavigate('planner')}>Mission Planner →</Btn>} />
-          <PicksBoard onNavigate={onNavigate} mobile={mobile} />
+          <SectionHead mobile={mobile} eyebrow="The board" title="Who wins what."
+            sub="Every front, one winner — and the best-value alternative underneath. Scored from live sources; open a card for the model, or the planner for the arithmetic."
+            action={<DataStatus status={wr.status} fetchedAt={wr.fetchedAt} sources={['arena', 'openrouter', 'swebench', 'openasr', ...(wr.capabilities?.aa ? ['aa'] : [])]} loading={wr.loading} compact={mobile} />} />
+          <FrontBoard onNavigate={onNavigate} mobile={mobile} />
         </section>
 
         {/* Top 10 + labs */}
@@ -252,25 +242,6 @@ export default function HomePage({ onNavigate, liveModels, countSnapshot }) {
           <SectionHead mobile={mobile} eyebrow="Battle Replay" title="Watch a real one."
             sub="Two models, one prompt, and the crowd already voted. Pick the better clip — the names appear after." />
           <ReplayTeaser onNavigate={onNavigate} mobile={mobile} />
-        </section>
-
-        {/* Every front */}
-        <section style={{ marginTop: gapY }}>
-          <SectionHead mobile={mobile} eyebrow="Theatres of operation" title="Every front, one terminal." />
-          <div style={{ display: 'grid', gridTemplateColumns: mobile ? '1fr 1fr' : 'repeat(4, 1fr)', gap: 10 }}>
-            {THEATRES.map((s, i) => (
-              <Reveal key={s.id} delay={i * 40} y={16}>
-                <div onClick={() => onNavigate(s.id)} className="aiwar-card-hover" role="link" tabIndex={0} onKeyDown={e => e.key === 'Enter' && onNavigate(s.id)}
-                  style={{ background: 'var(--card)', border: '0.5px solid var(--sep)', padding: mobile ? '12px 12px' : '16px 18px', cursor: 'pointer', height: '100%' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-                    <span style={{ fontSize: mobile ? 13 : 14.5, fontWeight: 600, color: 'var(--text)', letterSpacing: '-0.025em' }}>{s.label}</span>
-                    <span style={{ fontFamily: MONO, fontSize: 10, color: 'var(--muted2)' }}>{String(i + 1).padStart(2, '0')}</span>
-                  </div>
-                  <div style={{ fontSize: mobile ? 11.5 : 12.5, color: 'var(--muted)', lineHeight: 1.5 }}>{s.desc}</div>
-                </div>
-              </Reveal>
-            ))}
-          </div>
         </section>
 
         {/* Sources */}

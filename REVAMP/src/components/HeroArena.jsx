@@ -96,6 +96,7 @@ export default function HeroArena({ models, isLoaded, onNavigate, mobile, snap, 
 
       {/* the fight — full width, edge-masked, standing on the page */}
       <div style={{
+        position: 'relative',
         margin: mobile ? '10px -18px 0' : '4px 0 0',
         opacity: 0, animation: `aiwar-fade-in 1100ms ${EASE} 520ms both`,
       }}>
@@ -108,6 +109,11 @@ export default function HeroArena({ models, isLoaded, onNavigate, mobile, snap, 
           alt={champ && chall ? `${champ.name} versus ${chall.name}` : 'Two robots fighting'}
           style={{ WebkitMaskImage: MASK, maskImage: MASK, WebkitMaskComposite: 'source-in', maskComposite: 'intersect' }}
         />
+        {/* the sparks between them, warmed: a soft accent glow at the point of impact */}
+        <div aria-hidden style={{
+          position: 'absolute', inset: 0, pointerEvents: 'none',
+          background: 'radial-gradient(ellipse 28% 36% at 50% 56%, rgba(205,92,78,0.22), rgba(205,92,78,0) 100%)',
+        }} />
       </div>
 
       {/* tale of the tape */}
@@ -120,7 +126,7 @@ export default function HeroArena({ models, isLoaded, onNavigate, mobile, snap, 
       }}>
         <Fighter m={isLoaded ? champ : null} side="left" role="Champion · #1" color="var(--accent)" mobile={mobile} onNavigate={onNavigate} />
         <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
-          <span style={{ fontFamily: MONO, fontSize: mobile ? 12 : 14, fontWeight: 700, letterSpacing: '0.18em', color: 'var(--muted2)' }}>VS</span>
+          <span style={{ fontFamily: MONO, fontSize: mobile ? 14 : 20, fontWeight: 700, letterSpacing: '0.20em', color: 'var(--accent)', paddingLeft: '0.2em' }}>VS</span>
           {gap != null && isLoaded && (
             <span style={{ fontFamily: MONO, fontSize: 10.5, color: 'var(--muted)', whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums' }}>
               Δ {Math.round(gap)} ELO
