@@ -30,7 +30,7 @@ const topId = llms.models[0].id;
 localStorage.setItem('aiwar-battle-v1', JSON.stringify({ kind: 'llm', items: llms.models.slice(0, 3).map(m => ({ id: m.id, kind: 'llm', name: m.name, org: m.org })) }));
 
 const pages = [
-  ['WarRoomPage', () => import('../src/pages/WarRoomPage.jsx'), {}],
+  ['HomePage', () => import('../src/pages/HomePage.jsx'), { liveModels: null, countSnapshot: { count: 350, exact: false } }],
   ['LeaderboardPage', () => import('../src/pages/LeaderboardPage.jsx'), { liveModels: null }],
   ['CodeOpsPage', () => import('../src/pages/CodeOpsPage.jsx'), {}],
   ['MediaArenaPage:image', () => import('../src/pages/MediaArenaPage.jsx'), { kind: 'image' }],

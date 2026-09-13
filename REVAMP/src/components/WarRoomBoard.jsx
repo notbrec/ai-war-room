@@ -11,13 +11,7 @@ import { fmtMetric, fmtAgo, isNum, NA, SOURCES } from '../../shared/metrics.js';
 import { recommend } from '../../shared/recommend.js';
 import { Label, Delta, SourceTag, eloColor, GREEN, GOLD, RED, BLUE, PURPLE } from './ui.jsx';
 import { Skeleton } from './design.jsx';
-
-function llmCandidates(models) {
-  return models.map(m => ({ id: m.id, name: m.name, org: m.org, isReasoning: m.isThinking, m, metrics: {
-    elo: m.arena?.elo, intelligence: m.aa?.intelligence, codingIndex: m.aa?.codingIndex, agenticIndex: m.aa?.agenticIndex,
-    priceBlended: m.priceBlended, priceIn: m.priceIn, speed: m.aa?.speed, ttft: m.aa?.ttft, context: m.context, open: m.isOpen,
-  } }));
-}
+import { llmCandidates } from '../data/candidates.js';
 
 export function useWarRoomCards() {
   const llms = useLLMs(), media = useMedia(), coding = useCoding(), speech = useSpeech(), prov = useProviders();

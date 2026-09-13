@@ -12,6 +12,7 @@ import { PageFrame, PageTitle, DataStatus, Panel, Label, Chip, Btn, EmptyState, 
 import { MISSIONS, DEFAULT_WEIGHTS, recommend } from '../../shared/recommend.js';
 import { fmtMetric, isNum, NA, metric } from '../../shared/metrics.js';
 import { AddToBattle } from '../domains/comparison/BattleControls.jsx';
+import { poolFor } from '../data/candidates.js';
 
 const SLIDERS = [
   { key: 'quality', label: 'Quality', color: GREEN, hint: 'ELO / index of the mission' },
@@ -21,16 +22,6 @@ const SLIDERS = [
   { key: 'open',    label: 'Open weights', color: GREEN, hint: 'bonus for downloadable weights' },
 ];
 
-function llmCandidates(models) {
-  return models.filter(m => m.inArena || isNum(m.aa?.intelligence)).map(m => ({ id: m.id, name: m.name, org: m.org, slug: m.slug, isReasoning: m.isThinking, kind: 'llm', metrics: {
-    elo: m.arena?.elo, intelligence: m.aa?.intelligence, codingIndex: m.aa?.codingIndex, agenticIndex: m.aa?.agenticIndex,
-    priceBlended: m.priceBlended, priceIn: m.priceIn, speed: m.aa?.speed, ttft: m.aa?.ttft, context: m.context, open: m.isOpen,
-  } }));
-}
-function mediaCandidates(rows, kind) {
-  return rows.map(r => ({ id: r.id, name: r.name, org: r.org, kind, board: r.board, metrics: { elo: r.elo, pricePerImage: r.pricePerImage, pricePerSecond: r.pricePerSecond, genTime: r.genTime, open: r.isOpen } }));
-}
-
 export default function MissionPlannerPage({ onNavigate, slug }) {
   const mobile = useMobile();
   const llms = useLLMs(); const media = useMedia(); const speech = useSpeech();
@@ -39,17 +30,7 @@ export default function MissionPlannerPage({ onNavigate, slug }) {
   const [touched, setTouched] = useState(false);
   const mission = MISSIONS.find(m => m.id === missionId);
 
-  const rows = useMemo(() => {
-    switch (mission.pool) {
-      case 'llm': return llmCandidates(llms.models);
-      case 'image': return mediaCandidates(media.boards?.['text-to-image'] ?? [], 'image');
-      case 'image-edit': return mediaCandidates(media.boards?.['image-edit'] ?? [], 'image');
-      case 'video': return mediaCandidates(media.boards?.['text-to-video'] ?? [], 'video');
-      case 'tts': return speech.tts.map(r => ({ id: r.modelId ?? r.id, name: r.name, org: r.org, kind: 'tts', metrics: { ttsQuality: r.elo, pricePer1mChars: r.pricePer1mChars, ttft: r.ttft, open: r.isOpen } }));
-      case 'stt': return speech.stt.map(r => ({ id: r.id, name: r.name, org: r.org, kind: 'stt', metrics: { wer: r.wer, rtfx: r.rtfx, pricePerMinute: null, open: r.isOpen } }));
-      default: return [];
-    }
-  }, [mission, llms.models, media.boards, speech.tts, speech.stt]);
+  const rows = useMemo(() => poolFor(mission.pool, { llms, media, speech }), [mission, llms.models, media.boards, speech.tts, speech.stt]);
 
   const effective = touched ? weights : { ...DEFAULT_WEIGHTS, ...(mission.preset ?? {}) };
   const result = useMemo(() => rows.length ? recommend(mission, rows, effective) : null, [mission, rows, effective]);

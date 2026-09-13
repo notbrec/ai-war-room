@@ -3,7 +3,6 @@ import { useTheme }              from './hooks/useTheme.js';
 import NavBar                    from './components/NavBar.jsx';
 import Footer                    from './components/Footer.jsx';
 import CyberBackground           from './components/CyberBackground.jsx';
-import LoadingScreen             from './components/LoadingScreen.jsx';
 import HomePage                  from './pages/HomePage.jsx';
 import LeaderboardPage           from './pages/LeaderboardPage.jsx';
 import MethodologyPage           from './pages/MethodologyPage.jsx';
@@ -22,7 +21,6 @@ import { BattleDrawer, BattleToastHost } from './domains/comparison/BattleContro
 import { prefetch } from './data/api.js';
 
 // Command-center pages are code-split: the home + leaderboard shell stays small.
-const WarRoomPage       = lazy(() => import('./pages/WarRoomPage.jsx'));
 const CodeOpsPage       = lazy(() => import('./pages/CodeOpsPage.jsx'));
 const MediaArenaPage    = lazy(() => import('./pages/MediaArenaPage.jsx'));
 const VoiceCommsPage    = lazy(() => import('./pages/VoiceCommsPage.jsx'));
@@ -111,12 +109,6 @@ function PageFallback() {
 export default function App() {
   const { dark, toggle } = useTheme();
   const [route, setRoute] = useState(routeFromHash);
-  // Intro plays once per browser session, and only when landing on home.
-  const [intro, setIntro] = useState(() => {
-    try {
-      return routeFromHash().type === 'home' && !sessionStorage.getItem('aiwar-intro-seen');
-    } catch { return false; }
-  });
   const [liveModels, setLiveModels] = useState(readCache);
   // Stable count: starts from localStorage (or 280+ default), updates only on a real live load
   // so the user never sees the static 63-entry fallback flash through the UI.
@@ -141,8 +133,8 @@ export default function App() {
       .catch(() => {
         setLiveModels(prev => prev ?? MODELS);
       });
-    // Warm the merged dataset so the first command-center page opens instantly.
-    const t = setTimeout(() => prefetch('llms'), 1200);
+    // Warm the merged datasets the home board and the picks read from.
+    const t = setTimeout(() => { prefetch('llms'); prefetch('media'); prefetch('coding'); prefetch('speech'); prefetch('providers'); }, 800);
     return () => clearTimeout(t);
   }, []);
 
@@ -184,7 +176,7 @@ export default function App() {
 
   let body;
   switch (route.type) {
-    case 'warroom':      body = <WarRoomPage      onNavigate={navigate} />; break;
+    case 'warroom':      body = <HomePage         onNavigate={navigate} liveModels={liveModels} countSnapshot={countSnapshot} />; break;
     case 'leaderboard':  body = <LeaderboardPage  onNavigate={navigate} liveModels={liveModels} countSnapshot={countSnapshot} />; break;
     case 'coding':       body = <CodeOpsPage      onNavigate={navigate} slug={route.slug} />; break;
     case 'images':       body = <MediaArenaPage   onNavigate={navigate} kind="image" slug={route.slug} />; break;
@@ -211,12 +203,6 @@ export default function App() {
 
   return (
     <>
-      {intro && (
-        <LoadingScreen onDone={() => {
-          try { sessionStorage.setItem('aiwar-intro-seen', '1'); } catch {}
-          setIntro(false);
-        }} />
-      )}
       <GlobalMotion />
       <SmoothScroll />
       <ScrollProgress />
@@ -249,7 +235,7 @@ function pathForRoute(r) {
 }
 
 const TITLES = {
-  warroom: 'War Room — AI command center', leaderboard: 'LLM Rankings — Leaderboard', coding: 'Code Ops — coding agents & models',
+  warroom: 'War Room', leaderboard: 'LLM Rankings — Leaderboard', coding: 'Code Ops — coding agents & models',
   images: 'Image Arena — text-to-image & editing rankings', videos: 'Video Arena — text-to-video & image-to-video rankings',
   speech: 'Voice Comms — speech-to-text & text-to-speech', providers: 'Provider War — inference providers compared',
   benchmarks: 'Benchmarks — the capability matrix', compare: 'Battle Mode — head-to-head comparison',

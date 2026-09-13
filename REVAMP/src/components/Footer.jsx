@@ -47,7 +47,7 @@ export default function Footer({ onNavigate }) {
         }}>
 
           <Column title="Command">
-            <FooterLink onClick={() => onNavigate('warroom')}>War Room</FooterLink>
+            <FooterLink onClick={() => onNavigate('home')}>War Room</FooterLink>
             <FooterLink onClick={() => onNavigate('leaderboard')}>LLM Rankings</FooterLink>
             <FooterLink onClick={() => onNavigate('coding')}>Code Ops</FooterLink>
             <FooterLink onClick={() => onNavigate('images')}>Image Arena</FooterLink>
@@ -61,6 +61,7 @@ export default function Footer({ onNavigate }) {
             <FooterLink onClick={() => onNavigate('compare')}>Battle Mode</FooterLink>
             <FooterLink onClick={() => onNavigate('race')}>Speed Race</FooterLink>
             <FooterLink onClick={() => onNavigate('planner')}>Mission Planner</FooterLink>
+            <FooterLink onClick={() => onNavigate({ type: 'videos', slug: 'replay' })}>Battle Replay</FooterLink>
             <FooterLink onClick={() => onNavigate('guide')}>Guide</FooterLink>
             <FooterLink onClick={() => onNavigate('faq')}>FAQ</FooterLink>
             <FooterLink onClick={() => onNavigate('methodology')}>Methodology</FooterLink>

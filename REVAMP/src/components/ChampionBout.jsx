@@ -3,6 +3,8 @@ import { ORG_CONFIG } from '../models-data.js';
 import { LabLogo } from './LabLogo.jsx';
 import FightArena from './FightArena.jsx';
 
+const EDGE_MASK = 'linear-gradient(90deg, transparent 0, #000 14%, #000 86%, transparent 100%), linear-gradient(180deg, transparent 0, #000 10%, #000 94%, transparent 100%)';
+
 /* ─────────────────────────────────────────────────────────────────────────
    <ChampionBout/> — the two top-ranked models, personified as the
    combatants in the war room. Makes the robots literal: rank #1 (the
@@ -129,7 +131,8 @@ export default function ChampionBout({ models, onNavigate, mobile, variant = 'ar
             /* melts into the card rather than sitting on it as a panel */
             surface="var(--card)"
             alt={`${champ.name} versus ${chall.name}`}
-            style={{ width: mobile ? 132 : 248, flexShrink: 0 }}
+            /* fade the edges so the clip has no visible frame on the card */
+            style={{ width: mobile ? 132 : 248, flexShrink: 0, WebkitMaskImage: EDGE_MASK, maskImage: EDGE_MASK, WebkitMaskComposite: 'source-in', maskComposite: 'intersect' }}
           />
         ) : (
           <span style={{
