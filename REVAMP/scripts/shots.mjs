@@ -55,5 +55,5 @@ for (const [name, p] of PAGES) {
   }
 }
 ws.close(); chrome.kill();
-if (errors.length) { console.log('\nCONSOLE ERRORS'); for (const e of errors) console.log(e.page, e.errs.slice(0, 3)); }
+if (errors.length) { console.log('\nCONSOLE ERRORS'); for (const e of errors) console.log(e.page, JSON.stringify(e.errs.slice(0, 3))); }
 process.exit(0);

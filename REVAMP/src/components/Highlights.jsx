@@ -5,6 +5,7 @@
 // library. The same panel draws the three-across highlight row and the
 // full-width sections of a rankings page (`wide`).
 
+import { useEffect, useState } from 'react';
 import { MONO, SF, EASE } from './design.jsx';
 import { LabLogo } from './LabLogo.jsx';
 import { ORG_CONFIG } from '../models-data.js';
@@ -125,7 +126,7 @@ export function HighlightGrid({ children, mobile, cols = 3 }) {
 /** Section frame for a rankings page: eyebrow, big title, one line of copy, the chart. */
 export function ChartSection({ id, eyebrow, title, sub, action, mobile, children }) {
   return (
-    <section id={id} style={{ marginTop: mobile ? 40 : 60 }}>
+    <section id={id} data-section={id} style={{ marginTop: mobile ? 40 : 60, scrollMarginTop: 110 }}>
       <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 14 }}>
         <div>
           {eyebrow && <p style={{ fontSize: 11, fontWeight: 600, color: 'var(--muted2)', textTransform: 'uppercase', letterSpacing: '0.10em', margin: '0 0 6px', fontFamily: MONO }}>{eyebrow}</p>}
@@ -136,6 +137,36 @@ export function ChartSection({ id, eyebrow, title, sub, action, mobile, children
       </div>
       {children}
     </section>
+  );
+}
+
+/* ─── SectionNav — the page's table of contents, stuck under the nav ─────
+   Programmatic scroll, never a hash link: the router owns the hash. */
+export function SectionNav({ sections, mobile }) {
+  const [active, setActive] = useState(sections[0]?.id);
+  useEffect(() => {
+    const onScroll = () => {
+      const y = window.scrollY + 130;
+      let cur = sections[0]?.id;
+      for (const s of sections) { const el = document.getElementById(s.id); if (el && el.offsetTop <= y) cur = s.id; }
+      setActive(cur);
+    };
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, [sections]);
+  const go = id => { const el = document.getElementById(id); if (!el) return; window.scrollTo({ top: el.offsetTop - 96, behavior: 'smooth' }); };
+  return (
+    <div style={{ position: 'sticky', top: mobile ? 50 : 79, zIndex: 40, margin: mobile ? '0 -16px' : 0, background: 'var(--nav)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', borderBottom: '0.5px solid var(--sep)', borderTop: '0.5px solid var(--sep)' }}>
+      <div className="aiwar-strip" style={{ display: 'flex', alignItems: 'center', overflowX: 'auto', paddingInline: mobile ? 8 : 4, scrollbarWidth: 'none' }}>
+        {sections.map(s => (
+          <button key={s.id} onClick={() => go(s.id)} style={{ height: 36, paddingInline: 11, background: 'none', border: 'none', cursor: 'pointer', flexShrink: 0, position: 'relative', fontFamily: MONO, fontSize: 10.5, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: active === s.id ? 'var(--text)' : 'var(--muted)', whiteSpace: 'nowrap', transition: 'color 150ms' }}>
+            {s.label}
+            <span aria-hidden style={{ position: 'absolute', left: 11, right: 11, bottom: 0, height: 2, background: 'var(--accent)', transform: active === s.id ? 'scaleX(1)' : 'scaleX(0)', transformOrigin: 'left', transition: `transform 300ms ${EASE}` }} />
+          </button>
+        ))}
+      </div>
+    </div>
   );
 }
 
