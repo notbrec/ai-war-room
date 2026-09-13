@@ -55,16 +55,27 @@ async function loadAALLMs() {
   }
   if (!rows) return aaWebEnabled() ? fetchAAWebLLMs() : null;
   if (aaWebEnabled()) {
+    // The pages measure more models than the API exposes (the API reports 0
+    // for many), so every field the API leaves empty is filled from the page
+    // row of the same slug; the API value wins wherever both exist.
     try {
       const web = await fetchAAWebLLMs();
-      const retired = new Set(web.filter(r => r.deprecated).map(r => r.slug));
-      for (const r of rows) if (retired.has(r.slug)) r.deprecated = true;
-    } catch { /* the flags are a nicety; the API rows stand on their own */ }
+      const bySlug = new Map(web.map(r => [r.slug, r]));
+      const FILL = ['speed', 'ttft', 'ttfat', 'e2e', 'context', 'priceIn', 'priceOut', 'priceBlended', 'priceCacheRead', 'priceCacheWrite', 'releaseDate', 'isOpen'];
+      for (const r of rows) {
+        const w = bySlug.get(r.slug);
+        if (!w) continue;
+        if (w.deprecated) r.deprecated = true;
+        for (const k of FILL) if (r[k] == null && w[k] != null) r[k] = w[k];
+        if (w.benchmarks) { r.benchmarks = r.benchmarks ?? {}; for (const [k, v] of Object.entries(w.benchmarks)) if (r.benchmarks[k] == null && v != null) r.benchmarks[k] = v; }
+        if (r.intelligence == null && w.intelligence != null) r.intelligence = w.intelligence;
+      }
+    } catch { /* the pages are optional here; the API rows stand on their own */ }
   }
   return rows;
 }
 const aaLLMs = () => (aaConfigured() || aaWebEnabled())
-  ? cached(key('aa:llms:v2'), HOURS(3), loadAALLMs, { minValid: isList(10) })
+  ? cached(key('aa:llms:v3'), HOURS(3), loadAALLMs, { minValid: isList(10) })
   : Promise.resolve(AA_OFF);
 
 // Media, voices and transcription: the Data API returns only ELO / rank / CI
@@ -278,7 +289,7 @@ export async function loadHistory() {
 // ── Status ─────────────────────────────────────────────────────────────────
 export async function loadStatus() {
   const entries = await Promise.all([
-    readBlob(key('arena:text')), readBlob(key('openrouter:models')), readBlob(key('swebench')), readBlob(key('openasr')), readBlob(key('aa:llms:v2')),
+    readBlob(key('arena:text')), readBlob(key('openrouter:models')), readBlob(key('swebench')), readBlob(key('openasr')), readBlob(key('aa:llms:v3')),
   ]);
   const [a, o, s, r, aa] = entries;
   const st = e => e?.fetchedAt ? { status: 'cached', fetchedAt: e.fetchedAt } : { status: 'cold', fetchedAt: null };
