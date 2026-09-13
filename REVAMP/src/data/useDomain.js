@@ -50,7 +50,7 @@ export function useCoding() {
 }
 export function useSpeech() {
   const d = useDomain('speech');
-  return { ...d, stt: d.data?.stt ?? [], tts: d.data?.tts ?? [], s2s: d.data?.s2s ?? [], sources: d.data?.sources ?? {}, capabilities: d.data?.capabilities ?? {} };
+  return { ...d, stt: d.data?.stt ?? [], sttAA: d.data?.sttAA ?? [], tts: d.data?.tts ?? [], s2s: d.data?.s2s ?? [], sources: d.data?.sources ?? {}, capabilities: d.data?.capabilities ?? {} };
 }
 export function useProviders() {
   const d = useDomain('providers');

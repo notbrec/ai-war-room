@@ -138,7 +138,8 @@ export default function BattlePage({ onNavigate }) {
           {recs.length >= 2 && (kind === 'image' || kind === 'video') && (
             <div style={{ marginBottom: 16 }}>
               <MediaBattle kind={kind} roster={recs} candidates={Object.values(media.boards ?? {}).flat().filter(m => m.kind === kind)} priceKey={kind === 'image' ? 'pricePerImage' : 'pricePerSecond'} mobile={mobile} liveBattle={!!status.data?.capabilities?.liveBattle}
-                onAdd={r => addToBattle({ id: r.id, kind, name: r.name, org: r.org, board: r.board })} onRemove={removeFromBattle} onClear={clearBattle} />
+                onAdd={r => addToBattle({ id: r.id, kind, name: r.name, org: r.org, board: r.board })} onRemove={removeFromBattle} onClear={clearBattle}
+                showRoster={false} onReplay={() => onNavigate({ type: kind === 'video' ? 'videos' : 'images', slug: 'replay' })} />
             </div>
           )}
 

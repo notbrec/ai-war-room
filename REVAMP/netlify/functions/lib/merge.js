@@ -76,6 +76,7 @@ export function mergeLLMs(src) {
   }
 
   for (const m of aa) {
+    if (m.deprecated) continue;   // retired on AA: joins above, never listed on its own
     if (seen.has(m.modelId)) continue;
     if (!isNum(m.intelligence)) continue;
     seen.add(m.modelId);
@@ -109,7 +110,7 @@ function buildRecord({ id, arena, or, aa, vision, search }) {
     mathIndex:    aa?.mathIndex ?? null,
     speed: aa?.speed ?? null, ttft: aa?.ttft ?? null, e2e: aa?.e2e ?? null,
     benchmarks: aa?.benchmarks ?? null,
-    via: aa ? 'aa-api' : 'openrouter',
+    via: aa ? (aa.via ?? 'aa-api') : 'openrouter',
   } : null;
 
   const sources = [];
@@ -174,21 +175,9 @@ export function mergeMedia(board, arenaRows, aaRows) {
       sources: ['arena', ...(hit ? ['aa'] : [])],
     };
   });
-  // AA-only rows (when the key is configured) are appended without an arena rank.
-  const seen = new Set(out.map(r => r.id));
-  for (const m of aaRows ?? []) {
-    if (seen.has(m.modelId) || !isNum(m.elo)) continue;
-    seen.add(m.modelId);
-    out.push({
-      id: m.modelId, board, kind, slug: m.slug ?? bareKey(m.name), name: m.name, org: m.org, license: null, isOpen: m.isOpen ?? false,
-      rank: null, elo: Math.round(m.elo), rating: m.elo, ci: m.ci, votes: null, url: null, isNew: false,
-      pricePerImage: m.pricePerImage, pricePer1kImages: isNum(m.pricePerImage) ? m.pricePerImage * 1000 : (m.pricePer1kImages ?? null),
-      pricePerSecond: m.pricePerSecond, pricePerMinute: isNum(m.pricePerSecond) ? m.pricePerSecond * 60 : null,
-      genTime: m.genTime, genTimeP25: m.genTimeP25, genTimeP75: m.genTimeP75,
-      hasAudio: kind === 'video' ? m.hasAudio : null, resolution: m.resolution, releaseDate: m.releaseDate, provider: m.provider,
-      sources: ['aa'],
-    });
-  }
+  // Rows Artificial Analysis rates but arena.ai does not are deliberately NOT appended: AA's
+  // ELO is fitted on a different pool and scale, so mixing the two into one ranked column
+  // would mislead. AA only enriches the arena board here (times, prices, providers).
   return out;
 }
 

@@ -7,8 +7,9 @@ import { BarPanel } from '../components/Highlights.jsx';
 import { LabLogo } from '../components/LabLogo.jsx';
 import { useSpeech } from '../data/useDomain.js';
 import DataTable, { useColumnSelection, ColumnPicker } from '../components/table/DataTable.jsx';
-import { PageFrame, PageTitle, DataStatus, Panel, Label, Chip, Segmented, StatTile, EmptyState, BadgeTag, Btn, Unavailable, GREEN, GOLD, BLUE, PURPLE } from '../components/ui.jsx';
+import { PageFrame, PageTitle, DataStatus, Panel, Label, Chip, Segmented, StatTile, EmptyState, BadgeTag, SourceTag, Btn, Unavailable, GREEN, GOLD, BLUE, PURPLE } from '../components/ui.jsx';
 import { fmtMetric, isNum, NA, METRICS } from '../../shared/metrics.js';
+import { bareKey } from '../../shared/ids.js';
 import { AddToBattle } from '../domains/comparison/BattleControls.jsx';
 import AudioLanes from '../domains/comparison/AudioLanes.jsx';
 import { useSamples, attachSamples } from '../data/samples.js';
@@ -26,9 +27,28 @@ export default function VoiceCommsPage({ onNavigate, slug }) {
   const [sort, setSort] = useState({ key: 'wer', dir: 'asc' });
   const [expanded, setExpanded] = useState(null);
 
-  const stt = speech.stt;
+  // Hosted API prices and speeds (Artificial Analysis) joined onto the Open ASR rows by name.
+  const aaByKey = useMemo(() => new Map(speech.sttAA.map(r => [bareKey(r.name), r])), [speech.sttAA]);
+  const stt = useMemo(() => speech.stt.map(r => { const hit = aaByKey.get(bareKey(r.name)); return hit ? { ...r, pricePerMinute: hit.pricePerMinute ?? null, apiSpeedFactor: hit.speedFactor ?? null } : r; }), [speech.stt, aaByKey]);
   const q = query.trim().toLowerCase();
   const sttRows = useMemo(() => stt.filter(r => (!q || `${r.name} ${r.org}`.toLowerCase().includes(q)) && (!openOnly || r.isOpen)), [stt, q, openOnly]);
+  const [aaSort, setAaSort] = useState({ key: 'wer', dir: 'asc' });
+  const sttAACols = useMemo(() => [
+    { key: 'model', label: 'Service', sticky: true, width: mobile ? 210 : 300, value: r => r.rank, defaultDir: 'asc', render: r => (
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
+        <span style={{ width: 24, textAlign: 'right', fontFamily: MONO, fontSize: 11.5, color: r.rank <= 3 ? 'var(--text)' : 'var(--muted)', fontWeight: r.rank <= 3 ? 700 : 500, fontVariantNumeric: 'tabular-nums' }}>{r.rank}</span>
+        <LabLogo org={r.org} size={16} />
+        <div style={{ minWidth: 0 }}>
+          <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', letterSpacing: '-0.02em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: mobile ? 150 : 220 }}>{r.name}</div>
+          <div style={{ fontSize: 10.5, color: 'var(--muted)' }}>{r.org}{r.provider && r.provider !== r.org ? ` · via ${r.provider}` : ''}{r.isOpen ? ' · 🔓' : ''}</div>
+        </div>
+      </div>) },
+    { key: 'wer', label: 'Word error rate', short: 'WER', metricKey: 'wer', numeric: true, width: 124, bar: true, barColor: GREEN, barWidth: 40, valueWidth: 52, value: r => r.wer, render: r => <span style={{ fontWeight: 700 }}>{fmtMetric('wer', r.wer)}</span> },
+    { key: 'price', label: 'Price per minute', short: '$/min', metricKey: 'pricePerMinute', numeric: true, width: 84, value: r => r.pricePerMinute, render: r => isNum(r.pricePerMinute) ? `$${r.pricePerMinute.toFixed(4)}` : <span style={{ color: 'var(--muted2)' }}>{NA}</span> },
+    { key: 'price1k', label: 'Price per 1,000 minutes', short: '$/1K min', numeric: true, width: 90, higherIsBetter: false, value: r => r.pricePer1kMinutes, render: r => isNum(r.pricePer1kMinutes) ? fmtMetric('priceIn', r.pricePer1kMinutes) : <span style={{ color: 'var(--muted2)' }}>{NA}</span> },
+    { key: 'speed', label: 'Speed factor', short: 'Speed', numeric: true, width: 110, bar: true, barColor: PURPLE, barWidth: 36, valueWidth: 44, higherIsBetter: true, value: r => r.speedFactor, render: r => isNum(r.speedFactor) ? `${r.speedFactor.toFixed(0)}×` : <span style={{ color: 'var(--muted2)' }}>{NA}</span> },
+    { key: 'battle', label: '', width: 70, sortable: false, align: 'right', render: r => <AddToBattle item={{ id: r.id, kind: 'stt', name: r.name, org: r.org }} /> },
+  ], [mobile]);
   const datasets = useMemo(() => { const s = new Set(); for (const r of stt) for (const k of Object.keys(r.perDataset ?? {})) s.add(k); return [...s]; }, [stt]);
 
   const columns = useMemo(() => [
@@ -46,7 +66,7 @@ export default function VoiceCommsPage({ onNavigate, slug }) {
     { key: 'paramsB', label: 'Parameters', short: 'Params', metricKey: 'paramsB', numeric: true, width: 66, value: r => r.paramsB, render: r => fmtMetric('paramsB', r.paramsB) },
     { key: 'languages', label: 'Languages', short: 'Langs', numeric: true, width: 60, default: false, value: r => r.languages },
     { key: 'streaming', label: 'Streaming', width: 80, default: false, value: r => r.streaming, render: () => <span style={{ color: 'var(--muted2)' }} title="Not published by the Open ASR Leaderboard">{NA}</span> },
-    { key: 'price', label: 'Price per minute', short: '$/min', metricKey: 'pricePerMinute', numeric: true, width: 70, default: false, value: () => null, render: () => <span style={{ color: 'var(--muted2)' }} title="Pricing not published by this source">{NA}</span> },
+    { key: 'price', label: 'Price per minute (hosted API)', short: '$/min', metricKey: 'pricePerMinute', numeric: true, width: 84, value: r => r.pricePerMinute, render: r => isNum(r.pricePerMinute) ? `$${r.pricePerMinute.toFixed(4)}` : <span style={{ color: 'var(--muted2)' }} title="No hosted API price listed by Artificial Analysis for this model">{NA}</span> },
     { key: 'license', label: 'Licence', width: 130, default: false, value: r => r.license, maxWidth: 150, render: r => <span style={{ fontSize: 11, color: r.isOpen ? GREEN : 'var(--muted)' }}>{r.license ?? NA}</span> },
     { key: 'arch', label: 'Architecture', width: 130, default: false, mobile: false, value: r => `${r.encoder ?? ''}/${r.decoder ?? ''}`, render: r => (r.encoder || r.decoder) ? <span style={{ fontFamily: MONO, fontSize: 10.5, color: 'var(--muted)' }}>{r.encoder ?? '?'} → {r.decoder ?? '?'}</span> : <span style={{ color: 'var(--muted2)' }}>{NA}</span> },
     ...datasets.map(d => ({ key: `ds:${d}`, label: `${d} WER`, short: d.replace(/-Cleaned.*|-AA.*/g, ''), group: 'Per-dataset WER', metricKey: 'wer', numeric: true, width: 74, default: false, value: r => r.perDataset?.[d], render: r => fmtMetric('wer', r.perDataset?.[d]) })),
@@ -111,13 +131,36 @@ export default function VoiceCommsPage({ onNavigate, slug }) {
             </Panel>
           )}
           <p style={{ fontSize: 11.5, color: 'var(--muted)', marginTop: 12, lineHeight: 1.55 }}>
-            WER is averaged across {datasets.length || 8} English test sets with normalised transcripts. Pricing, streaming support and transcript latency are not published by the Open ASR Leaderboard, so those columns stay N/A rather than guessed.
+            WER is averaged across {datasets.length || 8} English test sets with normalised transcripts. Streaming support and transcript latency are not published by the Open ASR Leaderboard, so those columns stay N/A rather than guessed; hosted-API prices come from Artificial Analysis where the model name matches.
           </p>
+          {speech.sttAA.length > 0 && (
+            <section style={{ marginTop: 32 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: 10, flexWrap: 'wrap', marginBottom: 10 }}>
+                <div>
+                  <Label color="var(--muted2)">Hosted APIs</Label>
+                  <h2 style={{ fontSize: mobile ? 22 : 28, fontWeight: 700, letterSpacing: '-0.035em', color: 'var(--text)', margin: '4px 0 0', lineHeight: 1.1 }}>Transcription services.</h2>
+                  <p style={{ fontSize: 13, color: 'var(--muted)', margin: '6px 0 0', lineHeight: 1.5, maxWidth: 680 }}>Commercial speech-to-text APIs measured by Artificial Analysis: word error rate on its own English test sets, list price per minute of audio and speed relative to real time. Not comparable with the Open ASR figures above.</p>
+                </div>
+                <SourceTag id="aa" />
+              </div>
+              <DataTable dense mobile={mobile} rows={speech.sttAA} rowKey={r => r.id} columns={sttAACols} visible={sttAACols.map(c => c.key)} sort={aaSort} onSort={setAaSort} pageSize={40}
+                footer={<span>WER index and speed © Artificial Analysis · price = provider list price relayed by Artificial Analysis · lower WER wins, higher speed factor wins</span>} />
+            </section>
+          )}
         </>
       )}
 
       {cat === 'tts' && (
-        speech.tts.length ? (<><div style={{ marginBottom: 14 }}><AudioLanes rows={attachSamples(speech.tts.map(r => ({ ...r, id: r.modelId ?? r.id })), samples.byModel).slice(0, 12)} mobile={mobile} /></div><MediaLikeTable rows={speech.tts} kind="tts" mobile={mobile} /></>) : (
+        speech.tts.length ? (<>
+          {(() => { const lanes = attachSamples(speech.tts.map(r => ({ ...r, id: r.modelId ?? r.id })), samples.byModel).filter(r => r.sampleUrl).slice(0, 12); return lanes.length ? <div style={{ marginBottom: 14 }}><AudioLanes rows={lanes} mobile={mobile} /></div> : null; })()}
+          <div style={{ display: 'grid', gridTemplateColumns: mobile ? '1fr 1fr' : 'repeat(4, 1fr)', gap: 10, marginBottom: 14 }}>
+            <StatTile label="Best voice" value={fmtMetric('ttsQuality', speech.tts[0]?.elo)} sub={speech.tts[0] ? `${speech.tts[0].name} · ${speech.tts[0].org}` : undefined} color={GREEN} metricKey="ttsQuality" />
+            <StatTile label="Cheapest per 1M chars" value={(() => { const c = [...speech.tts].filter(r => isNum(r.pricePer1mChars)).sort((a, b) => a.pricePer1mChars - b.pricePer1mChars)[0]; return c ? fmtMetric('pricePer1mChars', c.pricePer1mChars) : NA; })()} sub={(() => { const c = [...speech.tts].filter(r => isNum(r.pricePer1mChars)).sort((a, b) => a.pricePer1mChars - b.pricePer1mChars)[0]; return c ? c.name : undefined; })()} color={GOLD} metricKey="pricePer1mChars" />
+            <StatTile label="Fastest synthesis" value={(() => { const c = [...speech.tts].filter(r => isNum(r.charsPerSecond)).sort((a, b) => b.charsPerSecond - a.charsPerSecond)[0]; return c ? `${Math.round(c.charsPerSecond)} ch/s` : NA; })()} sub={(() => { const c = [...speech.tts].filter(r => isNum(r.charsPerSecond)).sort((a, b) => b.charsPerSecond - a.charsPerSecond)[0]; return c ? c.name : undefined; })()} color={PURPLE} />
+            <StatTile label="Voices ranked" value={speech.tts.length} sub="Artificial Analysis Speech Arena" />
+          </div>
+          <MediaLikeTable rows={speech.tts} kind="tts" mobile={mobile} />
+        </>) : (
           <SchemaReady title="Text to speech" metrics={['ttsQuality', 'pricePer1mChars', 'ttft']} extra={['Characters / second', 'Provider', 'Language support']} note="Voice-quality ELO comes from the Artificial Analysis Speech Arena; this deployment has no AA key configured." />
         )
       )}

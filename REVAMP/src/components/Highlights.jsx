@@ -107,7 +107,7 @@ export function BarPanel({ title, color = 'var(--text)', subtitle, items, higher
             {rank && <span />}<span /><span />
             <span className="aiwar-rb-axis" style={{ fontFamily: MONO, borderTop: '1px solid var(--sep)' }}>
               <span style={{ left: 0 }}>{truncated ? `⫽ ${fmtNum(base)}` : '0'}</span>
-              {wide && <span style={{ left: '50%', transform: 'translateX(-50%)' }}>{fmtNum(base + span / 2)}</span>}
+              {wide && !twoCol && <span style={{ left: '50%', transform: 'translateX(-50%)' }}>{fmtNum(base + span / 2)}</span>}
               <span style={{ right: 0 }}>{fmtNum(max)}</span>
             </span>
             <span />{showDelta && <span />}

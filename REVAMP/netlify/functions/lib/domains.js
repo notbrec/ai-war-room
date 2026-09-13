@@ -7,6 +7,7 @@ import { cached, HOURS, readBlob, writeBlob, listBlobs, deleteBlob, hasDurableSt
 import { fetchArenaBoard, ARENA_BOARDS } from './arena.js';
 import { fetchORModels, fetchOREndpoints } from '../adapters/openrouter.js';
 import { aaConfigured, fetchAALLMs, fetchAAMedia, fetchAASpeech } from '../adapters/artificialanalysis.js';
+import { aaWebEnabled, fetchAAWebLLMs, fetchAAWebMedia, fetchAAWebSpeech } from '../adapters/aaweb.js';
 import { fetchSWEBench } from '../adapters/swebench.js';
 import { fetchOpenASR } from '../adapters/openasr.js';
 import { fetchGenAIBench } from '../adapters/genaibench.js';
@@ -29,17 +30,24 @@ const arenaBoard = (board, ttl = HOURS(6)) =>
 const orModels = () =>
   cached(key('openrouter:models'), HOURS(3), fetchORModels, { minValid: d => Array.isArray(d) && d.length > 50 });
 
+// Artificial Analysis: the official Data API when a key is configured, else
+// the published leaderboard pages (adapters/aaweb.js), else nothing.
+const AA_OFF = { data: null, cache: 'NONE', stale: true, error: 'Artificial Analysis source disabled (no ARTIFICIAL_ANALYSIS_API_KEY and AA_WEB=0)' };
+export const aaAvailable = () => aaConfigured() || aaWebEnabled();
+const aaKeyName = name => key(aaConfigured() ? `aa:${name}` : `aa-web:${name}`);
+const isList = min => d => Array.isArray(d) && d.length > min;
+
 const aaLLMs = () => aaConfigured()
-  ? cached(key('aa:llms'), HOURS(3), fetchAALLMs, { minValid: d => Array.isArray(d) && d.length > 10 })
-  : Promise.resolve({ data: null, cache: 'NONE', stale: true, error: 'ARTIFICIAL_ANALYSIS_API_KEY not configured' });
+  ? cached(aaKeyName('llms'), HOURS(3), fetchAALLMs, { minValid: isList(10) })
+  : aaWebEnabled() ? cached(aaKeyName('llms'), HOURS(3), fetchAAWebLLMs, { minValid: isList(10) }) : Promise.resolve(AA_OFF);
 
 const aaMedia = (board) => aaConfigured()
-  ? cached(key(`aa:media:${board}`), HOURS(6), () => fetchAAMedia(board), { minValid: d => Array.isArray(d) && d.length > 3 })
-  : Promise.resolve({ data: null, cache: 'NONE', stale: true, error: 'ARTIFICIAL_ANALYSIS_API_KEY not configured' });
+  ? cached(aaKeyName(`media:${board}`), HOURS(6), () => fetchAAMedia(board), { minValid: isList(3) })
+  : aaWebEnabled() ? cached(aaKeyName(`media:${board}`), HOURS(6), () => fetchAAWebMedia(board), { minValid: isList(3) }) : Promise.resolve(AA_OFF);
 
 const aaSpeech = (kind) => aaConfigured()
-  ? cached(key(`aa:speech:${kind}`), HOURS(6), () => fetchAASpeech(kind), { minValid: d => Array.isArray(d) && d.length > 3 })
-  : Promise.resolve({ data: null, cache: 'NONE', stale: true, error: 'ARTIFICIAL_ANALYSIS_API_KEY not configured' });
+  ? cached(aaKeyName(`speech:${kind}`), HOURS(6), () => fetchAASpeech(kind), { minValid: isList(3) })
+  : aaWebEnabled() ? cached(aaKeyName(`speech:${kind}`), HOURS(6), () => fetchAAWebSpeech(kind), { minValid: isList(3) }) : Promise.resolve(AA_OFF);
 
 const swe = () => cached(key('swebench'), HOURS(12), fetchSWEBench, { minValid: d => d && Array.isArray(d.Verified) && d.Verified.length > 10 });
 const asr = () => cached(key('openasr'), HOURS(24), fetchOpenASR, { minValid: d => Array.isArray(d) && d.length > 5 });
@@ -63,7 +71,7 @@ export async function loadLLMs() {
       arena: status(text), arenaVision: status(vision), arenaSearch: status(search),
       openrouter: status(or), aa: status(aa),
     },
-    capabilities: { aa: aaConfigured(), history: history.available },
+    capabilities: { aa: aaAvailable(), aaVia: aaConfigured() ? 'api' : aaWebEnabled() ? 'web' : null, history: history.available },
     counts: { models: models.length, inArena: models.filter(m => m.inArena).length, priced: models.filter(m => isNum(m.priceIn)).length, withIntelligence: models.filter(m => isNum(m.aa?.intelligence)).length },
     models,
   };
@@ -87,7 +95,7 @@ export async function loadMedia() {
   return {
     ok: anyArena,
     fetchedAt, stale: arenaEntries.some(e => e.stale),
-    sources, capabilities: { aa: aaConfigured() },
+    sources, capabilities: { aa: aaAvailable() },
     boards,
   };
 }
@@ -120,8 +128,8 @@ export async function loadProviders() {
   const modelMeta = Object.fromEntries(targets.map(m => [m.id, { name: m.name, org: m.org, elo: m.arena?.elo ?? null, intelligence: m.aa?.intelligence ?? null, isOpen: m.isOpen, context: m.context }]));
   return {
     ok: true, fetchedAt: eps.fetchedAt, stale: eps.stale,
-    sources: { openrouter: status(eps), aa: { status: aaConfigured() ? 'live' : 'unavailable', error: aaConfigured() ? null : 'ARTIFICIAL_ANALYSIS_API_KEY not configured' } },
-    capabilities: { speed: false, latency: false, aa: aaConfigured() },
+    sources: { openrouter: status(eps), aa: { status: aaAvailable() ? 'live' : 'unavailable', error: aaAvailable() ? null : 'Artificial Analysis source disabled' } },
+    capabilities: { speed: false, latency: false, aa: aaAvailable() },
     models: summaries, modelMeta, providers,
   };
 }
@@ -159,7 +167,7 @@ export async function loadSpeech() {
     ok: !!stt.data || !!tts.data,
     fetchedAt: stt.fetchedAt ?? tts.fetchedAt, stale: stt.stale,
     sources: { openasr: status(stt), aaTTS: status(tts), aaSTT: status(sttAA), aaS2S: status(s2s) },
-    capabilities: { aa: aaConfigured() },
+    capabilities: { aa: aaAvailable() },
     stt: stt.data ?? [], sttAA: sttAA.data ?? [], tts: tts.data ?? [], s2s: s2s.data ?? [],
   };
 }
@@ -241,15 +249,15 @@ export async function loadHistory() {
 // ── Status ─────────────────────────────────────────────────────────────────
 export async function loadStatus() {
   const entries = await Promise.all([
-    readBlob(key('arena:text')), readBlob(key('openrouter:models')), readBlob(key('swebench')), readBlob(key('openasr')), readBlob(key('aa:llms')),
+    readBlob(key('arena:text')), readBlob(key('openrouter:models')), readBlob(key('swebench')), readBlob(key('openasr')), readBlob(aaKeyName('llms')),
   ]);
   const [a, o, s, r, aa] = entries;
   const st = e => e?.fetchedAt ? { status: 'cached', fetchedAt: e.fetchedAt } : { status: 'cold', fetchedAt: null };
   return {
     ok: true, fetchedAt: new Date().toISOString(),
-    sources: { arena: st(a), openrouter: st(o), swebench: st(s), openasr: st(r), aa: aaConfigured() ? st(aa) : { status: 'unavailable', fetchedAt: null, error: 'ARTIFICIAL_ANALYSIS_API_KEY not configured' } },
+    sources: { arena: st(a), openrouter: st(o), swebench: st(s), openasr: st(r), aa: aaAvailable() ? st(aa) : { status: 'unavailable', fetchedAt: null, error: 'Artificial Analysis source disabled' } },
     capabilities: {
-      aa: aaConfigured(),
+      aa: aaAvailable(),
       history: hasDurableStore(),
       liveBattle: false, // no generation API keys are read server-side; the UI never incurs paid calls
       boards: Object.keys(ARENA_BOARDS),

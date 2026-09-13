@@ -172,7 +172,7 @@ export default function MediaArenaPage({ onNavigate, kind = 'image', slug }) {
         <BattleReplay boards={replays.boards} kind={kind} loading={replays.loading} license={replays.license} attribution={replays.attribution} mobile={mobile} initialBoard={board} />
       ) : (
         <MediaBattle kind={kind} roster={roster} candidates={rows} priceKey={priceKey} mobile={mobile} liveBattle={!!status.data?.capabilities?.liveBattle}
-          onAdd={r => addToBattle({ id: r.id, kind, name: r.name, org: r.org, board })} onRemove={removeFromBattle} onClear={clearBattle} />
+          onAdd={r => addToBattle({ id: r.id, kind, name: r.name, org: r.org, board })} onRemove={removeFromBattle} onClear={clearBattle} onReplay={() => setView('replay')} />
       )}
 
       <section style={{ marginTop: mobile ? 36 : 48 }}>

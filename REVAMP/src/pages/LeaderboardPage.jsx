@@ -310,7 +310,7 @@ export default function LeaderboardPage({ liveModels, onNavigate }) {
           <BarPanel wide mobile={mobile} title="Context window" color={BLUE} subtitle={`${scope} · tokens · OpenRouter`} items={charts.context} limit={n} baseline={0} onSelect={open} />
           {!aa && (
             <p style={{ fontSize: 11.5, color: 'var(--muted2)', fontFamily: MONO, margin: '10px 2px 0', lineHeight: 1.5 }}>
-              Intelligence Index, output speed and time-to-first-token sections appear here once <code>ARTIFICIAL_ANALYSIS_API_KEY</code> is set on the deployment — the charts are built, only the source is missing. Nothing is estimated in the meantime.
+              Intelligence Index, output speed and time-to-first-token sections appear here when the Artificial Analysis source is reachable — the charts are built, only the source is missing right now. Nothing is estimated in the meantime.
             </p>
           )}
         </ChartSection>

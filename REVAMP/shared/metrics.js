@@ -6,7 +6,7 @@
 export const SOURCES = {
   arena:      { id: 'arena',      name: 'arena.ai',            url: 'https://arena.ai/leaderboard',        note: 'Crowd-sourced human preference battles (Elo/Bradley-Terry).' },
   openrouter: { id: 'openrouter', name: 'OpenRouter',          url: 'https://openrouter.ai/models',        note: 'Public model & endpoint catalogue: pricing, context, providers, uptime.' },
-  aa:         { id: 'aa',         name: 'Artificial Analysis', url: 'https://artificialanalysis.ai',       note: 'Independent benchmarks & performance measurements (official Data API, attribution required).' },
+  aa:         { id: 'aa',         name: 'Artificial Analysis', url: 'https://artificialanalysis.ai',       note: 'Independent benchmarks & performance measurements (© Artificial Analysis, shown with attribution).' },
   swebench:   { id: 'swebench',   name: 'SWE-bench',           url: 'https://www.swebench.com',            note: 'Open software-engineering benchmark; results published by the SWE-bench team.' },
   openasr:    { id: 'openasr',    name: 'Open ASR Leaderboard', url: 'https://huggingface.co/spaces/hf-audio/open_asr_leaderboard', note: 'Hugging Face open speech-recognition evaluation (WER / RTFx).' },
   designarena:{ id: 'designarena', name: 'Design Arena',       url: 'https://www.designarena.ai',          note: 'Human-preference arena for UI/design/code generation, relayed via OpenRouter.' },
