@@ -132,8 +132,8 @@ function openPick(p, f, onNavigate) {
 function Card({ c, i, mobile, onNavigate }) {
   const go = () => openPick(c.top, c, onNavigate);
   return (
-    <div onClick={go} className="aiwar-card-hover" role="link" tabIndex={0} onKeyDown={e => e.key === 'Enter' && go()} style={{
-      background: 'var(--card)', border: '0.5px solid var(--sep)', borderTop: `2px solid ${c.color}`,
+    <div onClick={go} className="aiwar-surface aiwar-card-hover" role="link" tabIndex={0} onKeyDown={e => e.key === 'Enter' && go()} style={{
+      borderTop: `2px solid ${c.color}`,
       padding: mobile ? '14px 14px 12px' : '18px 18px 14px', cursor: 'pointer', minWidth: 0, height: '100%',
       display: 'flex', flexDirection: 'column', gap: 10,
       opacity: 0, animation: `aiwar-fade-up 600ms ${EASE} ${80 + i * 35}ms both`,

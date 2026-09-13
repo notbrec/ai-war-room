@@ -38,7 +38,7 @@ for (const [name, p] of PAGES) {
     await send('Page.navigate', { url: base + p });
     await sleep(1200);
     // Skip the intro screen if present + settle data + animations
-    await send('Runtime.evaluate', { expression: `try{sessionStorage.setItem('aiwar-intro-seen','1')}catch(e){}` });
+    await send('Runtime.evaluate', { expression: `try{sessionStorage.setItem('aiwar-intro-seen','1');${process.env.THEME ? `localStorage.setItem('aiwar-theme','${process.env.THEME}');location.reload();` : ''}}catch(e){}` });
     await sleep(2200);
     // Scroll through so IntersectionObserver reveals fire, then back to top
     await send('Runtime.evaluate', { expression: `(async()=>{for(let y=0;y<document.body.scrollHeight;y+=400){window.scrollTo(0,y);await new Promise(r=>setTimeout(r,60));}window.scrollTo(0,0);})()`, awaitPromise: true });

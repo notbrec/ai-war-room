@@ -63,7 +63,7 @@ export default function LLMCharts({ models, aaConfigured, selected, onSelect, mo
       )}
       <p style={{ fontSize: 11, color: 'var(--muted2)', fontFamily: MONO, marginTop: 10, lineHeight: 1.5 }}>
         {cfg.y === 'intelligence' || cfg.x === 'intelligence' ? 'Intelligence Index © Artificial Analysis, relayed via OpenRouter · ' : ''}
-        ELO © arena.ai · prices via OpenRouter (blended = 3:1 in:out). Dashed line = Pareto frontier: nothing is both better and cheaper than a point on it.
+        ELO © arena.ai · prices via OpenRouter (blended = 3:1 in:out). Solid line = Pareto frontier: nothing is both better and cheaper than a point on it.
       </p>
     </Panel>
   );

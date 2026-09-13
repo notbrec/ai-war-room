@@ -704,7 +704,7 @@ export function AmbientDots({ count = 14, color = 'var(--muted2)', opacity = 0.3
    <ComparisonBar/> — animated horizontal bar with label
    width is a 0–1 fraction; bar grows from 0 to width when in view.
    ────────────────────────────────────────────────────────────────────── */
-export function ComparisonBar({ width = 0.5, color = 'var(--text)', height = 4, label, valueText, mono = true, animate = true }) {
+export function ComparisonBar({ width = 0.5, color = 'var(--text)', height = 6, label, valueText, mono = true, animate = true }) {
   const [ref, shown] = useReveal({ threshold: 0.2 });
   const target = Math.max(0, Math.min(1, width));
   const pct = shown ? target * 100 : 0;

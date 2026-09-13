@@ -8,7 +8,7 @@ import { MONO, GlobalMotion, Reveal, Skeleton, SectionTitle } from '../component
 import { LabLogo } from '../components/LabLogo.jsx';
 import { ORG_CONFIG } from '../models-data.js';
 import { useCoding } from '../data/useDomain.js';
-import DataTable, { useColumnSelection, ColumnPicker } from '../components/table/DataTable.jsx';
+import DataTable, { useColumnSelection, ColumnPicker, NaCell } from '../components/table/DataTable.jsx';
 import { PageFrame, PageTitle, DataStatus, Panel, Label, Chip, Segmented, StatTile, EmptyState, BadgeTag, SourceTag, Btn, GREEN, GOLD, BLUE, PURPLE, RED } from '../components/ui.jsx';
 import { fmtMetric, fmtDate, isNum, NA } from '../../shared/metrics.js';
 import { BarPanel, HighlightGrid } from '../components/Highlights.jsx';
@@ -65,8 +65,8 @@ export default function CodeOpsPage({ onNavigate, slug }) {
           </div>
         </div>
       ) },
-    { key: 'resolved', label: 'Resolved', short: '% solved', metricKey: 'resolved', numeric: true, width: 84, value: r => r.resolved,
-      render: r => <span style={{ fontSize: 15, fontWeight: 700, color: r.resolved >= 70 ? GREEN : r.resolved >= 50 ? BLUE : r.resolved >= 30 ? GOLD : RED, letterSpacing: '-0.03em' }}>{fmtMetric('resolved', r.resolved)}</span> },
+    { key: 'resolved', label: 'Resolved', short: '% solved', metricKey: 'resolved', numeric: true, width: 140, bar: true, barColor: GREEN, barWidth: 52, valueWidth: 48, value: r => r.resolved,
+      render: r => <span style={{ fontWeight: 700 }}>{fmtMetric('resolved', r.resolved)}</span> },
     { key: 'costPerTask', label: 'Cost per task', short: '$/task', metricKey: 'costPerTask', numeric: true, width: 80, value: r => r.costPerTask, render: r => isNum(r.costPerTask) ? fmtMetric('costPerTask', r.costPerTask) : <span style={{ color: 'var(--muted2)' }}>{NA}</span> },
     { key: 'callsPerTask', label: 'Calls per task', short: 'Calls', metricKey: 'callsPerTask', numeric: true, width: 66, value: r => r.callsPerTask, render: r => isNum(r.callsPerTask) ? fmtMetric('callsPerTask', r.callsPerTask) : <span style={{ color: 'var(--muted2)' }}>{NA}</span> },
     { key: 'totalCost', label: 'Total run cost', short: 'Run $', numeric: true, width: 78, default: false, value: r => r.totalCost, render: r => isNum(r.totalCost) ? `$${Math.round(r.totalCost).toLocaleString()}` : <span style={{ color: 'var(--muted2)' }}>{NA}</span> },
@@ -187,41 +187,44 @@ export default function CodeOpsPage({ onNavigate, slug }) {
 function MatrixView({ matrix, focusModel, setFocusModel, focusAgent, setFocusAgent, mobile }) {
   const m = focusModel ? matrix.models.find(x => x.model === focusModel) : null;
   const a = focusAgent ? matrix.agents.find(x => x.agent === focusAgent) : null;
+  const [mSort, setMSort] = useState({ key: 'harnesses', dir: 'desc' });
+  const [aSort, setASort] = useState({ key: 'models', dir: 'desc' });
+  const [rSort, setRSort] = useState({ key: 'resolved', dir: 'desc' });
+  const modelCols = useMemo(() => [
+    { key: 'model', label: 'Model', sticky: true, width: mobile ? 180 : 240, value: x => x.model, render: x => <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8, minWidth: 0 }}><LabLogo org={x.org} size={13} /><span style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: mobile ? 130 : 190 }}>{x.model}</span></span> },
+    { key: 'harnesses', label: 'Harnesses tried', short: 'Harnesses', numeric: true, width: 96, value: x => x.harnesses },
+    { key: 'best', label: 'Best resolved', short: 'Best', metricKey: 'resolved', numeric: true, width: 124, bar: true, barColor: GREEN, barWidth: 40, valueWidth: 46, value: x => x.best, render: x => <span style={{ fontWeight: 700 }}>{fmtMetric('resolved', x.best)}</span> },
+  ], [mobile]);
+  const agentCols = useMemo(() => [
+    { key: 'agent', label: 'Harness', sticky: true, width: mobile ? 180 : 240, value: x => x.agent, render: x => <span style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--text)' }}>{x.agent}{x.org ? <span style={{ color: 'var(--muted)', fontSize: 11, fontWeight: 400 }}> · {x.org}</span> : null}</span> },
+    { key: 'models', label: 'Models tried', short: 'Models', numeric: true, width: 90, value: x => x.models },
+    { key: 'best', label: 'Best resolved', short: 'Best', metricKey: 'resolved', numeric: true, width: 124, bar: true, barColor: GREEN, barWidth: 40, valueWidth: 46, value: x => x.best, render: x => <span style={{ fontWeight: 700 }}>{fmtMetric('resolved', x.best)}</span> },
+  ], [mobile]);
+  const runCols = useMemo(() => [
+    { key: 'name', label: m ? 'Harness' : 'Model', sticky: true, width: mobile ? 180 : 240, value: r => (m ? r.agent : r.model), render: r => <span style={{ minWidth: 0 }}><span style={{ display: 'block', fontSize: 12.5, fontWeight: 600, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: mobile ? 150 : 210 }}>{m ? r.agent : r.model}</span><span style={{ fontSize: 10.5, color: 'var(--muted)', fontFamily: MONO }}>{fmtDate(r.date)}{r.reasoningEffort ? ` · ${r.reasoningEffort}` : ''}{r.attempts === '2+' ? ' · 2+ attempts' : ''}</span></span> },
+    { key: 'resolved', label: 'Resolved', short: '% solved', metricKey: 'resolved', numeric: true, width: 124, bar: true, barColor: GREEN, barWidth: 40, valueWidth: 46, value: r => r.resolved, render: r => <span style={{ fontWeight: 700 }}>{fmtMetric('resolved', r.resolved)}</span> },
+    { key: 'costPerTask', label: 'Cost per task', short: '$/task', metricKey: 'costPerTask', numeric: true, width: 84, value: r => r.costPerTask, render: r => isNum(r.costPerTask) ? fmtMetric('costPerTask', r.costPerTask) : <NaCell /> },
+  ], [m, mobile]);
+  const focus = m ?? a;
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: mobile ? '1fr' : '1fr 1fr', gap: 12 }}>
-      <Panel title="By model · harnesses tried" pad={0}>
-        <div style={{ maxHeight: 460, overflowY: 'auto' }}>
-          {matrix.models.map(x => (
-            <button key={x.model} onClick={() => { setFocusModel(focusModel === x.model ? null : x.model); setFocusAgent(null); }} style={{ display: 'grid', gridTemplateColumns: '18px 1fr auto auto', gap: 10, alignItems: 'center', width: '100%', padding: '8px 14px', background: focusModel === x.model ? 'var(--hover)' : 'transparent', border: 'none', borderBottom: '0.5px solid var(--sep2)', cursor: 'pointer', textAlign: 'left', fontFamily: 'inherit' }}>
-              <LabLogo org={x.org} size={13} />
-              <span style={{ fontSize: 12.5, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{x.model}</span>
-              <span style={{ fontFamily: MONO, fontSize: 10.5, color: 'var(--muted)' }}>{x.harnesses} harness{x.harnesses > 1 ? 'es' : ''}</span>
-              <span style={{ fontFamily: MONO, fontSize: 12, fontWeight: 700, color: GREEN }}>{fmtMetric('resolved', x.best)}</span>
-            </button>
-          ))}
+    <div style={{ display: 'grid', gridTemplateColumns: mobile ? '1fr' : '1fr 1fr', gap: 12, alignItems: 'start' }}>
+      <div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8, gap: 8 }}><Label color="var(--muted)">By model · harnesses tried</Label><span style={{ fontFamily: MONO, fontSize: 10, color: 'var(--muted2)', letterSpacing: '0.06em' }}>CLICK A ROW</span></div>
+        <DataTable dense mobile={mobile} rows={matrix.models} rowKey={x => x.model} columns={modelCols} visible={modelCols.map(c => c.key)} sort={mSort} onSort={setMSort} pageSize={30}
+          onRowClick={x => { setFocusModel(focusModel === x.model ? null : x.model); setFocusAgent(null); }} highlightKey={x => (x.model === focusModel ? GREEN : null)} />
+      </div>
+      <div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8, gap: 8 }}>
+          <Label color="var(--muted)">{m ? `${m.model} across harnesses` : a ? `${a.agent} across models` : 'By harness · models tried'}</Label>
+          {focus && <Btn small onClick={() => { setFocusModel(null); setFocusAgent(null); }}>← All harnesses</Btn>}
         </div>
-      </Panel>
-      <Panel title={m ? `${m.model} across harnesses` : a ? `${a.agent} across models` : 'By harness · models tried'} pad={0}>
-        <div style={{ maxHeight: 460, overflowY: 'auto' }}>
-          {(m ? m.runs : a ? a.runs : null) ? (m ?? a).runs.sort((p, q) => q.resolved - p.resolved).map(r => (
-            <div key={r.id} style={{ display: 'grid', gridTemplateColumns: '1fr auto auto', gap: 10, alignItems: 'center', padding: '8px 14px', borderBottom: '0.5px solid var(--sep2)' }}>
-              <div style={{ minWidth: 0 }}>
-                <div style={{ fontSize: 12.5, color: 'var(--text)', fontWeight: 600 }}>{m ? r.agent : r.model}</div>
-                <div style={{ fontSize: 10.5, color: 'var(--muted)', fontFamily: MONO }}>{fmtDate(r.date)}{r.reasoningEffort ? ` · ${r.reasoningEffort}` : ''}{r.attempts === '2+' ? ' · 2+ attempts' : ''}</div>
-              </div>
-              <span style={{ fontFamily: MONO, fontSize: 10.5, color: 'var(--muted)' }}>{isNum(r.costPerTask) ? fmtMetric('costPerTask', r.costPerTask) : NA}</span>
-              <span style={{ fontFamily: MONO, fontSize: 12, fontWeight: 700, color: GREEN }}>{fmtMetric('resolved', r.resolved)}</span>
-            </div>
-          )) : matrix.agents.map(x => (
-            <button key={x.agent} onClick={() => { setFocusAgent(x.agent); setFocusModel(null); }} style={{ display: 'grid', gridTemplateColumns: '1fr auto auto', gap: 10, alignItems: 'center', width: '100%', padding: '8px 14px', background: 'transparent', border: 'none', borderBottom: '0.5px solid var(--sep2)', cursor: 'pointer', textAlign: 'left', fontFamily: 'inherit' }}>
-              <span style={{ fontSize: 12.5, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{x.agent}{x.org ? <span style={{ color: 'var(--muted)', fontSize: 11 }}> · {x.org}</span> : null}</span>
-              <span style={{ fontFamily: MONO, fontSize: 10.5, color: 'var(--muted)' }}>{x.models} model{x.models > 1 ? 's' : ''}</span>
-              <span style={{ fontFamily: MONO, fontSize: 12, fontWeight: 700, color: GREEN }}>{fmtMetric('resolved', x.best)}</span>
-            </button>
-          ))}
-        </div>
-        {(m || a) && <div style={{ padding: 10 }}><Btn small onClick={() => { setFocusModel(null); setFocusAgent(null); }}>← Back to harness list</Btn></div>}
-      </Panel>
+        {focus ? (
+          <DataTable dense mobile={mobile} rows={focus.runs} rowKey={r => r.id} columns={runCols} visible={runCols.map(c => c.key)} sort={rSort} onSort={setRSort} pageSize={30} />
+        ) : (
+          <DataTable dense mobile={mobile} rows={matrix.agents} rowKey={x => x.agent} columns={agentCols} visible={agentCols.map(c => c.key)} sort={aSort} onSort={setASort} pageSize={30}
+            onRowClick={x => { setFocusAgent(x.agent); setFocusModel(null); }} />
+        )}
+      </div>
     </div>
   );
 }
@@ -231,7 +234,7 @@ function CodingIndexTable({ rows, mobile, onNavigate }) {
   const columns = useMemo(() => [
     { key: 'model', label: 'Model', sticky: true, width: mobile ? 200 : 280, value: r => r.name, render: r => (
       <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}><LabLogo org={r.org} size={14} /><span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>{r.name}</span><span style={{ fontSize: 10.5, color: 'var(--muted)' }}>{r.org}</span>{r.isOpen && <BadgeTag color={GREEN}>open</BadgeTag>}</span>) },
-    { key: 'codingIndex', label: 'Coding Index', short: 'Code', metricKey: 'codingIndex', numeric: true, width: 70, value: r => r.codingIndex, render: r => <span style={{ fontWeight: 700, color: 'var(--text)' }}>{fmtMetric('codingIndex', r.codingIndex)}</span> },
+    { key: 'codingIndex', label: 'Coding Index', short: 'Code', metricKey: 'codingIndex', numeric: true, width: 116, bar: true, barColor: GREEN, barWidth: 40, valueWidth: 36, value: r => r.codingIndex, render: r => <span style={{ fontWeight: 700, color: 'var(--text)' }}>{fmtMetric('codingIndex', r.codingIndex)}</span> },
     { key: 'agenticIndex', label: 'Agentic Index', short: 'Agent', metricKey: 'agenticIndex', numeric: true, width: 70, value: r => r.agenticIndex, render: r => fmtMetric('agenticIndex', r.agenticIndex) },
     { key: 'intelligence', label: 'Intelligence', short: 'Intel', metricKey: 'intelligence', numeric: true, width: 70, value: r => r.intelligence, render: r => fmtMetric('intelligence', r.intelligence) },
     { key: 'elo', label: 'Arena ELO', short: 'ELO', metricKey: 'elo', numeric: true, width: 70, value: r => r.elo, render: r => isNum(r.elo) ? r.elo : <span style={{ color: 'var(--muted2)' }}>{NA}</span> },

@@ -83,10 +83,10 @@ export default function RaceLanes({ lanes, metricKey, unit, mobile, autoplay = t
                   {!mobile && <div style={{ fontSize: 10.5, color: 'var(--muted)' }}>{l.org}</div>}
                 </div>
               </div>
-              <div style={{ position: 'relative', height: 14, background: 'var(--sep2)' }}>
+              <div style={{ position: 'relative', height: 10, background: 'var(--sep2)' }}>
                 <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: `${p * 100}%`, background: color, opacity: finished ? 1 : 0.85, transition: 'none' }} />
                 {/* head marker */}
-                <div style={{ position: 'absolute', top: -3, left: `calc(${p * 100}% - 2px)`, width: 4, height: 20, background: 'var(--text)', opacity: finished ? 0 : 0.8 }} />
+                <div style={{ position: 'absolute', top: -3, left: `calc(${p * 100}% - 1px)`, width: 2, height: 16, background: 'var(--text)', opacity: finished ? 0 : 0.8 }} />
               </div>
               <div style={{ textAlign: 'right', fontFamily: MONO, fontVariantNumeric: 'tabular-nums' }}>
                 <div style={{ fontSize: mobile ? 12 : 14, fontWeight: 700, color: finished ? (l.winner ? GREEN : 'var(--text)') : 'var(--muted2)', letterSpacing: '-0.02em', transition: 'color 300ms' }}>
@@ -117,7 +117,7 @@ export default function RaceLanes({ lanes, metricKey, unit, mobile, autoplay = t
 
 function Res({ label, value, sub, color }) {
   return (
-    <div style={{ background: 'var(--card)', border: '0.5px solid var(--sep)', padding: '10px 12px', minWidth: 0 }}>
+    <div className="aiwar-surface" style={{ padding: '10px 12px', minWidth: 0 }}>
       <Label>{label}</Label>
       <div style={{ fontSize: 14, fontWeight: 700, color: color ?? 'var(--text)', marginTop: 4, letterSpacing: '-0.02em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontFamily: MONO }}>{value}</div>
       {sub && <div style={{ fontSize: 10.5, color: 'var(--muted)', marginTop: 2 }}>{sub}</div>}

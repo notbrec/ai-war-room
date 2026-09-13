@@ -2,7 +2,8 @@
 
 import { useMemo, useState, lazy, Suspense } from 'react';
 import { useMobile } from '../hooks/useTheme.js';
-import { MONO, GlobalMotion, Skeleton, ComparisonBar } from '../components/design.jsx';
+import { MONO, GlobalMotion, Skeleton } from '../components/design.jsx';
+import { BarPanel } from '../components/Highlights.jsx';
 import { LabLogo } from '../components/LabLogo.jsx';
 import { useSpeech } from '../data/useDomain.js';
 import DataTable, { useColumnSelection, ColumnPicker } from '../components/table/DataTable.jsx';
@@ -33,14 +34,14 @@ export default function VoiceCommsPage({ onNavigate, slug }) {
   const columns = useMemo(() => [
     { key: 'model', label: 'Model', sticky: true, width: mobile ? 210 : 300, value: r => r.rank, defaultDir: 'asc', render: r => (
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
-        <span style={{ width: 24, textAlign: 'right', fontFamily: MONO, fontSize: 11, color: r.rank <= 3 ? GOLD : 'var(--muted)', fontWeight: r.rank <= 3 ? 700 : 500 }}>{r.rank}</span>
+        <span style={{ width: 24, textAlign: 'right', fontFamily: MONO, fontSize: 11.5, color: r.rank <= 3 ? 'var(--text)' : 'var(--muted)', fontWeight: r.rank <= 3 ? 700 : 500, fontVariantNumeric: 'tabular-nums' }}>{r.rank}</span>
         <LabLogo org={r.org} size={16} />
         <div style={{ minWidth: 0 }}>
           <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', letterSpacing: '-0.02em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: mobile ? 150 : 220 }}>{r.name}</div>
           <div style={{ fontSize: 10.5, color: 'var(--muted)' }}>{r.org}{r.isOpen ? ' · 🔓' : ' · API'}</div>
         </div>
       </div>) },
-    { key: 'wer', label: 'Word error rate', short: 'WER', metricKey: 'wer', numeric: true, width: 78, value: r => r.wer, render: r => <span style={{ fontSize: 15, fontWeight: 700, color: r.wer < 5 ? GREEN : r.wer < 7 ? BLUE : r.wer < 10 ? GOLD : 'var(--text)', letterSpacing: '-0.03em' }}>{fmtMetric('wer', r.wer)}</span> },
+    { key: 'wer', label: 'Word error rate', short: 'WER', metricKey: 'wer', numeric: true, width: 124, bar: true, barColor: GREEN, barWidth: 40, valueWidth: 52, value: r => r.wer, render: r => <span style={{ fontWeight: 700 }}>{fmtMetric('wer', r.wer)}</span> },
     { key: 'rtfx', label: 'Speed (RTFx)', short: 'RTFx', metricKey: 'rtfx', numeric: true, width: 72, value: r => r.rtfx, render: r => isNum(r.rtfx) ? <span>{fmtMetric('rtfx', r.rtfx)}×</span> : <span style={{ color: 'var(--muted2)' }} title="Not measured for hosted API models">{NA}</span> },
     { key: 'paramsB', label: 'Parameters', short: 'Params', metricKey: 'paramsB', numeric: true, width: 66, value: r => r.paramsB, render: r => fmtMetric('paramsB', r.paramsB) },
     { key: 'languages', label: 'Languages', short: 'Langs', numeric: true, width: 60, default: false, value: r => r.languages },
@@ -90,9 +91,9 @@ export default function VoiceCommsPage({ onNavigate, slug }) {
             <DataTable columns={columns} rows={sttRows} visible={colSel.visible} sort={sort} onSort={setSort} mobile={mobile} rowKey={r => r.id} expandedKey={expanded} onRowClick={r => setExpanded(expanded === r.id ? null : r.id)}
               renderExpanded={r => (
                 <div>
-                  <Label style={{ display: 'block', marginBottom: 8 }}>WER by test set · lower is better</Label>
-                  <div style={{ display: 'grid', gridTemplateColumns: mobile ? '1fr' : 'repeat(2, 1fr)', gap: '8px 24px', maxWidth: 760 }}>
-                    {Object.entries(r.perDataset ?? {}).map(([d, v]) => <ComparisonBar key={d} label={d} valueText={fmtMetric('wer', v)} width={Math.min(1, v / 25)} color={v < 5 ? GREEN : v < 10 ? BLUE : GOLD} />)}
+                  <div style={{ maxWidth: 760 }}>
+                    <BarPanel flat mobile={mobile} title="WER by test set" subtitle="Word error rate per English test set · Open ASR Leaderboard" color={GREEN} barColor={GREEN} higherIsBetter={false} baseline={0} limit={99} rank={false} gap={false}
+                      items={Object.entries(r.perDataset ?? {}).filter(([, v]) => isNum(v)).sort((a, b) => a[1] - b[1]).map(([d, v]) => ({ id: d, name: d, value: v, label: fmtMetric('wer', v) }))} />
                   </div>
                   <div style={{ marginTop: 12, fontSize: 11, color: 'var(--muted)', display: 'flex', gap: 12, flexWrap: 'wrap' }}>
                     <span>Licence: {r.license ?? NA}</span>{isNum(r.languages) && <span>Languages: {r.languages}</span>}
@@ -151,7 +152,7 @@ function MediaLikeTable({ rows, kind, mobile }) {
   const [sort, setSort] = useState({ key: 'elo', dir: 'desc' });
   const columns = useMemo(() => [
     { key: 'model', label: 'Model', sticky: true, width: mobile ? 200 : 280, value: r => r.rank ?? 999, defaultDir: 'asc', render: r => <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}><LabLogo org={r.org} size={14} /><span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>{r.name}</span><span style={{ fontSize: 10.5, color: 'var(--muted)' }}>{r.org}</span></span> },
-    { key: 'elo', label: 'Quality ELO', short: 'ELO', metricKey: 'ttsQuality', numeric: true, width: 80, value: r => r.elo, render: r => <span style={{ fontWeight: 700 }}>{fmtMetric('ttsQuality', r.elo)}</span> },
+    { key: 'elo', label: 'Quality ELO', short: 'ELO', metricKey: 'ttsQuality', numeric: true, width: 116, bar: true, barColor: PURPLE, barWidth: 40, valueWidth: 44, value: r => r.elo, render: r => <span style={{ fontWeight: 700 }}>{fmtMetric('ttsQuality', r.elo)}</span> },
     { key: 'price', label: 'Price per 1M chars', short: '$/1M ch', metricKey: 'pricePer1mChars', numeric: true, width: 80, value: r => r.pricePer1mChars, render: r => fmtMetric('pricePer1mChars', r.pricePer1mChars) },
     { key: 'cps', label: 'Characters / s', short: 'Chars/s', numeric: true, width: 74, value: r => r.charsPerSecond, render: r => isNum(r.charsPerSecond) ? Math.round(r.charsPerSecond) : <span style={{ color: 'var(--muted2)' }}>{NA}</span> },
     { key: 'ttft', label: 'Time to first audio', short: 'TTFA', metricKey: 'ttft', numeric: true, width: 74, value: r => r.ttft, render: r => fmtMetric('ttft', r.ttft) },

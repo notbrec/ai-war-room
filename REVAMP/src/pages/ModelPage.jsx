@@ -9,6 +9,8 @@ import { ArticleSections } from '../components/ArticleLayout.jsx';
 import { useDark, useMobile } from '../hooks/useTheme.js';
 import { MONO, GlobalMotion, Skeleton, ComparisonBar, EASE } from '../components/design.jsx';
 import { LabLogo } from '../components/LabLogo.jsx';
+import DataTable, { NaCell } from '../components/table/DataTable.jsx';
+import { BarPanel } from '../components/Highlights.jsx';
 import { useLLMs, useProviders, useHistory, useCoding } from '../data/useDomain.js';
 import { fromLegacy } from '../domains/models/columns.jsx';
 import { PageFrame, PageTitle, DataStatus, Panel, Label, Btn, StatTile, BadgeTag, SourceTag, Segmented, EmptyState, eloColor, eloTier, Delta, GREEN, GOLD, BLUE, PURPLE, RED } from '../components/ui.jsx';
@@ -31,6 +33,13 @@ function findModel(slug, models, liveModels) {
 
 const link = { color: '#CD5C4E', textDecoration: 'none', fontWeight: 500 };
 
+const SWE_COLS = [
+  { key: 'agent', label: 'Agent / harness', sticky: true, width: 230, value: r => r.agent, render: r => <span><span style={{ fontWeight: 600, color: 'var(--text)' }}>{r.agent}</span><span style={{ color: 'var(--muted)', fontFamily: MONO, fontSize: 10.5, marginLeft: 6 }}>{r.board}</span></span> },
+  { key: 'resolved', label: 'Resolved', short: '% solved', metricKey: 'resolved', numeric: true, width: 132, bar: true, barColor: GREEN, barWidth: 44, valueWidth: 48, value: r => r.resolved, render: r => <span style={{ fontWeight: 700 }}>{fmtMetric('resolved', r.resolved)}</span> },
+  { key: 'costPerTask', label: 'Cost per task', short: '$/task', metricKey: 'costPerTask', numeric: true, width: 84, value: r => r.costPerTask, render: r => isNum(r.costPerTask) ? fmtMetric('costPerTask', r.costPerTask) : <NaCell /> },
+  { key: 'date', label: 'Submitted', width: 104, value: r => r.date, defaultDir: 'desc', render: r => <span style={{ fontFamily: MONO, fontSize: 11, color: 'var(--muted)' }}>{fmtDate(r.date)}</span> },
+];
+
 export default function ModelPage({ slug, onNavigate, liveModels }) {
   const dark = useDark();
   const mobile = useMobile();
@@ -39,6 +48,8 @@ export default function ModelPage({ slug, onNavigate, liveModels }) {
   const hist = useHistory();
   const coding = useCoding();
   const [section, setSection] = useState('Overview');
+  const [sweSort, setSweSort] = useState({ key: 'resolved', dir: 'desc' });
+  const [provSort, setProvSort] = useState({ key: 'priceBlended', dir: 'asc' });
 
   const model = useMemo(() => findModel(slug, llms.models, liveModels), [slug, llms.models, liveModels]);
   const content = MODEL_CONTENT[slug] ?? (model ? MODEL_CONTENT[model.slug] : null);
@@ -55,6 +66,18 @@ export default function ModelPage({ slug, onNavigate, liveModels }) {
   const eloSeries = useMemo(() => model ? series(hist.snapshots, model.id, 'elo') : [], [hist.snapshots, model]);
   const rankSeries = useMemo(() => model ? series(hist.snapshots, model.id, 'rank') : [], [hist.snapshots, model]);
   const priceSeries = useMemo(() => model ? series(hist.snapshots, model.id, 'priceIn') : [], [hist.snapshots, model]);
+  const provCols = useMemo(() => {
+    const W = providers?.winners ?? {};
+    return [
+      { key: 'provider', label: 'Provider', sticky: true, width: mobile ? 170 : 230, value: e => e.provider, render: e => <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}><span style={{ fontWeight: 600, color: 'var(--text)' }}>{e.provider}</span>{W.cheapest === e.tag && <BadgeTag color={GOLD}>Cheapest</BadgeTag>}{W.bestValue === e.tag && W.bestValue !== W.cheapest && <BadgeTag color={BLUE}>Best value</BadgeTag>}</span> },
+      { key: 'quantization', label: 'Quantisation', short: 'Quant', width: 70, value: e => e.quantization, render: e => e.quantization ? <span style={{ fontFamily: MONO, fontSize: 11, color: /int4|fp4/.test(e.quantization) ? GOLD : 'var(--text)' }}>{e.quantization}</span> : <span style={{ color: 'var(--muted2)', fontSize: 11 }}>full</span> },
+      { key: 'contextLength', label: 'Context', short: 'Ctx', metricKey: 'context', numeric: true, width: 70, value: e => e.contextLength, render: e => fmtMetric('context', e.contextLength) },
+      { key: 'priceIn', label: 'Input price', short: 'In $/M', metricKey: 'priceIn', numeric: true, width: 76, value: e => e.priceIn, render: e => fmtMetric('priceIn', e.priceIn) },
+      { key: 'priceOut', label: 'Output price', short: 'Out $/M', metricKey: 'priceOut', numeric: true, width: 76, value: e => e.priceOut, render: e => fmtMetric('priceOut', e.priceOut) },
+      { key: 'priceBlended', label: 'Blended price', short: 'Blend', metricKey: 'priceBlended', numeric: true, width: 124, bar: true, barColor: GOLD, barWidth: 40, valueWidth: 52, value: e => e.priceBlended, render: e => <span style={{ fontWeight: 700 }}>{fmtMetric('priceBlended', e.priceBlended)}</span> },
+      { key: 'uptime30m', label: 'Uptime (30 min)', short: 'Uptime', metricKey: 'uptime', numeric: true, width: 76, value: e => e.uptime30m, render: e => isNum(e.uptime30m) ? fmtMetric('uptime', e.uptime30m) : <NaCell /> },
+    ];
+  }, [providers, mobile]);
 
   if (loading) return <PageFrame mobile={mobile}><Skeleton height={60} width="40%" style={{ marginBottom: 20 }} /><Skeleton height={300} /></PageFrame>;
   if (!model) {
@@ -107,7 +130,7 @@ export default function ModelPage({ slug, onNavigate, liveModels }) {
 
       {/* Top stats */}
       <div style={{ display: 'grid', gridTemplateColumns: mobile ? 'repeat(2, 1fr)' : 'repeat(6, 1fr)', gap: 8, marginBottom: 20 }}>
-        <StatTile label="Arena ELO" metricKey="elo" value={isNum(elo) ? elo : NA} color={eloColor(elo)} sub={isNum(elo) ? `#${model.arena.rank} · ±${model.arena.ci ?? '—'} · tier ${eloTier(elo)}` : 'not ranked'} />
+        <StatTile label="Arena ELO" metricKey="elo" value={isNum(elo) ? elo : NA} color={eloColor(elo)} sub={isNum(elo) ? `#${model.arena.rank} · ±${model.arena.ci ?? '—'} · tier ${eloTier(elo)}` : 'not ranked'} delta={<Delta value={model.history?.rankDelta7d} />} trend={eloSeries.map(p => p.value)} />
         <StatTile label="Intelligence" metricKey="intelligence" value={fmtMetric('intelligence', model.aa?.intelligence)} sub={isNum(model.aa?.codingIndex) ? `code ${fmtMetric('codingIndex', model.aa.codingIndex)} · agent ${fmtMetric('agenticIndex', model.aa.agenticIndex)}` : undefined} color={BLUE} />
         <StatTile label="Speed" metricKey="speed" value={fmtMetric('speed', model.aa?.speed)} sub={isNum(model.aa?.speed) ? 'tokens / s' : 'source not configured'} color={PURPLE} />
         <StatTile label="Latency" metricKey="ttft" value={fmtMetric('ttft', model.aa?.ttft)} sub={isNum(model.aa?.ttft) ? 'to first token' : 'source not configured'} color={PURPLE} />
@@ -195,29 +218,23 @@ export default function ModelPage({ slug, onNavigate, liveModels }) {
           </Panel>
           {model.aa?.benchmarks && Object.keys(model.aa.benchmarks).length > 0 && (
             <Panel title="Individual evaluations" action={<SourceTag id="aa" />}>
-              <div style={{ display: 'grid', gridTemplateColumns: mobile ? '1fr' : 'repeat(2, 1fr)', gap: '8px 24px' }}>
-                {Object.entries(model.aa.benchmarks).sort().map(([k, v]) => <ComparisonBar key={k} label={k.replace(/_/g, ' ')} valueText={v <= 1 ? `${(v * 100).toFixed(1)}%` : v.toFixed(1)} width={v <= 1 ? v : Math.min(1, v / 100)} color="var(--text)" />)}
-              </div>
+              <BarPanel flat wide mobile={mobile} barColor={BLUE} baseline={0} limit={99} rank={false} gap={false}
+                items={Object.entries(model.aa.benchmarks).filter(([, v]) => isNum(v)).map(([k, v]) => ({ id: k, name: k.replace(/_/g, ' '), value: v <= 1 ? v * 100 : v, label: v <= 1 ? `${(v * 100).toFixed(1)}%` : v.toFixed(1) })).sort((a, b) => b.value - a.value)}
+                note="Scores as published by Artificial Analysis; different evaluations are not comparable with each other" />
             </Panel>
           )}
           {model.or?.designArena?.length > 0 && (
             <Panel title="Design Arena · human preference by category" action={<SourceTag id="designarena" />}>
-              <div style={{ display: 'grid', gridTemplateColumns: mobile ? '1fr' : 'repeat(2, 1fr)', gap: '8px 24px' }}>
-                {[...model.or.designArena].sort((a, b) => (b.elo ?? 0) - (a.elo ?? 0)).map(d => <ComparisonBar key={`${d.arena}:${d.category}`} label={`${d.arena} · ${DESIGN_CATEGORY_LABEL[d.category] ?? d.category}${d.rank ? ` · #${d.rank}` : ''}`} valueText={`${d.elo ?? NA}${isNum(d.winRate) ? ` · ${d.winRate}% wins` : ''}`} width={isNum(d.elo) ? Math.max(0.05, (d.elo - 900) / 500) : 0.05} color={BLUE} />)}
-              </div>
+              <BarPanel flat wide mobile={mobile} barColor={BLUE} limit={99} rank={false} gap={false}
+                items={[...model.or.designArena].filter(d => isNum(d.elo)).sort((a, b) => b.elo - a.elo).map(d => ({ id: `${d.arena}:${d.category}`, name: `${DESIGN_CATEGORY_LABEL[d.category] ?? d.category} · ${d.arena}`, value: d.elo, label: String(Math.round(d.elo)), tag: d.rank ? <BadgeTag color="var(--muted)">#{d.rank}</BadgeTag> : null }))}
+                note="ELO per category; the badge is this model's rank within that category" />
             </Panel>
           )}
           {sweRuns.length > 0 && (
-            <Panel title="SWE-bench runs with this model" action={<Btn small onClick={() => onNavigate('coding')}>Code Ops →</Btn>}>
-              {sweRuns.map(r => (
-                <div key={r.id} style={{ display: 'grid', gridTemplateColumns: mobile ? '1fr auto' : '1fr 110px 90px 90px', gap: 10, padding: '7px 0', borderBottom: '0.5px solid var(--sep2)', fontSize: 12.5, alignItems: 'center' }}>
-                  <span><b style={{ color: 'var(--text)' }}>{r.agent}</b> <span style={{ color: 'var(--muted)', fontFamily: MONO, fontSize: 10.5 }}>· {r.board}</span></span>
-                  {!mobile && <span style={{ fontFamily: MONO, color: 'var(--muted)' }}>{fmtDate(r.date)}</span>}
-                  {!mobile && <span style={{ fontFamily: MONO, color: 'var(--muted)', textAlign: 'right' }}>{isNum(r.costPerTask) ? fmtMetric('costPerTask', r.costPerTask) : NA}</span>}
-                  <span style={{ fontFamily: MONO, fontWeight: 700, color: GREEN, textAlign: 'right' }}>{fmtMetric('resolved', r.resolved)}</span>
-                </div>
-              ))}
-            </Panel>
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, marginBottom: 8 }}><Label color="var(--muted)">SWE-bench runs with this model</Label><Btn small onClick={() => onNavigate('coding')}>Code Ops →</Btn></div>
+              <DataTable dense mobile={mobile} rows={sweRuns} rowKey={r => r.id} columns={SWE_COLS} visible={SWE_COLS.map(c => c.key)} sort={sweSort} onSort={setSweSort} onRowClick={() => onNavigate('coding')} footer={<span>Resolved = share of benchmark tasks whose tests pass after the agent's patch · SWE-bench</span>} />
+            </div>
           )}
           {!model.aa && !model.or?.designArena?.length && !sweRuns.length && <EmptyState title="No benchmark scores from a permitted source" body="This model has an arena ELO only. Benchmarks arrive from Artificial Analysis, Design Arena (via OpenRouter) and SWE-bench when the model is covered there." />}
         </div>
@@ -231,31 +248,21 @@ export default function ModelPage({ slug, onNavigate, liveModels }) {
             </div>
             <p style={{ fontSize: 11.5, color: 'var(--muted)', marginTop: 10, lineHeight: 1.5 }}>Blended = (3 × input + output) ÷ 4. Cache prices apply where the provider supports prompt caching. Cost per task depends on the workload and is not estimated here.</p>
           </Panel>
-          <Panel title="Cost of 1M blended tokens vs the top 20" >
-            {isNum(model.priceBlended) ? (
-              <div style={{ display: 'grid', gap: 8 }}>
-                {[...llms.models.filter(m => m.inArena && isNum(m.priceBlended)).slice(0, 20), model].filter((m, i, a) => a.findIndex(x => x.id === m.id) === i).sort((a, b) => a.priceBlended - b.priceBlended).map(m => (
-                  <ComparisonBar key={m.id} label={m.id === model.id ? `▶ ${m.name}` : m.name} valueText={fmtMetric('priceBlended', m.priceBlended)} width={Math.max(0.03, m.priceBlended / Math.max(...llms.models.slice(0, 20).map(x => x.priceBlended ?? 0), model.priceBlended, 0.01))} color={m.id === model.id ? GOLD : 'var(--muted2)'} />
-                ))}
-              </div>
-            ) : <p style={{ fontSize: 12.5, color: 'var(--muted)', margin: 0 }}>No listed price for this model.</p>}
-          </Panel>
+          {isNum(model.priceBlended) ? (
+            <BarPanel mobile={mobile} title="Blended price vs the top 20" color={GOLD} subtitle="$ per 1M tokens at 3:1 in:out · this model highlighted · OpenRouter" higherIsBetter={false} baseline={0} limit={21} emphasis={new Set([model.id])}
+              items={[...llms.models.filter(m => m.inArena && isNum(m.priceBlended)).slice(0, 20), model].filter((m, i, a) => a.findIndex(x => x.id === m.id) === i).sort((a, b) => a.priceBlended - b.priceBlended).map(m => ({ id: m.id, name: m.name, org: m.org, value: m.priceBlended, label: fmtMetric('priceBlended', m.priceBlended), slug: m.slug }))}
+              onSelect={it => { if (it.id !== model.id && it.slug) onNavigate({ type: 'model', slug: it.slug }); }} />
+          ) : <Panel title="Blended price vs the top 20"><p style={{ fontSize: 12.5, color: 'var(--muted)', margin: 0 }}>No listed price for this model.</p></Panel>}
         </div>
       )}
 
       {section === 'Providers' && (
         providers ? (
-          <Panel title={`${providers.count} hosts on OpenRouter`} action={<Btn small onClick={() => onNavigate({ type: 'providers', slug: model.id })}>Full provider view →</Btn>}>
-            {providers.endpoints.sort((a, b) => (a.priceBlended ?? Infinity) - (b.priceBlended ?? Infinity)).map(e => (
-              <div key={e.tag} style={{ display: 'grid', gridTemplateColumns: mobile ? '1fr auto' : '1fr 100px 80px 80px 80px', gap: 10, padding: '8px 0', borderBottom: '0.5px solid var(--sep2)', fontSize: 12.5, alignItems: 'center' }}>
-                <span><b style={{ color: 'var(--text)' }}>{e.provider}</b> <span style={{ fontFamily: MONO, fontSize: 10.5, color: 'var(--muted)' }}>{e.quantization ?? 'full'}</span> {providers.winners.cheapest === e.tag && <BadgeTag color={GOLD}>Cheapest</BadgeTag>} {providers.winners.bestValue === e.tag && providers.winners.bestValue !== providers.winners.cheapest && <BadgeTag color={BLUE}>Best value</BadgeTag>}</span>
-                {!mobile && <span style={{ fontFamily: MONO, color: 'var(--muted)' }}>ctx {fmtMetric('context', e.contextLength)}</span>}
-                {!mobile && <span style={{ fontFamily: MONO, color: 'var(--muted)', textAlign: 'right' }}>{fmtMetric('priceIn', e.priceIn)}</span>}
-                {!mobile && <span style={{ fontFamily: MONO, color: 'var(--muted)', textAlign: 'right' }}>{fmtMetric('priceOut', e.priceOut)}</span>}
-                <span style={{ fontFamily: MONO, fontWeight: 700, color: 'var(--text)', textAlign: 'right' }}>{fmtMetric('priceBlended', e.priceBlended)}</span>
-              </div>
-            ))}
-          </Panel>
+          <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, marginBottom: 8, flexWrap: 'wrap' }}><Label color="var(--muted)">{providers.count} hosts on OpenRouter</Label><Btn small onClick={() => onNavigate({ type: 'providers', slug: model.id })}>Full provider view →</Btn></div>
+            <DataTable dense mobile={mobile} rows={providers.endpoints} rowKey={e => e.tag ?? e.provider} columns={provCols} visible={provCols.map(c => c.key)} sort={provSort} onSort={setProvSort}
+              footer={<span>Blended = (3 × input + output) ÷ 4 · cheapest and best-value hosts are tagged · list prices relayed by OpenRouter</span>} />
+          </div>
         ) : <EmptyState title="No provider data" body={model.or ? 'Provider endpoints are tracked for the top of the board; this model is outside that window or the provider feed is still loading.' : 'This model is not listed on OpenRouter, so per-provider pricing is unavailable.'} />
       )}
 

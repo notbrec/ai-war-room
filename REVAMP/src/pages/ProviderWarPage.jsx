@@ -6,7 +6,8 @@
 
 import { useMemo, useState, useEffect, lazy, Suspense } from 'react';
 import { useMobile } from '../hooks/useTheme.js';
-import { MONO, GlobalMotion, Skeleton, ComparisonBar, SectionTitle } from '../components/design.jsx';
+import { MONO, GlobalMotion, Skeleton, SectionTitle } from '../components/design.jsx';
+import { BarPanel, HighlightGrid } from '../components/Highlights.jsx';
 import { LabLogo } from '../components/LabLogo.jsx';
 import { useProviders } from '../data/useDomain.js';
 import DataTable, { useColumnSelection, ColumnPicker } from '../components/table/DataTable.jsx';
@@ -53,7 +54,7 @@ export default function ProviderWarPage({ onNavigate, slug }) {
     { key: 'flags', label: 'Wins', width: 150, sortable: false, render: badge },
     { key: 'priceIn', label: 'Input price', short: 'In $/M', metricKey: 'priceIn', numeric: true, width: 74, value: e => e.priceIn, render: e => fmtMetric('priceIn', e.priceIn) },
     { key: 'priceOut', label: 'Output price', short: 'Out $/M', metricKey: 'priceOut', numeric: true, width: 74, value: e => e.priceOut, render: e => fmtMetric('priceOut', e.priceOut) },
-    { key: 'priceBlended', label: 'Blended price', short: 'Blend', metricKey: 'priceBlended', numeric: true, width: 70, value: e => e.priceBlended, render: e => <span style={{ fontWeight: 700 }}>{fmtMetric('priceBlended', e.priceBlended)}</span> },
+    { key: 'priceBlended', label: 'Blended price', short: 'Blend', metricKey: 'priceBlended', numeric: true, width: 124, bar: true, barColor: GOLD, barWidth: 40, valueWidth: 52, value: e => e.priceBlended, render: e => <span style={{ fontWeight: 700 }}>{fmtMetric('priceBlended', e.priceBlended)}</span> },
     { key: 'priceCacheRead', label: 'Cached input', short: 'Cache rd', metricKey: 'priceCacheRead', numeric: true, width: 74, default: false, value: e => e.priceCacheRead, render: e => fmtMetric('priceCacheRead', e.priceCacheRead) },
     { key: 'contextLength', label: 'Context', short: 'Ctx', metricKey: 'context', numeric: true, width: 62, value: e => e.contextLength, render: e => fmtMetric('context', e.contextLength) },
     { key: 'maxOutput', label: 'Max output', short: 'Max out', metricKey: 'maxOutput', numeric: true, width: 66, default: false, value: e => e.maxOutput, render: e => fmtMetric('maxOutput', e.maxOutput) },
@@ -69,7 +70,7 @@ export default function ProviderWarPage({ onNavigate, slug }) {
   const cheapest = rows.find(e => e.tag === W.cheapest);
   const priciest = [...rows].filter(e => isNum(e.priceBlended)).sort((a, b) => b.priceBlended - a.priceBlended)[0];
   const spread = cheapest && priciest && cheapest.priceBlended > 0 ? priciest.priceBlended / cheapest.priceBlended : null;
-  const maxBlend = Math.max(...rows.map(e => e.priceBlended ?? 0), 0.0001);
+  const unpriced = rows.filter(e => !isNum(e.priceBlended)).length;
 
   const chartPoints = useMemo(() => {
     // Across every model: one point per endpoint
@@ -83,9 +84,9 @@ export default function ProviderWarPage({ onNavigate, slug }) {
 
   const dirColumns = useMemo(() => [
     { key: 'provider', label: 'Provider', sticky: true, width: 200, value: p => p.provider, render: p => <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>{p.provider}</span> },
-    { key: 'models', label: 'Top models hosted', short: 'Models', numeric: true, width: 80, value: p => p.models },
-    { key: 'endpoints', label: 'Endpoints', numeric: true, width: 80, value: p => p.endpoints },
-    { key: 'avgUptime', label: 'Avg uptime (30 min)', short: 'Avg uptime', metricKey: 'uptime', numeric: true, width: 90, value: p => p.avgUptime, render: p => isNum(p.avgUptime) ? <span style={{ color: p.avgUptime >= 99.5 ? GREEN : p.avgUptime >= 97 ? GOLD : RED }}>{fmtMetric('uptime', p.avgUptime)}</span> : <span style={{ color: 'var(--muted2)' }}>{NA}</span> },
+    { key: 'models', label: 'Top models hosted', short: 'Models', numeric: true, width: 120, bar: true, barColor: BLUE, barWidth: 44, valueWidth: 30, value: p => p.models },
+    { key: 'endpoints', label: 'Endpoints', numeric: true, width: 90, value: p => p.endpoints },
+    { key: 'avgUptime', label: 'Avg uptime (30 min)', short: 'Avg uptime', metricKey: 'uptime', numeric: true, width: 130, bar: true, barColor: GREEN, barWidth: 40, valueWidth: 52, value: p => p.avgUptime, render: p => isNum(p.avgUptime) ? <span style={{ color: p.avgUptime >= 99.5 ? GREEN : p.avgUptime >= 97 ? GOLD : RED, fontWeight: 600 }}>{fmtMetric('uptime', p.avgUptime)}</span> : <span style={{ color: 'var(--muted2)' }}>{NA}</span> },
   ], []);
   const [dirSort, setDirSort] = useState({ key: 'models', dir: 'desc' });
 
@@ -130,14 +131,14 @@ export default function ProviderWarPage({ onNavigate, slug }) {
                 <DataTable columns={columns} rows={rows} visible={colSel.visible} sort={sort} onSort={setSort} mobile={mobile} rowKey={e => e.tag ?? e.provider} />
               )}
               {view === 'spread' && (
-                <Panel title={`Blended price per host · ${meta?.name}`}>
-                  <div style={{ display: 'grid', gap: 12 }}>
-                    {[...rows].filter(e => isNum(e.priceBlended)).sort((a, b) => a.priceBlended - b.priceBlended).map(e => (
-                      <ComparisonBar key={e.tag} label={`${e.provider}${e.quantization ? ` · ${e.quantization}` : ''}${e.tag === W.cheapest ? ' · CHEAPEST' : ''}`} valueText={`${fmtMetric('priceBlended', e.priceBlended)} · ctx ${fmtMetric('context', e.contextLength)}`} width={e.priceBlended / maxBlend} color={e.tag === W.cheapest ? GOLD : e.tag === W.bestValue ? BLUE : 'var(--text)'} />
-                    ))}
-                    {rows.filter(e => !isNum(e.priceBlended)).length > 0 && <p style={{ fontSize: 11, color: 'var(--muted2)', fontFamily: MONO, margin: 0 }}>{rows.filter(e => !isNum(e.priceBlended)).length} host(s) without a listed price are not drawn.</p>}
-                  </div>
-                </Panel>
+                <HighlightGrid mobile={mobile} cols={2}>
+                  <BarPanel mobile={mobile} title="Blended price per host" color={GOLD} subtitle={`${meta?.name ?? current.modelId} · $ per 1M tokens at 3:1 in:out · OpenRouter`} higherIsBetter={false} baseline={0} limit={rows.length}
+                    items={[...rows].filter(e => isNum(e.priceBlended)).sort((a, b) => a.priceBlended - b.priceBlended).map(e => ({ id: e.tag, name: e.provider, value: e.priceBlended, label: fmtMetric('priceBlended', e.priceBlended), color: e.tag === W.cheapest ? GOLD : e.tag === W.bestValue ? BLUE : 'var(--muted)', tag: e.quantization ? <BadgeTag color={/int4|fp4/.test(e.quantization) ? GOLD : 'var(--muted)'}>{e.quantization}</BadgeTag> : null }))}
+                    note={`${unpriced ? `${unpriced} host(s) without a listed price are not drawn · ` : ''}gold = cheapest · blue = best value at fp8 or better`} />
+                  <BarPanel mobile={mobile} title="Context served per host" color={BLUE} subtitle="Largest request each host accepts · tokens · OpenRouter" baseline={0} limit={rows.length}
+                    items={[...rows].filter(e => isNum(e.contextLength)).sort((a, b) => b.contextLength - a.contextLength).map(e => ({ id: e.tag, name: e.provider, value: e.contextLength, label: fmtMetric('context', e.contextLength), color: e.tag === W.context ? BLUE : 'var(--muted)' }))}
+                    note="blue = the host serving the largest window" />
+                </HighlightGrid>
               )}
               {view === 'charts' && (
                 <Panel pad={mobile ? 12 : 18}>

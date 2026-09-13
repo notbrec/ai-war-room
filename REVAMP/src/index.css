@@ -18,6 +18,17 @@
   --pill-text:   rgba(28,28,30,0.78);
   --shadow:      0 1px 0 rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.04);
   --accent:      #CD5C4E;
+  /* Raised surfaces — the "3D" layer: gradient face, top highlight, stacked shadow */
+  --surface-top: #FFFFFF;
+  --surface-bot: #F9F9FB;
+  --surface-hi:  rgba(255,255,255,0.9);
+  --surface-lo:  rgba(28,28,30,0.08);
+  --raise:       0 1px 1px rgba(0,0,0,0.03), 0 4px 10px rgba(0,0,0,0.04), 0 18px 40px -12px rgba(0,0,0,0.10);
+  --raise-hover: 0 2px 2px rgba(0,0,0,0.03), 0 10px 22px rgba(0,0,0,0.06), 0 30px 60px -16px rgba(0,0,0,0.16);
+  --th-bg:       #F3F3F6;
+  --th-bg2:      #ECECF0;
+  --row-alt:     rgba(28,28,30,0.022);
+  --nav-h:       88px;
 }
 
 html.dark {
@@ -39,6 +50,15 @@ html.dark {
   --pill-text:   rgba(245,245,247,0.78);
   --shadow:      0 1px 0 rgba(0,0,0,0.6), 0 12px 32px rgba(0,0,0,0.42);
   --accent:      #CD5C4E;
+  --surface-top: #1a1a20;
+  --surface-bot: #131317;
+  --surface-hi:  rgba(255,255,255,0.075);
+  --surface-lo:  rgba(0,0,0,0.6);
+  --raise:       0 1px 0 rgba(0,0,0,0.5), 0 6px 14px rgba(0,0,0,0.35), 0 24px 48px -12px rgba(0,0,0,0.6);
+  --raise-hover: 0 2px 0 rgba(0,0,0,0.5), 0 14px 28px rgba(0,0,0,0.45), 0 40px 70px -16px rgba(0,0,0,0.7);
+  --th-bg:       #1d1d23;
+  --th-bg2:      #17171c;
+  --row-alt:     rgba(255,255,255,0.018);
 }
 
 /* ─── Reset ────────────────────────────────────────────────────────────── */
@@ -224,6 +244,86 @@ html:not(.dark) ::selection { background: rgba(0,0,0,0.10); }
   background: var(--card);
   border: 0.5px solid var(--sep);
 }
+
+/* ─── Raised surface — every panel, tile and table sits on this ────────── */
+.aiwar-surface {
+  background: linear-gradient(180deg, var(--surface-top) 0%, var(--surface-bot) 100%);
+  border: 0.5px solid var(--sep);
+  box-shadow: inset 0 1px 0 var(--surface-hi), var(--raise);
+}
+.aiwar-surface.aiwar-card-hover:hover {
+  box-shadow: inset 0 1px 0 var(--surface-hi), var(--raise-hover);
+}
+
+/* ─── Tables — the console data layer ──────────────────────────────────────
+   Flat header on a solid tint, hairline rules, tabular numerals, and data
+   bars that share one language with the ranked charts. No gradients. */
+.aiwar-dt { overflow: visible; }
+.aiwar-dt-scroll { position: relative; }
+.aiwar-dt table { border-collapse: separate; border-spacing: 0; }
+.aiwar-dt thead th { background: var(--th-bg); }
+.aiwar-dt thead th.aiwar-dt-sortable:hover { color: var(--text) !important; }
+.aiwar-dt thead th.aiwar-dt-sortable:hover .aiwar-dt-sortglyph { opacity: 0.6; }
+.aiwar-dt-sortglyph { opacity: 0; transition: opacity 160ms ease; }
+.aiwar-dt-sortglyph[data-on="1"] { opacity: 1 !important; }
+.aiwar-dt-groups th { background: var(--th-bg2); }
+.aiwar-dt-row td { transition: background-color 120ms ease; }
+.aiwar-dt-row:hover td { background: var(--hover) !important; }
+.aiwar-dt-row[data-expanded="1"] td { background: var(--hover) !important; }
+.aiwar-dt-scroll[data-scrolled="1"] .aiwar-dt-stick { box-shadow: 8px 0 14px -8px rgba(0,0,0,0.55); }
+html:not(.dark) .aiwar-dt-scroll[data-scrolled="1"] .aiwar-dt-stick { box-shadow: 8px 0 14px -8px rgba(0,0,0,0.14); }
+
+/* data bar: [track ▮▮▮▮▯▯] value — the bar is the number's position within
+   the column (min → max); the printed number is the value */
+.aiwar-dt-cell-bar { display: inline-flex; align-items: center; justify-content: flex-end; gap: 8px; width: 100%; }
+.aiwar-dt-cell-bar > .aiwar-dt-val { display: inline-block; text-align: right; white-space: nowrap; }
+.aiwar-bar-track { position: relative; flex: 0 0 auto; height: 6px; background: var(--sep2); overflow: hidden; }
+.aiwar-bar-track > span { position: absolute; left: 0; top: 0; bottom: 0; background: currentColor; opacity: 0.78; transition: width 400ms cubic-bezier(0.16,1,0.3,1), opacity 120ms; }
+.aiwar-dt-row:hover .aiwar-bar-track > span { opacity: 1; }
+.aiwar-dt-more {
+  display: flex; align-items: center; justify-content: center; gap: 14px;
+  padding: 10px 14px; border-top: 0.5px solid var(--sep); background: var(--th-bg2);
+}
+.aiwar-dt-progress { flex: 1; max-width: 220px; height: 2px; background: var(--sep); position: relative; }
+.aiwar-dt-progress > span { position: absolute; left: 0; top: 0; bottom: 0; background: var(--text); opacity: 0.6; }
+.aiwar-dt-foot {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px;
+  padding: 8px 14px; border-top: 0.5px solid var(--sep);
+  font-family: 'SF Mono','JetBrains Mono',ui-monospace,'Menlo',monospace; font-size: 10.5px; color: var(--muted2);
+}
+
+/* ─── Ranked bars (Highlights.BarPanel) ───────────────────────────────────
+   rank · mark · name · bar on a hairline grid · value · gap to #1 */
+.aiwar-rb-row {
+  display: grid; align-items: center; width: 100%; box-sizing: content-box;
+  border: none; background: transparent; padding: 0 6px; margin: 0 -6px;
+  text-align: left; cursor: default; transition: background 120ms;
+}
+.aiwar-rb-row[data-click="1"] { cursor: pointer; }
+.aiwar-rb-row:hover, .aiwar-rb-row:focus-visible { background: var(--hover); outline: none; }
+.aiwar-rb-plot {
+  position: relative; min-width: 0; display: block;
+  background-image: linear-gradient(90deg, var(--sep) 0, var(--sep) 1px, transparent 1px);
+  background-size: 25% 100%; background-repeat: repeat-x;
+  border-right: 1px solid var(--sep);
+}
+.aiwar-rb-bar {
+  position: absolute; top: 50%; left: 0; height: 8px; transform: translateY(-50%);
+  transform-origin: left center; animation: aiwar-bar-grow 700ms cubic-bezier(0.16,1,0.3,1) both;
+  transition: opacity 120ms;
+}
+.aiwar-rb-row[data-dim="1"] .aiwar-rb-bar { opacity: 0.25 !important; }
+@keyframes aiwar-bar-grow { from { transform: translateY(-50%) scaleX(0); } to { transform: translateY(-50%) scaleX(1); } }
+.aiwar-rb-axis { position: relative; height: 16px; display: block; }
+.aiwar-rb-axis > span { position: absolute; top: 3px; font-size: 9px; letter-spacing: 0.04em; color: var(--muted2); white-space: nowrap; }
+
+/* ─── Chart chrome (SVG charts share one tooltip) ─────────────────────── */
+.aiwar-chart-tip {
+  position: absolute; pointer-events: none; z-index: 4;
+  background: var(--card); border: 0.5px solid var(--sep); box-shadow: var(--shadow);
+  padding: 9px 11px; width: 214px;
+}
+.aiwar-legend-btn { transition: opacity 150ms, background 150ms, color 150ms; }
 
 /* ─── NavBar-click glitch — random direction sweep + body shake ───────── */
 .aiwar-screen-glitch {

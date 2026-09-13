@@ -6,7 +6,7 @@ import { MONO } from '../../components/design.jsx';
 import { LabLogo } from '../../components/LabLogo.jsx';
 import { ORG_CONFIG } from '../../models-data.js';
 import { fmtMetric, fmtDate, isNum, parseContext, blendedPrice, NA } from '../../../shared/metrics.js';
-import { eloColor, eloTier, Delta, BadgeTag, SourceTag, GREEN, PURPLE } from '../../components/ui.jsx';
+import { eloColor, eloTier, Delta, BadgeTag, SourceTag, GREEN, PURPLE, BLUE } from '../../components/ui.jsx';
 import { AddToBattle } from '../comparison/BattleControls.jsx';
 
 /** Legacy /api/leaderboard row → merged-record shape (offline fallback). */
@@ -32,11 +32,7 @@ export function ModelCell({ m, dark, rank, onOpen, compact = false }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: compact ? 8 : 10, minWidth: 0 }}>
       <span style={{ width: 30, flexShrink: 0, textAlign: 'right' }}>
-        {top ? (
-          <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 5px', ...(r === 1 ? { color: '#7A5500', background: '#FFD700' } : r === 2 ? { color: '#555', background: '#D0D0D0' } : { color: '#fff', background: '#CD7F32' }) }}>#{r}</span>
-        ) : (
-          <span style={{ fontSize: 12, fontWeight: 500, color: 'var(--muted)', fontFamily: MONO }}>{isNum(r) ? r : '—'}</span>
-        )}
+        <span style={{ fontSize: 12, fontWeight: top ? 700 : 500, color: top ? 'var(--text)' : 'var(--muted)', fontFamily: MONO, fontVariantNumeric: 'tabular-nums' }}>{isNum(r) ? r : '—'}</span>
       </span>
       <div style={{ width: compact ? 26 : 32, height: compact ? 26 : 32, background: iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
         <LabLogo org={m.org} size={compact ? 14 : 18} />
@@ -63,24 +59,24 @@ export function ModelCell({ m, dark, rank, onOpen, compact = false }) {
 
 export function llmColumns({ dark, onOpen, mobile }) {
   return [
-    { key: 'model', label: 'Model', sticky: true, width: mobile ? 210 : 290, sortable: true, value: m => m.arena?.rank ?? 10_000 + (1000 - (m.aa?.intelligence ?? 0)), defaultDir: 'asc',
+    { key: 'model', label: 'Model', sticky: true, width: mobile ? 196 : 290, sortable: true, value: m => m.arena?.rank ?? 10_000 + (1000 - (m.aa?.intelligence ?? 0)), defaultDir: 'asc',
       render: m => <ModelCell m={m} dark={dark} onOpen={onOpen} compact={mobile} /> },
     // Arena
-    { key: 'elo', label: 'Arena ELO', short: 'ELO', metricKey: 'elo', group: 'Arena', numeric: true, width: 84, value: m => m.arena?.elo,
-      render: m => isNum(m.arena?.elo) ? <div><div style={{ fontSize: 15, fontWeight: 700, color: eloColor(m.arena.elo), letterSpacing: '-0.03em' }}>{m.arena.elo}</div><div style={{ fontSize: 9.5, color: 'var(--muted2)' }}>±{m.arena.ci ?? '—'}</div></div> : <span style={{ color: 'var(--muted2)' }}>{NA}</span> },
+    { key: 'elo', label: 'Arena ELO', short: 'ELO', metricKey: 'elo', group: 'Arena', numeric: true, width: 132, bar: true, barWidth: 40, valueWidth: 62, barColor: GREEN, value: m => m.arena?.elo,
+      render: m => isNum(m.arena?.elo) ? <span><span style={{ fontWeight: 700 }}>{m.arena.elo}</span><span style={{ fontSize: 10, color: 'var(--muted2)', marginLeft: 4 }}>±{m.arena.ci ?? '—'}</span></span> : <span style={{ color: 'var(--muted2)' }}>{NA}</span> },
     { key: 'delta7', label: 'Rank Δ 7d', short: 'Δ7d', group: 'Arena', numeric: true, width: 64, value: m => m.history?.rankDelta7d,
       render: m => m.history?.rankDelta7d != null ? <Delta value={m.history.rankDelta7d} placeholder="=" /> : <span style={{ color: 'var(--muted2)', fontSize: 10, fontFamily: MONO }} title="No snapshot ≥ 7 days old yet">{m.history?.isNew7d ? 'NEW' : NA}</span> },
     { key: 'eloDelta7', label: 'ELO Δ 7d', short: 'ELO Δ', group: 'Arena', numeric: true, width: 64, default: false, value: m => m.history?.eloDelta7d, render: m => <Delta value={m.history?.eloDelta7d} placeholder={m.history ? '=' : NA} /> },
-    { key: 'votes', label: 'Votes', metricKey: 'votes', group: 'Arena', numeric: true, width: 68, value: m => m.arena?.votes, render: m => num(m.arena?.votes, 'votes') },
+    { key: 'votes', label: 'Votes', metricKey: 'votes', group: 'Arena', numeric: true, width: 76, value: m => m.arena?.votes, render: m => num(m.arena?.votes, 'votes') },
     { key: 'ci', label: 'Confidence ±', short: '±CI', metricKey: 'ci', group: 'Arena', numeric: true, width: 56, default: false, value: m => m.arena?.ci, render: m => num(m.arena?.ci, 'ci') },
     { key: 'visionElo', label: 'Vision ELO', short: 'Vision', metricKey: 'elo', group: 'Arena', numeric: true, width: 70, default: false, value: m => m.arenas?.vision?.elo, render: m => num(m.arenas?.vision?.elo, 'elo') },
     { key: 'searchElo', label: 'Search ELO', short: 'Search', metricKey: 'elo', group: 'Arena', numeric: true, width: 70, default: false, value: m => m.arenas?.search?.elo, render: m => num(m.arenas?.search?.elo, 'elo') },
     // Intelligence
-    { key: 'intelligence', label: 'Intelligence Index', short: 'Intel', metricKey: 'intelligence', group: 'Benchmarks', numeric: true, width: 66, value: m => m.aa?.intelligence, render: m => num(m.aa?.intelligence, 'intelligence') },
-    { key: 'codingIndex', label: 'Coding Index', short: 'Code', metricKey: 'codingIndex', group: 'Benchmarks', numeric: true, width: 62, default: false, value: m => m.aa?.codingIndex, render: m => num(m.aa?.codingIndex, 'codingIndex') },
-    { key: 'agenticIndex', label: 'Agentic Index', short: 'Agent', metricKey: 'agenticIndex', group: 'Benchmarks', numeric: true, width: 62, default: false, value: m => m.aa?.agenticIndex, render: m => num(m.aa?.agenticIndex, 'agenticIndex') },
+    { key: 'intelligence', label: 'Intelligence Index', short: 'Intel', metricKey: 'intelligence', group: 'Benchmarks', numeric: true, width: 104, bar: true, barWidth: 36, valueWidth: 36, barColor: BLUE, value: m => m.aa?.intelligence, render: m => num(m.aa?.intelligence, 'intelligence') },
+    { key: 'codingIndex', label: 'Coding Index', short: 'Code', metricKey: 'codingIndex', group: 'Benchmarks', numeric: true, width: 104, bar: true, barWidth: 36, valueWidth: 36, barColor: GREEN, default: false, value: m => m.aa?.codingIndex, render: m => num(m.aa?.codingIndex, 'codingIndex') },
+    { key: 'agenticIndex', label: 'Agentic Index', short: 'Agent', metricKey: 'agenticIndex', group: 'Benchmarks', numeric: true, width: 104, bar: true, barWidth: 36, valueWidth: 36, barColor: PURPLE, default: false, value: m => m.aa?.agenticIndex, render: m => num(m.aa?.agenticIndex, 'agenticIndex') },
     // Performance
-    { key: 'speed', label: 'Output speed', short: 'Tok/s', metricKey: 'speed', group: 'Performance', numeric: true, width: 66, default: false, value: m => m.aa?.speed, render: m => num(m.aa?.speed, 'speed') },
+    { key: 'speed', label: 'Output speed', short: 'Tok/s', metricKey: 'speed', group: 'Performance', numeric: true, width: 104, bar: true, barWidth: 36, valueWidth: 36, barColor: PURPLE, default: false, value: m => m.aa?.speed, render: m => num(m.aa?.speed, 'speed') },
     { key: 'ttft', label: 'First token', short: 'TTFT', metricKey: 'ttft', group: 'Performance', numeric: true, width: 66, default: false, value: m => m.aa?.ttft, render: m => num(m.aa?.ttft, 'ttft') },
     { key: 'e2e', label: 'End-to-end', short: 'E2E', metricKey: 'e2e', group: 'Performance', numeric: true, width: 66, default: false, value: m => m.aa?.e2e, render: m => num(m.aa?.e2e, 'e2e') },
     // Pricing

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { RobotMascot } from './Robot.jsx';
 import { useMobile } from '../hooks/useTheme.js';
 import { prefetch } from '../data/api.js';
@@ -122,8 +122,20 @@ export default function NavBar({ page, onNavigate, dark, onToggleTheme }) {
 
   const isActive = item => page === item.id || (item.id === 'home' && page === 'warroom');
 
+  // publish our height so sticky table headers can tuck under the bar
+  const barRef = useRef(null);
+  useEffect(() => {
+    const el = barRef.current;
+    if (!el) return;
+    const set = () => document.documentElement.style.setProperty('--nav-h', `${Math.round(el.getBoundingClientRect().height)}px`);
+    set();
+    const ro = new ResizeObserver(set);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [mobile]);
+
   return (
-    <div style={{
+    <div ref={barRef} style={{
       position: 'sticky', top: 0, zIndex: 100,
       background: scrolled ? (dark ? 'rgba(7,7,10,0.78)' : 'rgba(245,245,247,0.78)') : 'var(--nav)',
       backdropFilter: `saturate(180%) blur(${scrolled ? 28 : 20}px)`,

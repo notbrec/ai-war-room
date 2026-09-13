@@ -1,9 +1,25 @@
 // ─── DataTable — one sortable, column-selectable table for every board ──────
-// Columns: { key, label, short?, metricKey?, width?, align?, render?(row), value?(row), sticky?, default?, group?, mobile? }
+// Columns: { key, label, short?, metricKey?, higherIsBetter?, width?, align?, numeric?, mono?,
+//            render?(row, v), value?(row), sticky?, default?, group?, mobile?, sortable?, defaultDir?,
+//            maxWidth?, bar?, barColor?, barWidth?, valueWidth? }
 // The first sticky column stays put while the rest scroll horizontally; the
 // body renders in pages of `pageSize` so a 400-row board stays fast.
+//
+// Presentation rules (shared by every board on the site):
+//  • flat header on a solid tint, one hairline under it, the sorted column
+//    underlined in ink — no gradients, no glass
+//  • a group band above the header names the column families (Arena,
+//    Pricing…) so a wide board reads in sections
+//  • numbers are monospaced, tabular and right-aligned; unknown values print
+//    N/A in the muted ink, never 0
+//  • `bar: true` columns draw a data bar in front of the number — the bar is
+//    the value's position within the column (min → max), the same language
+//    as the ranked charts, so a table can be scanned like one
+//  • when the table fits its container the header sticks under the nav bar;
+//    when it must scroll sideways the first column sticks instead and casts a
+//    shadow once you have scrolled
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { Fragment, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { MONO, SF, EASE } from '../design.jsx';
 import { metric, isNum, NA } from '../../../shared/metrics.js';
 import { InfoTip, Label, Btn } from '../ui.jsx';
@@ -46,9 +62,9 @@ export function ColumnPicker({ columns, visible, toggle, reset }) {
         Columns <span style={{ fontFamily: MONO, color: 'var(--muted)', fontSize: 10 }}>{visible.length}</span>
       </Btn>
       {open && (
-        <div style={{
+        <div className="aiwar-surface" style={{
           position: 'absolute', top: 'calc(100% + 6px)', right: 0, zIndex: 40, width: 300, maxHeight: 420, overflowY: 'auto',
-          background: 'var(--card)', border: '0.5px solid var(--text)', boxShadow: 'var(--shadow)', padding: 10,
+          borderColor: 'var(--text)', padding: 10,
           animation: `aiwar-pop-in 260ms ${EASE} both`,
         }}>
           {groups.map(([g, cols]) => (
@@ -63,7 +79,7 @@ export function ColumnPicker({ columns, visible, toggle, reset }) {
                       border: '0.5px solid transparent', cursor: 'pointer', textAlign: 'left', fontFamily: SF, fontSize: 12, color: on ? 'var(--text)' : 'var(--muted)',
                     }}>
                       <span style={{ width: 10, height: 10, border: `1px solid ${on ? 'var(--text)' : 'var(--sep)'}`, background: on ? 'var(--text)' : 'transparent', flexShrink: 0 }} />
-                      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.label}</span>
+                      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.label || c.short || c.key}</span>
                     </button>
                   );
                 })}
@@ -85,14 +101,51 @@ function cellValue(col, row) {
   return row[col.key];
 }
 
+/** True while the table is narrower than its wrapper — then the header can
+ *  stick to the page instead of the wrapper being a scroll box. */
+export function useFitsWidth(wrapRef, tableRef, deps = []) {
+  const [fits, setFits] = useState(false);
+  useLayoutEffect(() => {
+    const wrap = wrapRef.current, table = tableRef.current;
+    if (!wrap || !table) return;
+    const check = () => setFits(table.scrollWidth <= wrap.clientWidth + 1);
+    check();
+    const ro = new ResizeObserver(check);
+    ro.observe(wrap); ro.observe(table);
+    return () => ro.disconnect();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, deps);
+  return fits;
+}
+
+/** Group band — one cell per run of same-group columns. */
+function groupBands(cols) {
+  const bands = [];
+  for (const c of cols) {
+    const g = c.sticky ? null : (c.group ?? null);
+    const last = bands[bands.length - 1];
+    if (last && last.group === g && !c.sticky && !last.sticky) last.span += 1;
+    else bands.push({ group: g, span: 1, sticky: !!c.sticky, key: c.key });
+  }
+  return bands;
+}
+
+/** Muted N/A cell — every board prints unknowns the same way. */
+export function NaCell() { return <span style={{ color: 'var(--muted2)' }}>{NA}</span>; }
+
 export default function DataTable({
   columns, rows, visible, sort, onSort, onRowClick, rowKey = r => r.id,
-  pageSize = 60, mobile = false, renderExpanded, expandedKey, emptyText = 'No rows match.', stripe, dense = false,
-  highlightKey,
+  pageSize = 60, mobile = false, renderExpanded, expandedKey, emptyText = 'No rows match.', dense = false,
+  highlightKey, stickyHeader = true, footer,
 }) {
   const [shown, setShown] = useState(pageSize);
   useEffect(() => { setShown(pageSize); }, [rows, pageSize]);
   const cols = columns.filter(c => c.sticky || visible.includes(c.key)).filter(c => !mobile || c.mobile !== false);
+
+  const wrapRef = useRef(null), tableRef = useRef(null);
+  const fits = useFitsWidth(wrapRef, tableRef, [cols.length, mobile]);
+  const [scrolledX, setScrolledX] = useState(false);
+  const onScroll = e => { const s = e.currentTarget.scrollLeft > 2; if (s !== scrolledX) setScrolledX(s); };
 
   const sorted = useMemo(() => {
     if (!sort?.key) return rows;
@@ -111,38 +164,92 @@ export default function DataTable({
     });
   }, [rows, sort, columns]);
 
+  // per-column extent for the data bars (over every row, not just the page)
+  const barExt = useMemo(() => {
+    const out = {};
+    for (const c of cols) {
+      if (!c.bar) continue;
+      const xs = rows.map(r => cellValue(c, r)).filter(isNum);
+      if (xs.length < 2) continue;
+      const lo = Math.min(...xs), hi = Math.max(...xs);
+      if (hi > lo) out[c.key] = [lo, hi];
+    }
+    return out;
+  }, [cols, rows]);
+  const barRatio = (c, v) => {
+    const ext = barExt[c.key];
+    if (!ext || !isNum(v)) return null;
+    return 0.05 + ((v - ext[0]) / (ext[1] - ext[0])) * 0.95;
+  };
+
+  const dirOf = c => c.higherIsBetter ?? (c.metricKey ? metric(c.metricKey).higherIsBetter : null);
   const clickSort = col => {
     if (!onSort || col.sortable === false) return;
     if (sort?.key === col.key) onSort({ key: col.key, dir: sort.dir === 'asc' ? 'desc' : 'asc' });
     else {
       // First click sorts "best first": higher-is-better → desc, lower-is-better → asc, text → asc.
-      const m = col.metricKey ? metric(col.metricKey) : null;
-      const dir = col.defaultDir ?? (m ? (m.higherIsBetter === false ? 'asc' : 'desc') : (col.numeric ? 'desc' : 'asc'));
+      const d = dirOf(col);
+      const dir = col.defaultDir ?? (d === false ? 'asc' : d === true ? 'desc' : (col.numeric ? 'desc' : 'asc'));
       onSort({ key: col.key, dir });
     }
   };
 
+  const bands = groupBands(cols);
+  const showBands = !mobile && bands.filter(b => b.group).length >= 2;
   const padY = dense ? 7 : 10;
+  const alignOf = c => c.align ?? (c.numeric ? 'right' : 'left');
+  const stickTop = stickyHeader && fits;
+  const bandH = showBands ? 22 : 0;
+  // first column of each non-sticky group gets a hairline to its left
+  const groupStart = new Set();
+  { let prev = null; for (const c of cols) { const g = c.sticky ? '__s' : (c.group ?? null); if (g !== prev && !c.sticky && prev !== null) groupStart.add(c.key); prev = g; } }
+
   return (
-    <div style={{ background: 'var(--card)', border: '0.5px solid var(--sep)', boxShadow: 'var(--shadow)' }}>
-      <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
-        <table style={{ borderCollapse: 'separate', borderSpacing: 0, width: '100%', minWidth: cols.reduce((s, c) => s + (c.width ?? 100), 0), fontFamily: SF }}>
+    <div className="aiwar-surface aiwar-dt">
+      <div ref={wrapRef} className="aiwar-dt-scroll" data-scrolled={scrolledX ? '1' : '0'} onScroll={onScroll}
+        style={{ overflowX: fits ? 'visible' : 'auto', WebkitOverflowScrolling: 'touch' }}>
+        <table ref={tableRef} style={{ width: '100%', minWidth: cols.reduce((s, c) => s + (c.width ?? 100), 0), fontFamily: SF }}>
           <thead>
+            {showBands && (
+              <tr className="aiwar-dt-groups">
+                {bands.map((b, i) => (
+                  <th key={b.key} className={b.sticky ? 'aiwar-dt-stick' : undefined} colSpan={b.span} style={{
+                    position: (b.sticky || stickTop) ? 'sticky' : undefined, left: b.sticky ? 0 : undefined, top: stickTop ? 'var(--nav-h, 0px)' : undefined, zIndex: b.sticky ? 5 : 3,
+                    height: bandH, padding: '0 10px', textAlign: 'left', borderBottom: '0.5px solid var(--sep)',
+                    borderLeft: i > 0 && !b.sticky ? '0.5px solid var(--sep)' : undefined,
+                    fontFamily: MONO, fontSize: 9, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--muted2)', whiteSpace: 'nowrap',
+                  }}>{b.sticky ? '' : b.group}</th>
+                ))}
+              </tr>
+            )}
             <tr>
               {cols.map((c, i) => {
                 const active = sort?.key === c.key;
+                const sortable = !!onSort && c.sortable !== false;
                 const m = c.metricKey ? metric(c.metricKey) : null;
+                const d = dirOf(c);
+                const align = alignOf(c);
+                const dirText = d === false ? 'lower is better' : d === true ? 'higher is better' : '';
+                const title = [m ? `${m.label}${dirText ? ` — ${dirText}` : ''}` : (dirText || null), c.bar ? 'bar = position within this column' : null].filter(Boolean).join(' · ') || undefined;
                 return (
-                  <th key={c.key} onClick={() => clickSort(c)} style={{
-                    position: c.sticky ? 'sticky' : undefined, left: c.sticky ? 0 : undefined, zIndex: c.sticky ? 3 : 1,
-                    background: 'var(--card)', borderBottom: '1px solid var(--sep)', borderRight: c.sticky ? '0.5px solid var(--sep)' : undefined,
-                    padding: `9px ${i === cols.length - 1 ? 14 : 8}px 9px ${i === 0 ? 14 : 8}px`, textAlign: c.align ?? (c.numeric ? 'right' : 'left'),
-                    fontSize: 10, fontWeight: 700, color: active ? 'var(--text)' : 'var(--muted2)', textTransform: 'uppercase', letterSpacing: '0.07em',
-                    whiteSpace: 'nowrap', cursor: onSort && c.sortable !== false ? 'pointer' : 'default', userSelect: 'none', width: c.width, minWidth: c.width,
-                  }} title={m ? `${m.label} — ${m.higherIsBetter === false ? 'lower is better' : m.higherIsBetter ? 'higher is better' : ''}` : undefined}>
-                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, flexDirection: (c.align ?? (c.numeric ? 'right' : 'left')) === 'right' ? 'row-reverse' : 'row' }}>
-                      {c.metricKey && !mobile ? <InfoTip metricKey={c.metricKey} align={(c.align ?? (c.numeric ? 'right' : 'left')) === 'right' ? 'right' : 'left'}><span>{c.short ?? c.label}</span></InfoTip> : <span>{c.short ?? c.label}</span>}
-                      {active && <span style={{ fontSize: 8, color: 'var(--text)' }}>{sort.dir === 'asc' ? '▲' : '▼'}</span>}
+                  <th key={c.key} onClick={() => clickSort(c)} className={[c.sticky ? 'aiwar-dt-stick' : '', sortable ? 'aiwar-dt-sortable' : ''].join(' ').trim() || undefined} title={title} style={{
+                    position: (c.sticky || stickTop) ? 'sticky' : undefined, left: c.sticky ? 0 : undefined, top: stickTop ? `calc(var(--nav-h, 0px) + ${bandH}px)` : undefined,
+                    zIndex: c.sticky ? 5 : 3,
+                    borderBottom: `1px solid ${active ? 'var(--text)' : 'var(--sep)'}`, borderRight: c.sticky ? '0.5px solid var(--sep)' : undefined,
+                    borderLeft: groupStart.has(c.key) ? '0.5px solid var(--sep)' : undefined,
+                    padding: `${dense ? 8 : 10}px ${i === cols.length - 1 ? 14 : 10}px ${dense ? 7 : 9}px ${i === 0 ? 14 : 10}px`, textAlign: align,
+                    fontSize: 10.5, fontWeight: 600, color: active ? 'var(--text)' : 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: MONO,
+                    whiteSpace: 'nowrap', cursor: sortable ? 'pointer' : 'default', userSelect: 'none', width: c.width, minWidth: c.width,
+                    transition: 'color 160ms ease, border-color 160ms ease',
+                  }}>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, flexDirection: align === 'right' ? 'row-reverse' : 'row' }}>
+                      {c.metricKey && !mobile ? <InfoTip metricKey={c.metricKey} align={align === 'right' ? 'right' : 'left'}><span>{c.short ?? c.label}</span></InfoTip> : <span>{c.short ?? c.label}</span>}
+                      {sortable && (
+                        <svg className="aiwar-dt-sortglyph" data-on={active ? '1' : '0'} width="8" height="10" viewBox="0 0 8 10" aria-hidden style={{ flexShrink: 0, color: 'var(--text)' }}>
+                          <path d="M4 0 L7.5 4 H0.5 Z" fill="currentColor" opacity={active && sort.dir === 'asc' ? 1 : 0.25} />
+                          <path d="M4 10 L0.5 6 H7.5 Z" fill="currentColor" opacity={active && sort.dir === 'desc' ? 1 : 0.25} />
+                        </svg>
+                      )}
                     </span>
                   </th>
                 );
@@ -151,30 +258,40 @@ export default function DataTable({
           </thead>
           <tbody>
             {sorted.length === 0 && (
-              <tr><td colSpan={cols.length} style={{ padding: '40px 20px', textAlign: 'center', color: 'var(--muted)', fontSize: 14 }}>{emptyText}</td></tr>
+              <tr><td colSpan={cols.length} style={{ padding: '44px 20px', textAlign: 'center', color: 'var(--muted)', fontSize: 14 }}>{emptyText}</td></tr>
             )}
-            {sorted.slice(0, shown).map((row, ri) => {
+            {sorted.slice(0, shown).map((row) => {
               const key = rowKey(row);
               const expanded = expandedKey != null && expandedKey === key;
               const hi = highlightKey ? highlightKey(row) : null;
               return (
-                <RowGroup key={key}>
+                <Fragment key={key}>
                   <tr onClick={onRowClick ? () => onRowClick(row) : undefined}
-                    className="aiwar-dt-row"
-                    style={{ cursor: onRowClick ? 'pointer' : 'default', background: expanded ? 'var(--hover)' : (stripe && ri % 2 ? 'var(--sep2)' : 'transparent') }}>
+                    className="aiwar-dt-row" data-expanded={expanded ? '1' : '0'}
+                    style={{ cursor: onRowClick ? 'pointer' : 'default' }}>
                     {cols.map((c, i) => {
                       const v = cellValue(c, row);
-                      const content = c.render ? c.render(row, v) : (v == null || v === '' ? <span style={{ color: 'var(--muted2)' }}>{NA}</span> : (isNum(v) ? v.toLocaleString() : String(v)));
+                      const content = c.render ? c.render(row, v) : (v == null || v === '' ? <NaCell /> : (isNum(v) ? v.toLocaleString('en-US') : String(v)));
+                      const ratio = c.bar ? barRatio(c, v) : null;
+                      const align = alignOf(c);
                       return (
-                        <td key={c.key} style={{
+                        <td key={c.key} className={c.sticky ? 'aiwar-dt-stick' : undefined} style={{
                           position: c.sticky ? 'sticky' : undefined, left: c.sticky ? 0 : undefined, zIndex: c.sticky ? 2 : undefined,
-                          background: c.sticky ? (expanded ? 'var(--card2)' : 'var(--card)') : undefined,
+                          background: c.sticky ? (expanded ? 'var(--card2)' : 'var(--surface-bot)') : undefined,
                           borderRight: c.sticky ? '0.5px solid var(--sep)' : undefined,
-                          borderBottom: '0.5px solid var(--sep2)', borderLeft: hi && i === 0 ? `3px solid ${hi}` : undefined,
-                          padding: `${padY}px ${i === cols.length - 1 ? 14 : 8}px ${padY}px ${i === 0 ? (hi ? 11 : 14) : 8}px`,
-                          textAlign: c.align ?? (c.numeric ? 'right' : 'left'), fontSize: 12.5, color: 'var(--text)', whiteSpace: 'nowrap',
+                          borderLeft: hi && i === 0 ? `3px solid ${hi}` : groupStart.has(c.key) ? '0.5px solid var(--sep2)' : undefined,
+                          borderBottom: '0.5px solid var(--sep2)',
+                          padding: `${padY}px ${i === cols.length - 1 ? 14 : 10}px ${padY}px ${i === 0 ? (hi ? 11 : 14) : 10}px`,
+                          textAlign: align, fontSize: dense ? 12.5 : 13, color: 'var(--text)', whiteSpace: 'nowrap', lineHeight: 1.3,
                           fontVariantNumeric: 'tabular-nums', fontFamily: c.mono !== false && c.numeric ? MONO : SF, maxWidth: c.maxWidth, overflow: c.maxWidth ? 'hidden' : undefined, textOverflow: c.maxWidth ? 'ellipsis' : undefined,
-                        }}>{content}</td>
+                        }}>
+                          {ratio != null ? (
+                            <span className="aiwar-dt-cell-bar">
+                              <span className="aiwar-bar-track" aria-hidden style={{ width: c.barWidth ?? 44, color: c.barColor ?? 'var(--text)' }}><span style={{ width: `${(ratio * 100).toFixed(1)}%` }} /></span>
+                              <span className="aiwar-dt-val" style={{ minWidth: c.valueWidth ?? 40 }}>{content}</span>
+                            </span>
+                          ) : content}
+                        </td>
                       );
                     })}
                   </tr>
@@ -183,20 +300,21 @@ export default function DataTable({
                       <div style={{ padding: mobile ? '14px 14px 18px' : '18px 24px 22px', animation: `aiwar-pop-in 380ms ${EASE} both`, transformOrigin: 'top center' }}>{renderExpanded(row)}</div>
                     </td></tr>
                   )}
-                </RowGroup>
+                </Fragment>
               );
             })}
           </tbody>
         </table>
       </div>
       {sorted.length > shown && (
-        <div style={{ padding: 10, textAlign: 'center', borderTop: '0.5px solid var(--sep)' }}>
-          <Btn small onClick={() => setShown(s => s + pageSize)}>Show {Math.min(pageSize, sorted.length - shown)} more <span style={{ fontFamily: MONO, color: 'var(--muted)', fontSize: 10 }}>{shown}/{sorted.length}</span></Btn>
+        <div className="aiwar-dt-more">
+          <span style={{ fontFamily: MONO, fontSize: 10.5, color: 'var(--muted)', letterSpacing: '0.04em' }}>{shown} / {sorted.length}</span>
+          <span className="aiwar-dt-progress"><span style={{ width: `${(shown / sorted.length * 100).toFixed(1)}%` }} /></span>
+          <Btn small onClick={() => setShown(s => s + pageSize)}>Show {Math.min(pageSize, sorted.length - shown)} more</Btn>
+          {sorted.length - shown > pageSize && <Btn small onClick={() => setShown(sorted.length)} style={{ color: 'var(--muted)' }}>All</Btn>}
         </div>
       )}
-      <style>{`.aiwar-dt-row:hover td { background: var(--hover) !important; }`}</style>
+      {footer && <div className="aiwar-dt-foot">{footer}</div>}
     </div>
   );
 }
-
-function RowGroup({ children }) { return <>{children}</>; }

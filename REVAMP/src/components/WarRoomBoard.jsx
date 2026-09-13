@@ -101,8 +101,8 @@ function Card({ c, i, mobile, onNavigate, fetchedAt }) {
     onNavigate(c.route);
   };
   return (
-    <div onClick={go} className="aiwar-card-hover" role="link" tabIndex={0} onKeyDown={e => e.key === 'Enter' && go()} style={{
-      background: 'var(--card)', border: '0.5px solid var(--sep)', borderTop: `2px solid ${c.color}`, padding: mobile ? '12px 12px 10px' : '14px 16px 12px',
+    <div onClick={go} className="aiwar-surface aiwar-card-hover" role="link" tabIndex={0} onKeyDown={e => e.key === 'Enter' && go()} style={{
+      borderTop: `2px solid ${c.color}`, padding: mobile ? '12px 12px 10px' : '14px 16px 12px',
       cursor: 'pointer', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 6,
       opacity: 0, animation: `aiwar-fade-up 600ms ${EASE} ${80 + i * 40}ms both`,
     }}>

@@ -76,7 +76,7 @@ export default function MediaArenaPage({ onNavigate, kind = 'image', slug }) {
   const columns = useMemo(() => [
     { key: 'model', label: 'Model', sticky: true, width: mobile ? 210 : 290, value: r => r.rank ?? 9999, defaultDir: 'asc', render: r => (
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
-        <span style={{ width: 24, textAlign: 'right', fontFamily: MONO, fontSize: 11, color: r.rank <= 3 ? GOLD : 'var(--muted)', fontWeight: r.rank <= 3 ? 700 : 500 }}>{r.rank ?? '—'}</span>
+        <span style={{ width: 24, textAlign: 'right', fontFamily: MONO, fontSize: 11.5, color: r.rank <= 3 ? 'var(--text)' : 'var(--muted)', fontWeight: r.rank <= 3 ? 700 : 500, fontVariantNumeric: 'tabular-nums' }}>{r.rank ?? '—'}</span>
         <LabLogo org={r.org} size={16} />
         <div style={{ minWidth: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
@@ -86,7 +86,7 @@ export default function MediaArenaPage({ onNavigate, kind = 'image', slug }) {
           <div style={{ fontSize: 10.5, color: 'var(--muted)', display: 'flex', gap: 5 }}>{r.org}{r.isOpen && <span style={{ color: GREEN }}>🔓</span>}{kind === 'video' && r.hasAudio && <span title="Generates audio" style={{ color: PURPLE }}>♪</span>}</div>
         </div>
       </div>) },
-    { key: 'elo', label: 'Quality ELO', short: 'ELO', metricKey: 'elo', numeric: true, width: 84, value: r => r.elo, render: r => <div><div style={{ fontSize: 15, fontWeight: 700, color: rankColor(r.rank), letterSpacing: '-0.03em' }}>{r.elo}</div><div style={{ fontSize: 9.5, color: 'var(--muted2)' }}>±{r.ci ?? '—'}</div></div> },
+    { key: 'elo', label: 'Quality ELO', short: 'ELO', metricKey: 'elo', numeric: true, width: 132, bar: true, barColor: GREEN, barWidth: 40, valueWidth: 62, value: r => r.elo, render: r => <span><span style={{ fontWeight: 700 }}>{r.elo}</span><span style={{ fontSize: 10, color: 'var(--muted2)', marginLeft: 4 }}>±{r.ci ?? '—'}</span></span> },
     { key: 'votes', label: 'Votes', metricKey: 'votes', numeric: true, width: 66, value: r => r.votes, render: r => isNum(r.votes) ? fmtMetric('votes', r.votes) : <span style={{ color: 'var(--muted2)' }}>{NA}</span> },
     { key: 'price', label: kind === 'image' ? 'Price per image' : 'Price per second', short: kind === 'image' ? '$/img' : '$/s', metricKey: priceKey, numeric: true, width: 72, value: r => r[priceKey], render: r => isNum(r[priceKey]) ? fmtMetric(priceKey, r[priceKey]) : <span style={{ color: 'var(--muted2)' }}>{NA}</span> },
     { key: 'priceAlt', label: kind === 'image' ? 'Price per 1,000 images' : 'Price per minute', short: kind === 'image' ? '$/1K' : '$/min', metricKey: K.priceAlt, numeric: true, width: 72, value: r => r[K.priceAlt], render: r => isNum(r[K.priceAlt]) ? fmtMetric(K.priceAlt, r[K.priceAlt]) : <span style={{ color: 'var(--muted2)' }}>{NA}</span> },

@@ -45,10 +45,11 @@ export function Label({ children, style, color = 'var(--muted2)' }) {
 }
 
 /* ─── Panel — the solid card ─────────────────────────────────────────────── */
-export function Panel({ children, style, pad = 16, title, action, hover = false, onClick, ...rest }) {
+export function Panel({ children, style, pad = 16, title, action, hover = false, onClick, flat = false, className, ...rest }) {
+  const cls = [flat ? '' : 'aiwar-surface', hover ? 'aiwar-card-hover' : '', className ?? ''].join(' ').trim() || undefined;
   return (
-    <div onClick={onClick} className={hover ? 'aiwar-card-hover' : undefined} style={{
-      background: 'var(--card)', border: '0.5px solid var(--sep)',
+    <div onClick={onClick} className={cls} style={{
+      ...(flat ? { background: 'var(--card)', border: '0.5px solid var(--sep)' } : {}),
       padding: pad, cursor: onClick ? 'pointer' : undefined, minWidth: 0,
       ...style,
     }} {...rest}>
@@ -117,7 +118,7 @@ export function DataStatus({ status, fetchedAt, sources = [], loading, onRefresh
         : { color: GREEN, pulse: true, label: fetchedAt ? (Date.now() - new Date(fetchedAt).getTime() < 120_000 ? 'Live' : `Updated ${fmtAgo(fetchedAt)}`) : 'Live', title: 'Fresh data from the sources listed.' };
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-      <div title={cfg.title} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '5px 10px', background: 'var(--card)', border: '0.5px solid var(--sep)' }}>
+      <div title={cfg.title} className="aiwar-surface" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '5px 10px' }}>
         {loading ? <span data-round="1" style={{ width: 6, height: 6, background: GOLD }} />
           : cfg.pulse ? <LivePulse color={cfg.color} size={6} /> : <span data-round="1" style={{ width: 6, height: 6, background: cfg.color }} />}
         <span style={{ fontSize: 12, color: 'var(--text)', fontFamily: MONO, fontWeight: 500, letterSpacing: '-0.005em' }}>{loading ? 'Syncing…' : cfg.label}</span>
@@ -200,25 +201,49 @@ export function Delta({ value, suffix = '', invert = false, size = 10, placehold
   );
 }
 
-/* ─── StatTile — small labelled number (leaderboard StatCard geometry) ───── */
-export function StatTile({ label, value, sub, color, metricKey, mono = true, style }) {
+/* ─── StatTile — label · value · optional delta and sparkline ────────────── */
+export function StatTile({ label, value, sub, color, metricKey, mono = true, style, delta, trend, trendColor, invertTrend = false }) {
+  const hasTrend = Array.isArray(trend) && trend.filter(isNum).length >= 2;
   return (
-    <div style={{ background: 'var(--card)', border: '0.5px solid var(--sep)', padding: '12px 14px', minWidth: 0, ...style }}>
+    <div className="aiwar-surface" style={{ padding: '12px 14px', minWidth: 0, ...style }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginBottom: 6 }}>
         {metricKey ? <InfoTip metricKey={metricKey}><Label>{label}</Label></InfoTip> : <Label>{label}</Label>}
       </div>
-      <div style={{ fontSize: 20, fontWeight: 700, color: color ?? 'var(--text)', letterSpacing: '-0.035em', fontVariantNumeric: 'tabular-nums', lineHeight: 1, fontFamily: mono ? MONO : SF, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-        {value ?? NA}
+      <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 10, minWidth: 0 }}>
+        <div style={{ minWidth: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, minWidth: 0 }}>
+            <span style={{ fontSize: 21, fontWeight: 700, color: color ?? 'var(--text)', letterSpacing: '-0.02em', lineHeight: 1, fontFamily: mono ? MONO : SF, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{value ?? NA}</span>
+            {delta}
+          </div>
+          {sub && <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 5, letterSpacing: '-0.01em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{sub}</div>}
+        </div>
+        {hasTrend && <Sparkline values={trend} color={trendColor ?? color ?? 'var(--text)'} invert={invertTrend} />}
       </div>
-      {sub && <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 5, letterSpacing: '-0.01em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{sub}</div>}
     </div>
+  );
+}
+
+/* ─── Sparkline — a small trend line for a stat tile ─────────────────────── */
+export function Sparkline({ values, color = 'var(--text)', width = 64, height = 22, invert = false }) {
+  const xs = values.filter(isNum);
+  if (xs.length < 2) return null;
+  const lo = Math.min(...xs), hi = Math.max(...xs);
+  const span = hi - lo || 1;
+  const pts = xs.map((v, i) => [2 + (i / (xs.length - 1)) * (width - 4), 2 + (invert ? (v - lo) / span : 1 - (v - lo) / span) * (height - 4)]);
+  const d = pts.map((p, i) => `${i ? 'L' : 'M'}${p[0].toFixed(1)},${p[1].toFixed(1)}`).join(' ');
+  const last = pts[pts.length - 1];
+  return (
+    <svg width={width} height={height} aria-hidden style={{ flexShrink: 0, overflow: 'visible' }}>
+      <path d={d} fill="none" stroke={color} strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round" opacity="0.7" />
+      <circle cx={last[0]} cy={last[1]} r="2.5" fill={color} stroke="var(--card)" strokeWidth="1.5" />
+    </svg>
   );
 }
 
 /* ─── EmptyState ─────────────────────────────────────────────────────────── */
 export function EmptyState({ title = 'No data', body, action, icon = '◌' }) {
   return (
-    <div style={{ padding: '40px 20px', textAlign: 'center', border: '0.5px dashed var(--sep)', background: 'var(--card)' }}>
+    <div className="aiwar-surface" style={{ padding: '40px 20px', textAlign: 'center', borderStyle: 'dashed' }}>
       <div style={{ fontSize: 22, color: 'var(--muted2)', marginBottom: 8, fontFamily: MONO }}>{icon}</div>
       <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text)', letterSpacing: '-0.02em' }}>{title}</div>
       {body && <div style={{ fontSize: 12.5, color: 'var(--muted)', marginTop: 6, maxWidth: 460, marginInline: 'auto', lineHeight: 1.5 }}>{body}</div>}

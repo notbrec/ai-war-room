@@ -4,13 +4,13 @@
 
 import { useMemo, useState } from 'react';
 import { useMobile } from '../hooks/useTheme.js';
-import { MONO, SF, EASE, GlobalMotion, Skeleton, ComparisonBar } from '../components/design.jsx';
+import { MONO, EASE, GlobalMotion, Skeleton } from '../components/design.jsx';
 import { LabLogo } from '../components/LabLogo.jsx';
-import { ORG_CONFIG } from '../models-data.js';
 import { useLLMs, useMedia, useSpeech } from '../data/useDomain.js';
-import { PageFrame, PageTitle, DataStatus, Panel, Label, Chip, Btn, EmptyState, BadgeTag, SourceTag, GREEN, GOLD, BLUE, PURPLE, RED } from '../components/ui.jsx';
+import DataTable, { NaCell } from '../components/table/DataTable.jsx';
+import { PageFrame, PageTitle, DataStatus, Panel, Label, Chip, Btn, EmptyState, BadgeTag, GREEN, GOLD, BLUE, PURPLE } from '../components/ui.jsx';
 import { MISSIONS, DEFAULT_WEIGHTS, recommend } from '../../shared/recommend.js';
-import { fmtMetric, isNum, NA, metric } from '../../shared/metrics.js';
+import { isNum, NA, metric } from '../../shared/metrics.js';
 import { AddToBattle } from '../domains/comparison/BattleControls.jsx';
 import { poolFor } from '../data/candidates.js';
 
@@ -21,6 +21,7 @@ const SLIDERS = [
   { key: 'context', label: 'Context', color: BLUE, hint: 'context window (LLM missions)' },
   { key: 'open',    label: 'Open weights', color: GREEN, hint: 'bonus for downloadable weights' },
 ];
+const DIM_COLOR = Object.fromEntries(SLIDERS.map(s => [s.key, s.color]));
 
 export default function MissionPlannerPage({ onNavigate, slug }) {
   const mobile = useMobile();
@@ -28,9 +29,10 @@ export default function MissionPlannerPage({ onNavigate, slug }) {
   const [missionId, setMissionId] = useState(MISSIONS.some(m => m.id === slug) ? slug : 'chat');
   const [weights, setWeights] = useState({ ...DEFAULT_WEIGHTS });
   const [touched, setTouched] = useState(false);
+  const [sort, setSort] = useState({ key: 'score', dir: 'desc' });
   const mission = MISSIONS.find(m => m.id === missionId);
 
-  const rows = useMemo(() => poolFor(mission.pool, { llms, media, speech }), [mission, llms.models, media.boards, speech.tts, speech.stt]);
+  const rows = useMemo(() => poolFor(mission.pool, { llms, media, speech }), [mission, llms.models, media.boards, speech.tts, speech.stt]); // eslint-disable-line
 
   const effective = touched ? weights : { ...DEFAULT_WEIGHTS, ...(mission.preset ?? {}) };
   const result = useMemo(() => rows.length ? recommend(mission, rows, effective) : null, [mission, rows, effective]);
@@ -38,6 +40,23 @@ export default function MissionPlannerPage({ onNavigate, slug }) {
 
   const set = (k, v) => { setTouched(true); setWeights(w => ({ ...w, [k]: v })); };
   const pickMission = id => { setMissionId(id); setTouched(false); setWeights({ ...DEFAULT_WEIGHTS }); };
+
+  const shortlist = useMemo(() => (result?.scored ?? []).slice(0, 25).map((r, i) => ({ ...r, rank: i + 1 })), [result]);
+  const cols = useMemo(() => [
+    { key: 'model', label: 'Candidate', sticky: true, width: mobile ? 200 : 290, value: r => r.rank, defaultDir: 'asc', render: r => (
+      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
+        <span style={{ width: 22, textAlign: 'right', fontFamily: MONO, fontSize: 11.5, color: r.rank <= 3 ? 'var(--text)' : 'var(--muted)', fontWeight: r.rank <= 3 ? 700 : 500, fontVariantNumeric: 'tabular-nums', flexShrink: 0 }}>{r.rank}</span>
+        <LabLogo org={r.org} size={14} />
+        <span style={{ minWidth: 0 }}>
+          <span style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--text)', letterSpacing: '-0.02em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: mobile ? 130 : 200 }}>{r.name}</span>
+          <span style={{ fontSize: 10.5, color: 'var(--muted)' }}>{r.org}</span>
+        </span>
+      </span>) },
+    { key: 'score', label: 'Mission score', short: 'Score', group: 'Score · 0–100', numeric: true, bar: true, barColor: GREEN, higherIsBetter: true, width: 150, barWidth: 60, valueWidth: 36, value: r => r.score * 100, render: r => <span style={{ fontWeight: 700 }}>{Math.round(r.score * 100)}</span> },
+    ...(result?.dims ?? []).map(d => ({ key: `part:${d.key}`, label: `${d.key} · weight ${Math.round(d.weight * 100)}%`, short: d.key, group: 'Breakdown · per dimension', numeric: true, width: 92, bar: true, barColor: DIM_COLOR[d.key] ?? 'var(--text)', barWidth: 28, valueWidth: 28, higherIsBetter: true, value: r => (isNum(r.parts?.[d.key]) ? r.parts[d.key] * 100 : null), render: r => (isNum(r.parts?.[d.key]) ? Math.round(r.parts[d.key] * 100) : <NaCell />) })),
+    { key: 'coverage', label: 'Data coverage', short: 'Coverage', group: 'Breakdown · per dimension', numeric: true, width: 84, value: r => r.coverage, render: r => r.coverage < 1 ? <BadgeTag color={GOLD}>partial</BadgeTag> : <span style={{ color: 'var(--muted2)', fontSize: 11 }}>full</span> },
+    { key: 'battle', label: '', width: 72, sortable: false, align: 'right', render: r => <AddToBattle item={{ id: r.id, kind: r.kind, name: r.name, org: r.org, board: r.board }} /> },
+  ], [result, mobile]);
 
   return (
     <PageFrame mobile={mobile}>
@@ -72,16 +91,17 @@ export default function MissionPlannerPage({ onNavigate, slug }) {
         <EmptyState title="Not enough data for this mission" body={result?.reason ?? `No candidates carry a ${metric(mission.quality).label} value from a configured source.`} />
       ) : (
         <>
+          {/* The four picks */}
           <div style={{ display: 'grid', gridTemplateColumns: mobile ? '1fr' : 'repeat(4, 1fr)', gap: 10, marginBottom: 16 }}>
             {[['primary', 'Primary pick', GREEN], ['bestValue', 'Best value', GOLD], ['budget', 'Budget pick', BLUE], ['fastest', 'Fastest pick', PURPLE]].map(([k, label, color], i) => {
               const p = result.picks[k];
               return (
-                <div key={k} style={{ background: 'var(--card)', border: '0.5px solid var(--sep)', borderTop: `2px solid ${color}`, padding: 14, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 6, animation: `aiwar-fade-up 500ms ${EASE} ${i * 70}ms both` }}>
+                <div key={k} className="aiwar-surface" style={{ borderTop: `2px solid ${color}`, padding: 14, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 6, animation: `aiwar-fade-up 500ms ${EASE} ${i * 70}ms both` }}>
                   <Label color={color}>{label}</Label>
                   {p ? (
                     <>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}><LabLogo org={p.org} size={14} /><span style={{ fontSize: 15, fontWeight: 700, color: 'var(--text)', letterSpacing: '-0.03em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</span></div>
-                      <div style={{ fontSize: 10.5, color: 'var(--muted)' }}>{p.org} · score {(p.score * 100).toFixed(0)}/100</div>
+                      <div style={{ fontSize: 10.5, color: 'var(--muted)' }}>{p.org} · <span style={{ fontFamily: MONO }}>score {(p.score * 100).toFixed(0)}/100</span></div>
                       <ul style={{ margin: '4px 0 0', paddingLeft: 14, fontSize: 11.5, color: 'var(--muted)', lineHeight: 1.5 }}>{p.why.map((w, j) => <li key={j}>{w}</li>)}</ul>
                       <div style={{ marginTop: 'auto', paddingTop: 6, display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                         {p.slug && <Btn small onClick={() => onNavigate({ type: 'model', slug: p.slug })}>Profile</Btn>}
@@ -96,23 +116,14 @@ export default function MissionPlannerPage({ onNavigate, slug }) {
             })}
           </div>
 
-          <Panel title={`Ranked shortlist · ${result.scored.length} candidates`} action={<span style={{ fontFamily: MONO, fontSize: 10, color: 'var(--muted2)' }}>weights: {result.dims.map(d => `${d.key} ${Math.round(d.weight * 100)}%`).join(' · ')}</span>}>
-            <div style={{ display: 'grid', gap: 8 }}>
-              {result.scored.slice(0, 15).map((r, i) => (
-                <div key={r.id} style={{ display: 'grid', gridTemplateColumns: mobile ? '20px 1fr 52px' : '24px 16px 220px 1fr 60px 70px', gap: 10, alignItems: 'center' }}>
-                  <span style={{ fontFamily: MONO, fontSize: 11, color: i < 3 ? GOLD : 'var(--muted)' }}>{i + 1}</span>
-                  {!mobile && <LabLogo org={r.org} size={13} />}
-                  <div style={{ minWidth: 0 }}>
-                    <div style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.name}</div>
-                    <div style={{ fontSize: 10, color: 'var(--muted2)', fontFamily: MONO }}>{Object.entries(r.parts).map(([k, v]) => `${k} ${Math.round(v * 100)}`).join(' · ')}{r.coverage < 1 ? ' · partial' : ''}</div>
-                  </div>
-                  {!mobile && <div style={{ height: 4, background: 'var(--sep2)' }}><div style={{ height: '100%', width: `${r.score * 100}%`, background: ORG_CONFIG[r.org]?.color ?? 'var(--text)' }} /></div>}
-                  <span style={{ fontFamily: MONO, fontSize: 13, fontWeight: 700, color: 'var(--text)', textAlign: 'right' }}>{(r.score * 100).toFixed(0)}</span>
-                  {!mobile && <span style={{ textAlign: 'right' }}><AddToBattle item={{ id: r.id, kind: r.kind, name: r.name, org: r.org, board: r.board }} /></span>}
-                </div>
-              ))}
-            </div>
-          </Panel>
+          {/* The shortlist — score, and the score's parts, as data bars */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, marginBottom: 8, flexWrap: 'wrap' }}>
+            <Label color="var(--muted)">Ranked shortlist · top {shortlist.length} of {result.scored.length} candidates</Label>
+            <span style={{ fontFamily: MONO, fontSize: 10, color: 'var(--muted2)' }}>weights: {result.dims.map(d => `${d.key} ${Math.round(d.weight * 100)}%`).join(' · ')}</span>
+          </div>
+          <DataTable columns={cols} rows={shortlist} visible={cols.map(c => c.key)} sort={sort} onSort={setSort} mobile={mobile} rowKey={r => r.id} pageSize={25}
+            onRowClick={r => { if (r.slug) onNavigate({ type: 'model', slug: r.slug }); }}
+            footer={<span>Score = weighted mean of the dimensions the candidate has data for · a missing dimension is skipped, never scored as zero · partial = coverage penalty applied</span>} />
 
           <p style={{ fontSize: 11.5, color: 'var(--muted)', marginTop: 12, lineHeight: 1.55 }}>
             How it works: each dimension is normalised to 0–1 across the candidate pool (cost and context on a log scale, lower-is-better metrics inverted), multiplied by its weight and averaged over the dimensions the candidate actually has data for. A missing dimension is skipped — never scored as zero — with a small coverage penalty so a model can't win by omission. Best value = ½ quality + ½ cheapness among candidates at ≥55% of the top quality; budget = cheapest at mid-pack quality or better; fastest = best speed metric at mid-pack quality or better.

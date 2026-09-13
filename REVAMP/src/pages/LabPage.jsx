@@ -1,6 +1,8 @@
 import { MODELS, ORG_CONFIG } from '../models-data.js';
 import { LAB_CONTENT } from '../content/labs.js';
 import ArticleLayout, { ArticleSections } from '../components/ArticleLayout.jsx';
+import { BarPanel } from '../components/Highlights.jsx';
+import { isNum } from '../../shared/metrics.js';
 
 const ORG_BY_SLUG = {
   'anthropic': 'Anthropic',
@@ -54,20 +56,10 @@ export default function LabPage({ slug, onNavigate, liveModels }) {
         <>
           {labModels.length > 0 && (
             <>
-              <h3 style={{ fontSize: 14, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--muted)', margin: '0 0 12px' }}>
-                Top {orgName} models on the leaderboard
-              </h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 24 }}>
-                {labModels.map(m => (
-                  <button key={m.slug} onClick={() => onNavigate({ type: 'model', slug: m.slug })} style={modelRow}>
-                    <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--text)', letterSpacing: '-0.015em' }}>
-                      {m.name}
-                    </span>
-                    <span style={{ fontSize: 13, color: 'var(--muted)', fontVariantNumeric: 'tabular-nums' }}>
-                      ELO {m.elo}
-                    </span>
-                  </button>
-                ))}
+              <div style={{ marginBottom: 24 }}>
+                <BarPanel title={`Top ${orgName} models`} subtitle="Arena ELO · arena.ai" color={orgCfg.color === '#FFFFFF' ? 'var(--text)' : orgCfg.color} limit={labModels.length}
+                  items={labModels.filter(m => isNum(m.elo)).map(m => ({ id: m.slug, name: m.name, org: orgName, value: m.elo, label: String(m.elo), slug: m.slug }))}
+                  onSelect={it => onNavigate({ type: 'model', slug: it.slug })} />
               </div>
             </>
           )}
@@ -82,12 +74,6 @@ export default function LabPage({ slug, onNavigate, liveModels }) {
 
 const link = { color: '#CD5C4E', textDecoration: 'none', fontWeight: 500 };
 const sep  = { color: 'var(--muted2)' };
-const modelRow = {
-  display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-  padding: '12px 14px', borderRadius: 10, border: '0.5px solid var(--sep)',
-  background: 'var(--card)', cursor: 'pointer',
-  fontFamily: 'inherit', textAlign: 'left', width: '100%',
-};
 const ctaBtn = {
   height: 40, paddingInline: 18, borderRadius: 980,
   background: 'var(--text)', color: 'var(--bg)',

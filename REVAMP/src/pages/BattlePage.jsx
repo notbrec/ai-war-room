@@ -181,7 +181,7 @@ export default function BattlePage({ onNavigate }) {
                 </div>
               </Panel>
               <p style={{ fontSize: 11, color: 'var(--muted2)', fontFamily: MONO, marginTop: 10, lineHeight: 1.5 }}>
-                Green = best in the row (direction from the metric's definition), red = worst. A row needs at least two known values to have a winner. Sources: {[...new Set(recs.flatMap(r => r.sources ?? []))].join(', ') || 'see each board'}.
+                Green dot = best in the row (direction from the metric's definition), red dot = worst. A row needs at least two known values to have a winner. Sources: {[...new Set(recs.flatMap(r => r.sources ?? []))].join(', ') || 'see each board'}.
               </p>
             </>
           ) : <EmptyState title="Add one more" body="A battle needs at least two contestants." />}
@@ -193,20 +193,25 @@ export default function BattlePage({ onNavigate }) {
 
 function Cell({ v, best, worst, mobile }) {
   return (
-    <td style={{ padding: mobile ? '7px 8px' : '8px 12px', textAlign: 'right', borderBottom: '0.5px solid var(--sep2)', fontFamily: MONO, fontSize: mobile ? 12 : 13, fontVariantNumeric: 'tabular-nums',
-      color: v === NA ? 'var(--muted2)' : best ? GREEN : worst ? RED : 'var(--text)', fontWeight: best ? 700 : 500, background: best ? `${GREEN}0e` : 'transparent', whiteSpace: 'nowrap' }}>{v}</td>
+    <td style={{ padding: mobile ? '8px 8px' : '9px 12px', textAlign: 'right', borderBottom: '0.5px solid var(--sep2)', fontFamily: MONO, fontSize: mobile ? 12 : 13, fontVariantNumeric: 'tabular-nums',
+      color: v === NA ? 'var(--muted2)' : 'var(--text)', fontWeight: best ? 700 : 500, background: best ? `${GREEN}14` : 'transparent', whiteSpace: 'nowrap' }}>
+      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7 }}>
+        {v}
+        <span data-round="1" aria-hidden style={{ width: 6, height: 6, flexShrink: 0, background: best ? GREEN : RED, opacity: best ? 1 : 0.65, visibility: best || worst ? 'visible' : 'hidden' }} />
+      </span>
+    </td>
   );
 }
 function LabelCell({ children, mobile, metricKey }) {
   const m = metricKey ? metric(metricKey) : null;
   return (
-    <td style={{ position: 'sticky', left: 0, background: 'var(--card)', padding: mobile ? '7px 8px' : '8px 12px', borderBottom: '0.5px solid var(--sep2)', borderRight: '0.5px solid var(--sep)', fontSize: 12, color: 'var(--text)', whiteSpace: 'nowrap', zIndex: 1 }}>
+    <td style={{ position: 'sticky', left: 0, background: 'var(--surface-bot)', padding: mobile ? '8px 8px' : '9px 12px', borderBottom: '0.5px solid var(--sep2)', borderRight: '0.5px solid var(--sep)', fontSize: 12.5, color: 'var(--text)', whiteSpace: 'nowrap', zIndex: 1 }}>
       {children}{m && m.higherIsBetter != null && <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--muted2)', marginLeft: 6 }}>{m.higherIsBetter ? '▲' : '▼'}</span>}
     </td>
   );
 }
 function GroupHeader({ children, span }) {
-  return <tr><td colSpan={span} style={{ padding: '10px 12px 4px', borderBottom: '0.5px solid var(--sep)' }}><Label>{children}</Label></td></tr>;
+  return <tr><td colSpan={span} style={{ padding: '9px 12px 7px', borderBottom: '0.5px solid var(--sep)', borderTop: '0.5px solid var(--sep)', background: 'var(--th-bg2)' }}><Label>{children}</Label></td></tr>;
 }
 
 function GroupRows({ group, recs, mobile }) {

@@ -47,17 +47,6 @@ function orgsFrom(models) {
   return Object.entries(counts).filter(([org]) => org && org !== 'Unknown').sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).map(([org]) => org);
 }
 
-function StatCard({ label, value, color, animate = false, format, suffix }) {
-  return (
-    <div style={{ background: 'var(--card)', padding: '16px 18px', flex: 1, minWidth: 0, border: '0.5px solid var(--sep)' }}>
-      <div style={{ fontSize: 11, color: 'var(--muted2)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8, fontFamily: MONO, fontWeight: 600 }}>{label}</div>
-      <div style={{ fontSize: 24, fontWeight: 700, color: color ?? 'var(--text)', letterSpacing: '-0.04em', fontVariantNumeric: 'tabular-nums', lineHeight: 1 }}>
-        {animate && typeof value === 'number' ? <AnimatedNumber value={value} format={format} suffix={suffix} /> : value}
-      </div>
-    </div>
-  );
-}
-
 /* one labelled row of the control bar */
 function Row({ label, children, last }) {
   return (
@@ -231,11 +220,11 @@ export default function LeaderboardPage({ liveModels, onNavigate }) {
 
         {/* ── Stats row ────────────────────────────────────────────── */}
         <Reveal>
-          <div style={{ display: 'flex', gap: 10, marginBottom: 24, flexWrap: mobile ? 'wrap' : 'nowrap' }}>
-            <StatCard label="Models" value={ranked.length > 0 ? ranked.length : '—'} animate format={v => Math.round(v).toString()} />
-            <StatCard label="Total votes" value={ranked.length > 0 ? totalVotes : '—'} animate format={v => { const n = Math.round(v); return n >= 1_000_000 ? `${(n/1_000_000).toFixed(1)}M` : `${Math.round(n/1000)}K`; }} />
-            <StatCard label="Top ELO" value={ranked.length > 0 ? topElo : '—'} animate format={v => Math.round(v).toString()} />
-            <StatCard label="Open weight" value={ranked.length > 0 ? openCount : '—'} animate format={v => Math.round(v).toString()} />
+          <div style={{ display: 'grid', gridTemplateColumns: mobile ? '1fr 1fr' : 'repeat(4, 1fr)', gap: 10, marginBottom: 24 }}>
+            <StatTile label="Models ranked" value={ranked.length > 0 ? <AnimatedNumber value={ranked.length} format={v => Math.round(v).toString()} /> : NA} sub="on the arena text board" />
+            <StatTile label="Total votes" value={ranked.length > 0 ? <AnimatedNumber value={totalVotes} format={v => { const n = Math.round(v); return n >= 1_000_000 ? `${(n / 1_000_000).toFixed(1)}M` : `${Math.round(n / 1000)}K`; }} /> : NA} sub="human head-to-head battles" />
+            <StatTile label="Top ELO" metricKey="elo" value={ranked.length > 0 ? <AnimatedNumber value={topElo} format={v => Math.round(v).toString()} /> : NA} sub={boutModels[0]?.name} color={GREEN} />
+            <StatTile label="Open weights" value={ranked.length > 0 ? <AnimatedNumber value={openCount} format={v => Math.round(v).toString()} /> : NA} sub={ranked.length ? `${Math.round((openCount / ranked.length) * 100)}% of the board` : undefined} />
           </div>
         </Reveal>
 
@@ -306,7 +295,7 @@ export default function LeaderboardPage({ liveModels, onNavigate }) {
         </ChartSection>
 
         {/* ── ELO vs price ─────────────────────────────────────────── */}
-        <ChartSection id="sec-value" mobile={mobile} eyebrow="Quality vs cost" title="ELO vs price." sub="Up and to the left is the place to be. The dashed line is the Pareto frontier: nothing is both better and cheaper than a point on it.">
+        <ChartSection id="sec-value" mobile={mobile} eyebrow="Quality vs cost" title="ELO vs price." sub="Up and to the left is the place to be. The thin line is the Pareto frontier: nothing is both better and cheaper than a point on it. Click a lab in the legend to focus it.">
           <LLMCharts models={picking ? pick.picked : filtered} aaConfigured={aa} mobile={mobile} initial="elo-price"
             selected={selected} onSelect={m => setSelected(s => { const n = new Set(s); n.has(m.id) ? n.delete(m.id) : n.add(m.id); return n; })} />
         </ChartSection>
