@@ -64,7 +64,7 @@ async function loadAALLMs() {
   return rows;
 }
 const aaLLMs = () => (aaConfigured() || aaWebEnabled())
-  ? cached(key('aa:llms'), HOURS(3), loadAALLMs, { minValid: isList(10) })
+  ? cached(key('aa:llms:v2'), HOURS(3), loadAALLMs, { minValid: isList(10) })
   : Promise.resolve(AA_OFF);
 
 // Media, voices and transcription: the Data API returns only ELO / rank / CI
@@ -278,7 +278,7 @@ export async function loadHistory() {
 // ── Status ─────────────────────────────────────────────────────────────────
 export async function loadStatus() {
   const entries = await Promise.all([
-    readBlob(key('arena:text')), readBlob(key('openrouter:models')), readBlob(key('swebench')), readBlob(key('openasr')), readBlob(key('aa:llms')),
+    readBlob(key('arena:text')), readBlob(key('openrouter:models')), readBlob(key('swebench')), readBlob(key('openasr')), readBlob(key('aa:llms:v2')),
   ]);
   const [a, o, s, r, aa] = entries;
   const st = e => e?.fetchedAt ? { status: 'cached', fetchedAt: e.fetchedAt } : { status: 'cold', fetchedAt: null };
