@@ -84,7 +84,11 @@ export function useFronts() {
           }
           out.push({
             ...card,
-            alt: value ? { name: value.name, org: value.org, kind: value.kind, id: value.id, slug: value.slug, note: [isNum(value.metrics[mission.quality]) ? fmtMetric(mission.quality, value.metrics[mission.quality]) : null, isNum(value.metrics[mission.cost]) ? fmtMetric(mission.cost, value.metrics[mission.cost]) : null].filter(Boolean).join(' · ') } : null,
+            alt: value ? (() => {
+              const aq = value.metrics[mission.quality], ac = value.metrics[mission.cost];
+              const share = isNum(aq) && isNum(qv) && qv > 0 && metric(mission.quality).higherIsBetter !== false ? `${Math.round((aq / qv) * 100)}% of the leader` : null;
+              return { name: value.name, org: value.org, kind: value.kind, id: value.id, slug: value.slug, value: isNum(aq) ? fmtMetric(mission.quality, aq) : null, note: [cost(mission.cost, ac), share].filter(Boolean).join(' · ') };
+            })() : null,
           });
           continue;
         }
@@ -102,7 +106,7 @@ export function useFronts() {
         const cheap = [...ranked.filter(m => m.isOpen && isNum(m.priceBlended)).slice(0, 15)].sort((a, b) => a.priceBlended - b.priceBlended)[0];
         out.push({ ...f, source: 'arena', top: { name: top.name, org: top.org, kind: 'llm', id: top.id, slug: top.slug }, value: fmtMetric('elo', top.arena.elo), unit: 'ELO',
           sub: `#${top.arena.rank} overall · ${top.license ?? 'open'}`,
-          alt: cheap && cheap.id !== top.id ? { name: cheap.name, org: cheap.org, kind: 'llm', id: cheap.id, slug: cheap.slug, note: `${cheap.arena.elo} · ${fmtMetric('priceBlended', cheap.priceBlended)}` } : null });
+          alt: cheap && cheap.id !== top.id ? { name: cheap.name, org: cheap.org, kind: 'llm', id: cheap.id, slug: cheap.slug, value: fmtMetric('elo', cheap.arena.elo), note: `${cost('priceBlended', cheap.priceBlended)} · ${Math.round((cheap.arena.elo / top.arena.elo) * 100)}% of the leader` } : null });
         continue;
       }
       if (f.special === 'provider') {
@@ -111,8 +115,8 @@ export function useFronts() {
         const ep = entry?.endpoints?.find(e => e.tag === entry.winners.cheapest);
         if (!ep) continue;
         const ctx = entry.endpoints.find(e => e.tag === entry.winners.context);
-        out.push({ ...f, source: 'openrouter', top: { name: ep.provider, org: null, kind: 'provider', id: champ.id }, value: fmtMetric('priceBlended', ep.priceBlended), unit: `blended / 1M · ${champ.name}`,
-          sub: `${entry.endpoints.length} hosts compared`, alt: ctx && ctx.tag !== ep.tag ? { name: ctx.provider, org: null, kind: 'provider', id: champ.id, note: `most context · ${fmtMetric('context', ctx.context)}`, label: 'CONTEXT' } : null });
+        out.push({ ...f, source: 'openrouter', top: { name: ep.provider, org: null, kind: 'provider', id: champ.id }, value: fmtMetric('priceBlended', ep.priceBlended), unit: 'blended / 1M',
+          sub: `for ${champ.name} · ${entry.endpoints.length} hosts compared`, alt: ctx && ctx.tag !== ep.tag ? { name: ctx.provider, org: null, kind: 'provider', id: champ.id, value: fmtMetric('context', ctx.context), note: 'largest context window served', label: 'CONTEXT' } : null });
       }
     }
     return out;
@@ -129,47 +133,73 @@ function openPick(p, f, onNavigate) {
   onNavigate(f.route);
 }
 
+const ellipsis = { overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' };
+
+function LogoTile({ org, size = 34 }) {
+  return (
+    <span style={{ width: size, height: size, background: 'var(--card2)', border: '0.5px solid var(--sep2)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+      <LabLogo org={org} size={Math.round(size * 0.55)} />
+    </span>
+  );
+}
+
+/* One front: the label, the question, the winner as a row (mark · name · lab
+   on the left, the number on the right), then the best-value alternative as
+   a second, smaller row of the same shape. Numbers wear the ink colour; the
+   front's colour is the small square beside the label. */
 function Card({ c, i, mobile, onNavigate }) {
   const go = () => openPick(c.top, c, onNavigate);
   return (
     <div onClick={go} className="aiwar-surface aiwar-card-hover" role="link" tabIndex={0} onKeyDown={e => e.key === 'Enter' && go()} style={{
-      borderTop: `2px solid ${c.color}`,
-      padding: mobile ? '14px 14px 12px' : '18px 18px 14px', cursor: 'pointer', minWidth: 0, height: '100%',
-      display: 'flex', flexDirection: 'column', gap: 10,
+      padding: mobile ? '14px 14px 12px' : '16px 18px 14px', cursor: 'pointer', minWidth: 0, height: '100%',
+      display: 'flex', flexDirection: 'column',
       opacity: 0, animation: `aiwar-fade-up 600ms ${EASE} ${80 + i * 35}ms both`,
     }}>
+      {/* Front */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
-        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7 }}>
-          {c.live && <LivePulse color={GREEN} size={6} />}
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7, minWidth: 0 }}>
+          <span aria-hidden style={{ width: 8, height: 8, background: c.color, flexShrink: 0 }} />
           <Label color="var(--text)" style={{ fontSize: 10.5 }}>{c.label}</Label>
+          {c.live && <LivePulse color={GREEN} size={6} />}
         </span>
         <SourceTag id={c.source} />
       </div>
+      <div style={{ fontSize: 11.5, color: 'var(--muted)', marginTop: 4, ...ellipsis }}>{c.q}</div>
 
-      <div style={{ fontSize: 11.5, color: 'var(--muted2)', marginTop: -6, letterSpacing: '-0.01em' }}>{c.q}</div>
-
-      <div style={{ display: 'flex', alignItems: 'center', gap: 9, minWidth: 0 }}>
-        {c.top.org && <LabLogo org={c.top.org} size={mobile ? 16 : 18} />}
-        <span style={{ fontSize: mobile ? 15 : 16.5, fontWeight: 700, color: 'var(--text)', letterSpacing: '-0.03em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.top.name}</span>
+      {/* Winner */}
+      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginTop: 14, minWidth: 0 }}>
+        {c.top.org ? <LogoTile org={c.top.org} size={mobile ? 30 : 34} /> : null}
+        <div style={{ minWidth: 0, flex: 1 }}>
+          <div style={{ fontSize: mobile ? 15 : 16, fontWeight: 700, color: 'var(--text)', letterSpacing: '-0.03em', lineHeight: 1.15, ...ellipsis }}>{c.top.name}</div>
+          {c.top.org && <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 3, ...ellipsis }}>{c.top.org}</div>}
+        </div>
+        <div style={{ textAlign: 'right', flexShrink: 0 }}>
+          <div style={{ fontSize: mobile ? 20 : 22, fontWeight: 700, color: 'var(--text)', letterSpacing: '-0.03em', fontFamily: MONO, lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>{c.value}</div>
+          <div style={{ fontSize: 9.5, color: 'var(--muted2)', fontFamily: MONO, letterSpacing: '0.06em', textTransform: 'uppercase', marginTop: 4, maxWidth: 120, ...ellipsis }}>{c.unit}</div>
+        </div>
       </div>
+      {c.sub && <div style={{ fontSize: 11, color: 'var(--muted2)', marginTop: 8, ...ellipsis }}>{c.sub}</div>}
 
-      <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, minWidth: 0 }}>
-        <span style={{ fontSize: mobile ? 26 : 30, fontWeight: 700, color: c.color, letterSpacing: '-0.045em', fontFamily: MONO, fontVariantNumeric: 'tabular-nums', lineHeight: 1 }}>{c.value}</span>
-        <span style={{ fontSize: 10.5, color: 'var(--muted2)', fontFamily: MONO, letterSpacing: '0.04em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.unit}</span>
-      </div>
-      {c.sub && <div style={{ fontSize: 11.5, color: 'var(--muted)', marginTop: -4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.sub}</div>}
-
-      <div style={{ marginTop: 'auto', paddingTop: 10, borderTop: '0.5px solid var(--sep2)', minHeight: 30, display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
-        {c.alt ? (
-          <button onClick={e => { e.stopPropagation(); openPick(c.alt, c, onNavigate); }} className="aiwar-press-btn" title="Best value for this job" style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 7, minWidth: 0, width: '100%', textAlign: 'left' }}>
-            <span style={{ fontFamily: MONO, fontSize: 9.5, fontWeight: 700, color: GOLD, letterSpacing: '0.10em', flexShrink: 0 }}>{c.alt.label ?? 'VALUE'}</span>
-            {c.alt.org && <LabLogo org={c.alt.org} size={12} />}
-            <span style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--text)', letterSpacing: '-0.02em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0, flex: 1 }}>{c.alt.name}</span>
-            <span style={{ fontFamily: MONO, fontSize: 10.5, color: 'var(--muted)', whiteSpace: 'nowrap', flexShrink: 0 }}>{c.alt.note}</span>
-          </button>
-        ) : (
-          <span style={{ fontSize: 11.5, color: 'var(--muted2)' }}>{c.mission?.desc ?? ''}</span>
-        )}
+      {/* Best-value alternative */}
+      <div style={{ marginTop: 'auto', paddingTop: 12 }}>
+        <div style={{ borderTop: '0.5px solid var(--sep)', paddingTop: 10, minHeight: 46 }}>
+          {c.alt ? (
+            <button onClick={e => { e.stopPropagation(); openPick(c.alt, c, onNavigate); }} className="aiwar-press-btn" title="Best value for this job" style={{
+              background: 'none', border: 'none', padding: 0, cursor: 'pointer', width: '100%', textAlign: 'left', fontFamily: 'inherit',
+              display: 'grid', gridTemplateColumns: 'auto minmax(0, 1fr) auto', alignItems: 'center', columnGap: 8, rowGap: 3,
+            }}>
+              <span style={{ fontFamily: MONO, fontSize: 9, fontWeight: 700, color: GOLD, letterSpacing: '0.1em', border: `0.5px solid ${GOLD}66`, padding: '2px 5px', whiteSpace: 'nowrap' }}>{c.alt.label ?? 'VALUE'}</span>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
+                {c.alt.org && <LabLogo org={c.alt.org} size={12} />}
+                <span style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--text)', letterSpacing: '-0.02em', ...ellipsis }}>{c.alt.name}</span>
+              </span>
+              <span style={{ fontFamily: MONO, fontSize: 12.5, fontWeight: 700, color: 'var(--text)', whiteSpace: 'nowrap', textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{c.alt.value ?? ''}</span>
+              {c.alt.note && <><span /><span style={{ fontSize: 10.5, color: 'var(--muted)', gridColumn: '2 / 4', ...ellipsis }}>{c.alt.note}</span></>}
+            </button>
+          ) : (
+            <span style={{ fontSize: 11.5, color: 'var(--muted2)', display: 'block', lineHeight: 1.45 }}>{c.mission?.desc ?? ''}</span>
+          )}
+        </div>
       </div>
     </div>
   );

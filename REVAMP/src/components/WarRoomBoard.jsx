@@ -91,9 +91,13 @@ export default function WarRoomBoard({ onNavigate, mobile, compact = false }) {
   );
 }
 
-function Card({ c, i, mobile, onNavigate, fetchedAt }) {
+const ellipsis = { overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' };
+
+/* One question, one card: the label with the front's colour square, the
+   winner (mark · name · lab) on the left and the number on the right in ink,
+   the week's movement or a note underneath. */
+function Card({ c, i, mobile, onNavigate }) {
   const has = !!c.name;
-  const orgColor = c.org ? (ORG_CONFIG[c.org]?.color ?? '#8E8E93') : c.color;
   const go = () => {
     if (c.slug) return onNavigate({ type: 'model', slug: c.slug });
     if (c.kind && c.id) return onNavigate({ type: c.kind === 'image' ? 'images' : 'videos', slug: c.id });
@@ -102,37 +106,42 @@ function Card({ c, i, mobile, onNavigate, fetchedAt }) {
   };
   return (
     <div onClick={go} className="aiwar-surface aiwar-card-hover" role="link" tabIndex={0} onKeyDown={e => e.key === 'Enter' && go()} style={{
-      borderTop: `2px solid ${c.color}`, padding: mobile ? '12px 12px 10px' : '14px 16px 12px',
+      padding: mobile ? '12px 12px 10px' : '14px 16px 12px',
       cursor: 'pointer', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 6,
       opacity: 0, animation: `aiwar-fade-up 600ms ${EASE} ${80 + i * 40}ms both`,
     }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 6 }}>
-        <Label color="var(--text)">{c.label}</Label>
-        {c.key === 'overall' && <LivePulse color={GREEN} size={6} />}
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7, minWidth: 0 }}>
+          <span aria-hidden style={{ width: 8, height: 8, background: c.color, flexShrink: 0 }} />
+          <Label color="var(--text)">{c.label}</Label>
+          {c.key === 'overall' && <LivePulse color={GREEN} size={6} />}
+        </span>
+        <SourceTag id={c.source} />
       </div>
       {has ? (
         <>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
-            {c.org && <LabLogo org={c.org} size={14} />}
-            <span style={{ fontSize: mobile ? 13 : 14.5, fontWeight: 600, color: 'var(--text)', letterSpacing: '-0.025em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.name}</span>
-            {isNum(c.rank) && !mobile && <span style={{ fontSize: 10, fontFamily: MONO, color: 'var(--muted2)', flexShrink: 0 }}>#{c.rank}</span>}
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, minWidth: 0, marginTop: 4 }}>
+            <div style={{ minWidth: 0, flex: 1 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
+                {c.org && <LabLogo org={c.org} size={14} />}
+                <span style={{ fontSize: mobile ? 13 : 14.5, fontWeight: 600, color: 'var(--text)', letterSpacing: '-0.025em', ...ellipsis }}>{c.name}</span>
+              </div>
+              <div style={{ fontSize: 10.5, color: 'var(--muted)', marginTop: 3, ...ellipsis }}>{[c.org, isNum(c.rank) ? `#${c.rank} overall` : null].filter(Boolean).join(' · ')}</div>
+            </div>
+            <div style={{ textAlign: 'right', flexShrink: 0 }}>
+              <div style={{ fontSize: mobile ? 18 : 21, fontWeight: 700, color: 'var(--text)', letterSpacing: '-0.03em', fontFamily: MONO, lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>{c.value}</div>
+              <div style={{ fontSize: 9.5, color: 'var(--muted2)', fontFamily: MONO, letterSpacing: '0.06em', textTransform: 'uppercase', marginTop: 4, maxWidth: 110, ...ellipsis }}>{c.unit}</div>
+            </div>
           </div>
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, minWidth: 0 }}>
-            <span style={{ fontSize: mobile ? 18 : 22, fontWeight: 700, color: orgColor === '#FFFFFF' ? 'var(--text)' : c.color, letterSpacing: '-0.04em', fontFamily: MONO, fontVariantNumeric: 'tabular-nums', lineHeight: 1 }}>{c.value}</span>
-            <span style={{ fontSize: 10, color: 'var(--muted2)', fontFamily: MONO, letterSpacing: '0.04em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.unit}</span>
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 6, minWidth: 0, marginTop: 'auto' }}>
-            <span style={{ fontSize: 10.5, color: 'var(--muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-              {c.delta != null && c.delta !== 0 ? <><Delta value={c.delta} /> <span style={{ color: 'var(--muted2)' }}>was #{c.prevRank}</span></> : c.delta === 0 ? <span style={{ fontFamily: MONO, color: 'var(--muted2)' }}>= 7d</span> : (c.sub ?? '')}
-            </span>
-            <SourceTag id={c.source} />
+          <div style={{ fontSize: 10.5, color: 'var(--muted)', marginTop: 'auto', paddingTop: 4, ...ellipsis }}>
+            {c.delta != null && c.delta !== 0 ? <><Delta value={c.delta} /> <span style={{ color: 'var(--muted2)' }}>was #{c.prevRank} a week ago</span></> : c.delta === 0 ? <span style={{ fontFamily: MONO, color: 'var(--muted2)' }}>= unchanged over 7 days</span> : (c.sub ?? '')}
           </div>
         </>
       ) : (
         <>
           <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--muted2)', fontFamily: MONO }}>{NA}</div>
           <div style={{ fontSize: 10.5, color: 'var(--muted)', lineHeight: 1.4 }}>{c.na ?? 'Source unavailable right now'}</div>
-          <div style={{ marginTop: 'auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}><span style={{ fontSize: 10, color: 'var(--muted2)', minWidth: 0 }}>{c.q}</span><SourceTag id={c.source} /></div>
+          <div style={{ marginTop: 'auto', fontSize: 10, color: 'var(--muted2)' }}>{c.q}</div>
         </>
       )}
     </div>
