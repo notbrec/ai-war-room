@@ -153,7 +153,11 @@ export default function NavBar({ page, onNavigate, dark, onToggleTheme }) {
       <div style={{
         maxWidth: 1200, margin: '0 auto', padding: mobile ? '0 12px' : '0 24px',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        height: mobile ? 50 : (scrolled ? 44 : 52), transition: `height 350ms ${EASE}`,
+        // Constant height on purpose: shrinking the bar on scroll changed the
+        // document height under the reader, browser scroll anchoring then nudged
+        // scrollY back across the 20px threshold and the bar oscillated ~8Hz at
+        // the top of every page (and cut the inertia scroll short of 0).
+        height: mobile ? 50 : 52,
       }}>
         {/* Brand */}
         <button onClick={() => onNavigate('home')} className="aiwar-brand-btn" style={{ display: 'flex', alignItems: 'center', gap: 9, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
