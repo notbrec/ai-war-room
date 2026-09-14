@@ -319,7 +319,7 @@ export function WordReveal({ children, baseDelay = 0, perWord = 80, style, as: T
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
-   <ClickEffects/> — global JS-driven click glitch.
+   <ClickEffects/> — global JS-driven click press.
    Listens to mousedown on the document. When it lands on any button/anchor,
    adds .aiwar-clicked for 600ms so the full keyframe sequence completes
    even on very quick clicks (where :active would end before animation).
@@ -345,58 +345,6 @@ export function ClickEffects() {
     };
   }, []);
   return null;
-}
-
-/* ─────────────────────────────────────────────────────────────────────────
-   <ScreenGlitch/> — full-screen scan + body shake.
-   ONLY triggers when clicking a top NavBar item (.aiwar-nav-link).
-   Random direction per click: vertical-top, horizontal-left/right,
-   or one of four diagonals. Body briefly shakes.
-   Clicks on anything else do nothing.
-   ────────────────────────────────────────────────────────────────────── */
-const GLITCH_DIRS = ['top', 'left', 'right', 'diag-tl', 'diag-tr', 'diag-bl', 'diag-br'];
-
-export function ScreenGlitch() {
-  const overlayRef = useRef(null);
-
-  useEffect(() => {
-    const handler = (e) => {
-      const t = e.target instanceof Element ? e.target : null;
-      if (!t) return;
-      // Only fire when the click lands on a NavBar link
-      if (!t.closest('.aiwar-nav-link')) return;
-
-      const el = overlayRef.current;
-      if (!el) return;
-
-      const dir = GLITCH_DIRS[Math.floor(Math.random() * GLITCH_DIRS.length)];
-
-      // Reset → reflow → re-add with new direction class for a fresh animation
-      el.className = 'aiwar-screen-glitch';
-      void el.offsetWidth;
-      el.classList.add('aiwar-screen-glitch-active', `aiwar-screen-glitch--${dir}`);
-
-      // Body shake briefly
-      document.body.classList.remove('aiwar-screen-shake');
-      void document.body.offsetWidth;
-      document.body.classList.add('aiwar-screen-shake');
-      window.setTimeout(() => document.body.classList.remove('aiwar-screen-shake'), 320);
-    };
-
-    document.addEventListener('mousedown', handler, { passive: true });
-    document.addEventListener('touchstart', handler, { passive: true });
-    return () => {
-      document.removeEventListener('mousedown', handler);
-      document.removeEventListener('touchstart', handler);
-    };
-  }, []);
-
-  return (
-    <div ref={overlayRef} aria-hidden className="aiwar-screen-glitch">
-      <div className="aiwar-screen-glitch-line" />
-      <div className="aiwar-screen-glitch-line aiwar-screen-glitch-line--lag" />
-    </div>
-  );
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
@@ -1121,51 +1069,20 @@ export function GlobalMotion() {
       }
       .aiwar-press-btn:hover  { transform: translateY(-1px); }
 
-      /* Click glitch — fires on any button/anchor via .aiwar-clicked
-         (added by <ClickEffects/> JS) AND :active for instant fallback. */
+      /* Premium press — clean settle, no RGB-split, no drama.
+         Fires on any button/anchor via .aiwar-clicked (added by
+         <ClickEffects/> JS) AND :active for instant fallback. */
       .aiwar-clicked,
       .aiwar-press-btn:active {
-        animation: aiwar-glitch-pulse 480ms cubic-bezier(0.16,1,0.3,1) both;
+        animation: aiwar-press 360ms cubic-bezier(0.16,1,0.3,1) both;
       }
       .aiwar-clicked {
         position: relative;
       }
-      @keyframes aiwar-glitch-pulse {
-        0% {
-          transform: translate(0, 0) scale(1);
-          filter: brightness(1) saturate(1);
-          text-shadow: none;
-        }
-        8% {
-          transform: translate(-2px, 1px) scale(0.93);
-          filter: brightness(1.25) saturate(1.5) contrast(1.1);
-          text-shadow:
-             2px 0 0 rgba(255,59,48,0.65),
-            -2px 0 0 rgba(52,199,89,0.65);
-        }
-        16% {
-          transform: translate(2px, -1px) scale(0.94);
-          filter: brightness(1.20) saturate(1.4) contrast(1.06);
-          text-shadow:
-            -1.5px 0 0 rgba(255,59,48,0.55),
-             1.5px 0 0 rgba(52,199,89,0.55);
-        }
-        24% {
-          transform: translate(-1px, 0) scale(0.94);
-          text-shadow:
-             1px 0 0 rgba(255,59,48,0.35),
-            -1px 0 0 rgba(52,199,89,0.35);
-        }
-        40% {
-          transform: translate(0, 0) scale(0.96);
-          filter: brightness(1.08) saturate(1.2);
-          text-shadow: none;
-        }
-        100% {
-          transform: translate(0, 0) scale(1);
-          filter: brightness(1) saturate(1);
-          text-shadow: none;
-        }
+      @keyframes aiwar-press {
+        0%   { transform: scale(1);    }
+        28%  { transform: scale(0.965);}
+        100% { transform: scale(1);    }
       }
       .aiwar-card-hover {
         transition: transform 600ms cubic-bezier(0.16,1,0.3,1), border-color 350ms, box-shadow 600ms cubic-bezier(0.16,1,0.3,1);
@@ -1193,51 +1110,6 @@ export function GlobalMotion() {
       }
       .aiwar-page-enter {
         animation: aiwar-fade-up 600ms cubic-bezier(0.16,1,0.3,1) both;
-      }
-      /* Glitch / press flash — dual expanding ring + brighten core */
-      @keyframes aiwar-click-flash {
-        0% {
-          box-shadow:
-            0 0 0 0 rgba(255,255,255,0.55),
-            0 0 0 0 rgba(255,255,255,0.30);
-          background: rgba(255,255,255,0.20);
-        }
-        60% {
-          box-shadow:
-            0 0 0 12px rgba(255,255,255,0.10),
-            0 0 0 24px rgba(255,255,255,0);
-          background: rgba(255,255,255,0.04);
-        }
-        100% {
-          box-shadow:
-            0 0 0 28px rgba(255,255,255,0),
-            0 0 0 40px rgba(255,255,255,0);
-          background: rgba(255,255,255,0);
-        }
-      }
-      .aiwar-press-btn:active::after,
-      .aiwar-clicked::after {
-        content: '';
-        position: absolute; inset: 0; border-radius: inherit;
-        animation: aiwar-click-flash 540ms cubic-bezier(0.16,1,0.3,1) both;
-        pointer-events: none;
-        mix-blend-mode: screen;
-      }
-      /* Highlight sweep left → right */
-      @keyframes aiwar-click-sweep {
-        0%   { transform: translateX(-110%); opacity: 0.0; }
-        25%  { opacity: 0.75; }
-        100% { transform: translateX(120%);  opacity: 0;   }
-      }
-      .aiwar-press-btn:active::before,
-      .aiwar-clicked::before {
-        content: '';
-        position: absolute; inset: 0; border-radius: inherit;
-        background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.55) 50%, transparent 100%);
-        animation: aiwar-click-sweep 460ms cubic-bezier(0.16,1,0.3,1) both;
-        pointer-events: none;
-        mix-blend-mode: screen;
-        overflow: hidden;
       }
     `}</style>
   );

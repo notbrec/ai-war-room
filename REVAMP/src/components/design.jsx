@@ -319,7 +319,7 @@ export function WordReveal({ children, baseDelay = 0, perWord = 80, style, as: T
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
-   <ClickEffects/> — global JS-driven click glitch.
+   <ClickEffects/> — global JS-driven click press.
    Listens to mousedown on the document. When it lands on any button/anchor,
    adds .aiwar-clicked for 600ms so the full keyframe sequence completes
    even on very quick clicks (where :active would end before animation).
@@ -345,58 +345,6 @@ export function ClickEffects() {
     };
   }, []);
   return null;
-}
-
-/* ─────────────────────────────────────────────────────────────────────────
-   <ScreenGlitch/> — full-screen scan + body shake.
-   ONLY triggers when clicking a top NavBar item (.aiwar-nav-link).
-   Random direction per click: vertical-top, horizontal-left/right,
-   or one of four diagonals. Body briefly shakes.
-   Clicks on anything else do nothing.
-   ────────────────────────────────────────────────────────────────────── */
-const GLITCH_DIRS = ['top', 'left', 'right', 'diag-tl', 'diag-tr', 'diag-bl', 'diag-br'];
-
-export function ScreenGlitch() {
-  const overlayRef = useRef(null);
-
-  useEffect(() => {
-    const handler = (e) => {
-      const t = e.target instanceof Element ? e.target : null;
-      if (!t) return;
-      // Only fire when the click lands on a NavBar link
-      if (!t.closest('.aiwar-nav-link')) return;
-
-      const el = overlayRef.current;
-      if (!el) return;
-
-      const dir = GLITCH_DIRS[Math.floor(Math.random() * GLITCH_DIRS.length)];
-
-      // Reset → reflow → re-add with new direction class for a fresh animation
-      el.className = 'aiwar-screen-glitch';
-      void el.offsetWidth;
-      el.classList.add('aiwar-screen-glitch-active', `aiwar-screen-glitch--${dir}`);
-
-      // Body shake briefly
-      document.body.classList.remove('aiwar-screen-shake');
-      void document.body.offsetWidth;
-      document.body.classList.add('aiwar-screen-shake');
-      window.setTimeout(() => document.body.classList.remove('aiwar-screen-shake'), 320);
-    };
-
-    document.addEventListener('mousedown', handler, { passive: true });
-    document.addEventListener('touchstart', handler, { passive: true });
-    return () => {
-      document.removeEventListener('mousedown', handler);
-      document.removeEventListener('touchstart', handler);
-    };
-  }, []);
-
-  return (
-    <div ref={overlayRef} aria-hidden className="aiwar-screen-glitch">
-      <div className="aiwar-screen-glitch-line" />
-      <div className="aiwar-screen-glitch-line aiwar-screen-glitch-line--lag" />
-    </div>
-  );
 }
 
 /* ─────────────────────────────────────────────────────────────────────────

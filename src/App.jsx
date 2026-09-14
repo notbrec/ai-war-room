@@ -15,7 +15,7 @@ import LabPage                   from './pages/LabPage.jsx';
 import GuidePage                  from './pages/GuidePage.jsx';
 import FAQPage                    from './pages/FAQPage.jsx';
 import { BlogIndexPage, BlogPostPage } from './pages/BlogPage.jsx';
-import { ScrollProgress, GlobalMotion, ClickEffects, ScreenGlitch, SmoothScroll } from './components/design.jsx';
+import { ScrollProgress, GlobalMotion, ClickEffects, SmoothScroll } from './components/design.jsx';
 import { MODELS, fetchLeaderboard, readModelCountSnapshot, writeModelCountSnapshot } from './models-data.js';
 
 const CACHE_KEY = 'aiwar-models-v1';
@@ -151,7 +151,6 @@ export default function App() {
       <SmoothScroll />
       <ScrollProgress />
       <ClickEffects />
-      <ScreenGlitch />
       <CyberBackground dark={dark} />
       <NavBar
         page={route.type}
