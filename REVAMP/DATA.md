@@ -41,7 +41,7 @@ src/domains/               models · comparison (battle) · benchmarks
 | OpenRouter | public API, 3–6 h cache | in/out/cache pricing, context, max output, modalities, reasoning/tool support, release date, per-provider endpoints (price, ctx, quantisation, uptime), relayed AA indexes and Design Arena ELOs |
 | SWE-bench | official page's `leaderboard-data` JSON, 12 h | agent × model, resolved %, $/task, calls/task |
 | Open ASR Leaderboard | public HF dataset CSV, 24 h | WER (avg + per dataset), RTFx, licence, params |
-| Artificial Analysis | official Data API with `ARTIFICIAL_ANALYSIS_API_KEY`, else the published leaderboard pages (adapters/aaweb.js, RSC flight payload like arena.ai; `AA_WEB=0` disables) | speed, TTFT, E2E, per-benchmark scores, media generation times, TTS / STT / S2S |
+| Artificial Analysis | official Data API with `ARTIFICIAL_ANALYSIS_API_KEY` (LLM board only, 12 h cache = at most 2 calls a day; a failed call is not retried for 12 h), else the published leaderboard pages (adapters/aaweb.js, RSC flight payload like arena.ai, 6 h cache; `AA_WEB=0` disables) | speed, TTFT, E2E, per-benchmark scores, media generation times, TTS / STT / S2S |
 
 Without the AA key every dependent cell reads **N/A** — nothing is estimated.
 Attribution is shown wherever a source's numbers appear (SourceTag, footers,

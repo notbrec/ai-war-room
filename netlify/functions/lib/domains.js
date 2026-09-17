@@ -74,8 +74,12 @@ async function loadAALLMs() {
   }
   return rows;
 }
+// The Data API is metered, so it is refreshed twice a day at most: a 12 h
+// window, and after a failed refresh nothing is retried for another 12 h —
+// the last good copy is served instead. Visitors never trigger extra calls.
+const AA_API_WINDOW = HOURS(12);
 const aaLLMs = () => (aaConfigured() || aaWebEnabled())
-  ? cached(key('aa:llms:v3'), HOURS(3), loadAALLMs, { minValid: isList(10) })
+  ? cached(key('aa:llms:v3'), AA_API_WINDOW, loadAALLMs, { minValid: isList(10), retryAfterMs: AA_API_WINDOW })
   : Promise.resolve(AA_OFF);
 
 // Media, voices and transcription: the Data API returns only ELO / rank / CI
