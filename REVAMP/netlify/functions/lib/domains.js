@@ -14,6 +14,7 @@ import { fetchGenAIBench } from '../adapters/genaibench.js';
 import { mergeLLMs, mergeMedia, summariseProviders } from './merge.js';
 import { dateKey, snapshotLLMs, snapshotMedia, snapshotsEqual, diffRows, snapshotAtLeast, pruneKeys } from '../../../shared/history.js';
 import { isNum } from '../../../shared/metrics.js';
+import { looseKey } from '../../../shared/ids.js';
 
 const VERSION = 'v1';
 const key = (name) => `warroom:${VERSION}:${name}`;
@@ -24,8 +25,30 @@ function status(entry) {
 }
 
 // ── Source-level caches ────────────────────────────────────────────────────
-const arenaBoard = (board, ttl = HOURS(6)) =>
-  cached(key(`arena:${board}`), ttl, () => fetchArenaBoard(board), { minValid: d => Array.isArray(d) && d.length > 10 });
+// The arena pages also listed prices ($/1M tokens, $/image, $/s), context and a
+// model-card link; the dataset that replaced them does not. Whatever the pages
+// last listed for a model is carried forward from the previous cache entry,
+// stamped with the date it was listed (`listedAt`), so those columns do not
+// empty out. Models that arrived since get prices from OpenRouter / AA only.
+const LISTED = ['priceIn', 'priceOut', 'context', 'url', 'pricePerImage', 'pricePerSecond'];
+export function carryListing(prior, rows) {
+  if (!Array.isArray(prior?.data)) return rows;
+  const by = new Map(prior.data.map(p => [looseKey(p.name ?? p.slug), p]));
+  const pageDate = prior.fetchedAt ? String(prior.fetchedAt).slice(0, 10) : null;
+  for (const r of rows) {
+    const p = by.get(looseKey(r.name));
+    if (!p) continue;
+    let carried = false;
+    for (const k of LISTED) if (r[k] == null && p[k] != null) { r[k] = p[k]; carried = true; }
+    if (carried) r.listedAt = p.listedAt ?? (p.published ? null : pageDate);
+  }
+  return rows;
+}
+
+const arenaBoard = (board, ttl = HOURS(6)) => {
+  const k = key(`arena:${board}`);
+  return cached(k, ttl, async () => carryListing(await readBlob(k), await fetchArenaBoard(board)), { minValid: d => Array.isArray(d) && d.length > 10 });
+};
 
 const orModels = () =>
   cached(key('openrouter:models'), HOURS(3), fetchORModels, { minValid: d => Array.isArray(d) && d.length > 50 });
@@ -99,24 +122,28 @@ const genai = () => cached(key('genaibench'), HOURS(24), () => fetchGenAIBench()
 
 // ── LLMs ───────────────────────────────────────────────────────────────────
 export async function loadLLMs() {
-  const [text, vision, search, or, aa] = await Promise.all([
-    arenaBoard('text'), arenaBoard('vision'), arenaBoard('search'), orModels(), aaLLMs(),
+  const [text, vision, search, webdev, or, aa] = await Promise.all([
+    arenaBoard('text'), arenaBoard('vision'), arenaBoard('search'), arenaBoard('webdev'), orModels(), aaLLMs(),
   ]);
   if (!text.data) {
     return { ok: false, error: 'arena text board unavailable', sources: { arena: status(text), openrouter: status(or), aa: status(aa) } };
   }
-  const models = mergeLLMs({ arena: text.data, vision: vision.data, search: search.data, or: or.data, aa: aa.data });
+  const models = mergeLLMs({ arena: text.data, vision: vision.data, search: search.data, webdev: webdev.data, or: or.data, aa: aa.data });
   const history = await attachHistory(models);
   return {
     ok: true,
     fetchedAt: text.fetchedAt,
     stale: text.stale,
+    published: text.data.map(m => m.published).filter(Boolean).sort().pop() ?? null,
     sources: {
-      arena: status(text), arenaVision: status(vision), arenaSearch: status(search),
+      arena: status(text), arenaVision: status(vision), arenaSearch: status(search), arenaWebdev: status(webdev),
       openrouter: status(or), aa: status(aa),
     },
     capabilities: { aa: aaAvailable(), aaVia: aaConfigured() ? 'api' : aaWebEnabled() ? 'web' : null, history: history.available },
-    counts: { models: models.length, inArena: models.filter(m => m.inArena).length, priced: models.filter(m => isNum(m.priceIn)).length, withIntelligence: models.filter(m => isNum(m.aa?.intelligence)).length },
+    counts: {
+      models: models.length, inArena: models.filter(m => m.inArena).length, newOnArena: models.filter(m => m.arena?.isNew).length,
+      priced: models.filter(m => isNum(m.priceIn)).length, withIntelligence: models.filter(m => isNum(m.aa?.intelligence)).length,
+    },
     models,
   };
 }

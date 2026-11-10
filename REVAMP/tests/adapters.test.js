@@ -1,10 +1,12 @@
 import { describe, it, expect } from 'vitest';
 import { normaliseORModel, normaliseOREndpoint } from '../netlify/functions/adapters/openrouter.js';
 import { normaliseSWEEntry } from '../netlify/functions/adapters/swebench.js';
-import { parseCSV, normaliseASRRow } from '../netlify/functions/adapters/openasr.js';
+import { normaliseASRRow, rowsFromConfig, paramsFromName } from '../netlify/functions/adapters/openasr.js';
 import { normaliseAALLM, normaliseAAMedia, aaConfigured } from '../netlify/functions/adapters/artificialanalysis.js';
-import { extractEntryArrays, toModel, toMediaRow, validateBoard, normaliseOrg } from '../netlify/functions/lib/arena.js';
-import { mergeLLMs, mergeMedia, summariseProviders, isOpenWeights } from '../netlify/functions/lib/merge.js';
+import { parseS2S } from '../netlify/functions/adapters/aaweb.js';
+import { toModel, toMediaRow, validateBoard, normaliseOrg, rowGroups, newcomersFrom, slugify, tidyName } from '../netlify/functions/lib/arena.js';
+import { mergeLLMs, mergeMedia, summariseProviders, isOpenWeights, tidyEffort } from '../netlify/functions/lib/merge.js';
+import { carryListing } from '../netlify/functions/lib/domains.js';
 
 describe('openrouter adapter', () => {
   const raw = {
@@ -67,8 +69,35 @@ describe('swebench adapter', () => {
 });
 
 describe('open asr adapter', () => {
-  it('parses quoted CSV', () => {
-    expect(parseCSV('a,b\n"x, y",2\n')).toEqual([['a', 'b'], ['x, y', '2']]);
+  const link = (href, text) => `<a target="_blank" href="${href}" style="color: var(--link-text-color)">${text}</a>`;
+  const config = { components: [
+    { type: 'markdown', props: { value: 'intro' } },
+    { type: 'dataframe', props: { value: {
+      headers: ['Rank', 'Rank Δ', 'model', 'Average WER ⬇️', 'RTFx ⬆️️', 'AMI-Cleaned', 'SPGISpeech'],
+      data: [
+        [1, '—', link('https://www.zoom.ai', 'zoom/scribe_v2.1_pro'), 4.87, null, 5.96, 1.39],
+        [2, '—', link('https://huggingface.co/nvidia/canary-qwen-2.5b', 'nvidia/canary-qwen-2.5b'), 6.92, 881.67, 7.1, 1.6],
+      ],
+    } } },
+    { type: 'dataframe', props: { value: { headers: ['Rank', 'Model', 'Average WER ⬇️', 'Coverage'], data: [] } } },
+  ] };
+  it('reads the main table out of the Space config', () => {
+    const rows = rowsFromConfig(config).map(normaliseASRRow);
+    expect(rows).toHaveLength(2);
+    expect(rows[0].name).toBe('scribe_v2.1_pro');
+    expect(rows[0].org).toBe('Zoom');
+    expect(rows[0].isOpen).toBe(false);          // vendor page → hosted API
+    expect(rows[0].rtfx).toBeNull();
+    expect(rows[0].perDataset.SPGISpeech).toBe(1.39);
+    expect(rows[1].isOpen).toBe(true);           // Hugging Face repo → open weights
+    expect(rows[1].paramsB).toBe(2.5);
+    expect(rows[1].url).toBe('https://huggingface.co/nvidia/canary-qwen-2.5b');
+  });
+  it('reads parameter counts from names', () => {
+    expect(paramsFromName('niagara-84m-batch.en')).toBe(0.084);
+    expect(paramsFromName('NVIDIA-Nemotron-3.5-Transcribe-30B-A4B')).toBe(30);
+    expect(paramsFromName('gemma-4-E4B-it')).toBeNull();
+    expect(paramsFromName('whisper-large-v3')).toBeNull();
   });
   it('normalises a row', () => {
     const r = normaliseASRRow({ model: 'nvidia/parakeet-tdt', avg: '5.5', RTFx: '3000', License: 'cc-by-4.0', 'Size (B)': '0.6', 'AMI-Cleaned WER': '10', 'LS Clean WER': '1.2' });
@@ -109,35 +138,106 @@ describe('artificial analysis adapter', () => {
   });
 });
 
-describe('arena parser', () => {
-  const entries = Array.from({ length: 30 }, (_, i) => ({
-    rank: i + 1, modelKey: `k${i}`, modelDisplayName: `model-${i}`, rating: 1500 - i * 5, ratingUpper: 1510 - i * 5, ratingLower: 1490 - i * 5,
-    votes: 1000 + i, modelOrganization: i % 2 ? 'SpaceXAI' : 'Google', modelUrl: null, license: i % 3 ? 'Proprietary' : 'MIT',
-    inputPricePerMillion: 1, outputPricePerMillion: 5, contextLength: 262144, pricePerImage: i === 0 ? 0.04 : null, pricePerSecond: null, releaseType: null,
+describe('arena dataset', () => {
+  // Rows exactly as lmarena-ai/leaderboard-dataset ships them (int64 → BigInt).
+  const rows = Array.from({ length: 30 }, (_, i) => ({
+    model_name: i === 0 ? 'Claude Opus 4.6 (High)' : `Model ${i}`, organization: i % 2 ? 'xai' : 'google', license: i % 3 ? 'Proprietary' : 'MIT',
+    rating: 1500.4 - i * 5, rating_lower: 1490.4 - i * 5, rating_upper: 1510.4 - i * 5, variance: 4, vote_count: 1000 + i, rank: BigInt(i + 1),
+    category: 'overall', leaderboard_publish_date: '2026-11-09',
   }));
-  const chunk = JSON.stringify(`x:{"entries":${JSON.stringify(entries)}}`);
-  const html = `<html><script>self.__next_f.push([1,${chunk}])</script></html>`;
-  it('recovers the entries array from the flight payload', () => {
-    const arrays = extractEntryArrays(html);
-    expect(arrays.length).toBe(1);
-    expect(arrays[0].length).toBe(30);
+  it('maps rows, keeps display names and normalises the org', () => {
+    const out = rows.map(toModel);
+    expect(out[0].name).toBe('Claude Opus 4.6 (High)');
+    expect(out[0].slug).toBe('claude-opus-4.6-high');
+    expect(out[0].rank).toBe(1);
+    expect(out[0].elo).toBe(1500);
+    expect(out[0].ci).toBe(10);
+    expect(out[1].org).toBe('xAI');
+    expect(out[0].priceIn).toBeNull();          // the dataset lists no prices — never invented
+    expect(validateBoard(out, { minRows: 20 })).toBeNull();
   });
-  it('maps rows and normalises the org', () => {
-    const rows = extractEntryArrays(html)[0].map(toModel);
-    expect(rows[1].org).toBe('xAI');
+  it('media rows carry empty price slots for the merge to fill', () => {
+    const m = toMediaRow(rows[0]);
+    expect(m.pricePerImage).toBeNull();
+    expect(m.pricePerSecond).toBeNull();
+  });
+  it('names the lab when the dataset leaves it blank, and never uses a licence', () => {
+    expect(normaliseOrg('', 'Yi Lightning')).toBe('01.AI');
+    expect(normaliseOrg('', 'Trinity Large Thinking')).toBe('Arcee AI');
+    expect(normaliseOrg('Apache 2.0', 'Something')).toBe('Unknown');
+    expect(normaliseOrg('luma-ai', 'Luma Ray3')).toBe('Luma AI');
+    expect(normaliseOrg('thinky', 'Inkling')).toBe('Thinking Machines');
+    expect(normaliseOrg('synlan', 'X')).toBe('Synlan');
+  });
+  it('prettifies only bare slugs', () => {
+    expect(tidyName('gemini-omni-flash')).toBe('Gemini Omni Flash');
+    expect(tidyName('GPT-5.6 Sol (xHigh)')).toBe('GPT-5.6 Sol (xHigh)');
+    expect(slugify('Claude Opus 4.5 (High, 32K, 20251101)')).toBe('claude-opus-4.5-high-32k-20251101');
+  });
+  it('finds the "overall" row groups from parquet statistics', () => {
+    const rg = (min, max, n, dmin = '2026-01-01', dmax = '2026-11-09') => ({ num_rows: BigInt(n), columns: [
+      { meta_data: { path_in_schema: ['category'], statistics: { min_value: min, max_value: max } } },
+      { meta_data: { path_in_schema: ['leaderboard_publish_date'], statistics: { min_value: dmin, max_value: dmax } } },
+    ] });
+    const g = rowGroups({ row_groups: [rg('chinese', 'math', 1000), rg('math', 'overall', 1000), rg('overall', 'overall', 1000), rg('overall', 'spanish', 500)] });
+    expect(g.map(x => x.overall)).toEqual([false, true, true, true]);
+    expect(g.map(x => x.pure)).toEqual([false, false, true, false]);
+    expect(g[2].start).toBe(2000);
+    expect(g[3].end).toBe(3500);
+  });
+});
+
+describe('arena newcomers', () => {
+  const row = (d, name, rating, votes) => ({ leaderboard_publish_date: d, model_name: name, rating, vote_count: votes });
+  const rows = [
+    row('2026-10-01', 'claude-opus-4-6-high', 1503, 80000), row('2026-10-01', 'mistral-medium-2508', 1408, 95300), row('2026-10-01', 'old-model', 1300, 5000),
+    // Oct 15: arena renames everything; one reworded beyond any spelling rule
+    row('2026-10-15', 'Claude Opus 4.6 (High)', 1503.1, 80100), row('2026-10-15', 'Mistral Medium 3.1 (2508)', 1407.9, 95290), row('2026-10-15', 'Old Model', 1300, 5000),
+    row('2026-10-15', 'Brand New (Max)', 1510, 2000),
+    row('2026-11-09', 'Claude Opus 4.6 (High)', 1503, 84000), row('2026-11-09', 'Mistral Medium 3.1 (2508)', 1408, 95400), row('2026-11-09', 'Old Model', 1301, 5100),
+    row('2026-11-09', 'Brand New (Max)', 1511, 12000), row('2026-11-09', 'Fresh One', 1450, 900),
+  ];
+  it('flags only models that joined after the baseline, surviving renames', () => {
+    const r = newcomersFrom(rows, '2026-10-10');
+    expect(r.baseline).toBe('2026-10-01');
+    expect(r.firstSeen).toEqual({ 'Brand New (Max)': '2026-10-15', 'Fresh One': '2026-11-09' });
+  });
+  it('a board younger than the window has no baseline', () => {
+    expect(newcomersFrom(rows, '2026-09-01')).toBeNull();
+  });
+});
+
+describe('arena listing carry-forward', () => {
+  it('keeps prices and links the pages last listed, dated, without overwriting fresh values', () => {
+    const prior = { fetchedAt: '2026-10-12T12:00:00Z', data: [
+      { name: 'veo-3.1-audio-1080p', pricePerSecond: 0.5, url: 'https://deepmind.google/veo' },
+      { name: 'seedance-v1.5-pro', pricePerSecond: 0.247, url: null },
+    ] };
+    const rows = carryListing(prior, [
+      { name: 'Veo 3.1 (Audio, 1080p)', pricePerSecond: null, url: null },
+      { name: 'Seedance 1.5 Pro', pricePerSecond: 0.3, url: null },
+      { name: 'Gemini Omni 1.2 Flash', pricePerSecond: null, url: null },
+    ]);
+    expect(rows[0].pricePerSecond).toBe(0.5);
+    expect(rows[0].url).toBe('https://deepmind.google/veo');
+    expect(rows[0].listedAt).toBe('2026-10-12');
+    expect(rows[1].pricePerSecond).toBe(0.3);    // a value already present wins
+    expect(rows[2].pricePerSecond).toBeNull();    // new model: nothing to carry, nothing invented
+  });
+});
+
+describe('aa speech-to-speech page', () => {
+  const host = (id, name, bba, ttfa) => ({ id, name, shortName: name, slug: name.toLowerCase().replace(/\W+/g, '-'), model: { openSource: false }, host: { name: 'Google' }, bbaScore: bba, timeToFirstAudioSeconds: ttfa, pricePerHourInput: 0.3, pricePerHourOutput: 1.4, tauVoiceAggScore: 0.3 });
+  const text = `x{"stsIndexHostModels":${JSON.stringify([host('a', 'Live A', 0.9, 0.8), host('b', 'Live B', 0.7, 1.2)])},"other":["$ref"],` +
+    `"tauChartModels":${JSON.stringify([host('c', 'Live C', 0.5, 2.0)])},` +
+    `"arenaResults":${JSON.stringify([{ stsHostModelId: 'b', creatorName: 'Google', elo: 1080, lower95ci: 1070, upper95ci: 1090, appearances: 900, sliceKey: 'overall', stsQualityIndexV2Score: 70 }])}}`;
+  it('collects host rows across chart arrays and joins the speech arena', () => {
+    const rows = parseS2S(text);
+    expect(rows.map(r => r.name)).toEqual(['Live B', 'Live A', 'Live C']);   // rated first, then by Big Bench Audio
+    expect(rows[0].elo).toBe(1080);
     expect(rows[0].ci).toBe(10);
-    expect(rows[0].context).toBe('262K');
-    expect(validateBoard(rows, { minRows: 20 })).toBeNull();
-  });
-  it('media rows keep per-unit prices and treat a listed $0 as unknown', () => {
-    const rows = extractEntryArrays(html)[0].map(toMediaRow);
-    expect(rows[0].pricePerImage).toBe(0.04);
-    expect(rows[1].pricePerImage).toBeNull();
-    expect(toMediaRow({ ...entries[0], pricePerImage: 0 }, 0).pricePerImage).toBeNull();
-  });
-  it('rejects a licence leaking into the org column', () => {
-    expect(normaliseOrg('Apache 2.0', 'https://huggingface.co/Qwen/x')).toBe('Alibaba');
-    expect(normaliseOrg('Proprietary', null)).toBe('Unknown');
+    expect(rows[1].bigBenchAudio).toBeCloseTo(90);
+    expect(rows[1].pricePerHour).toBeCloseTo(1.7);
   });
 });
 
@@ -208,6 +308,36 @@ describe('merge', () => {
     expect(s[0].winners.bestValue).toBe('a');   // full precision beats int4
     expect(s[0].winners.bestUptime).toBe('c');
     expect(s[0].winners.fastest).toBeNull();     // no throughput data → no winner, not a fake one
+  });
+  it('effort levels of one OpenRouter model get their own names and URLs', () => {
+    const aa = [
+      { slug: 'claude-opus-4-5', name: 'Claude Opus 4.5', org: 'Anthropic', modelId: 'anthropic:claudeopus45', intelligence: 50 },
+      { slug: 'claude-opus-4-5-xhigh', name: 'Claude Opus 4.5 (xhigh)', org: 'Anthropic', modelId: 'anthropic:claudeopus45:xhigh', intelligence: 55 },
+      { slug: 'claude-opus-4-5-low', name: 'Claude Opus 4.5', org: 'Anthropic', modelId: 'anthropic:claudeopus45:low', intelligence: 45 },
+    ];
+    const out = mergeLLMs({ arena: [], or: [or[0]], aa });
+    const names = out.map(m => m.name);
+    expect(names).toContain('Claude Opus 4.5 (xHigh)');
+    expect(names).toContain('Claude Opus 4.5 (Low)');
+    expect(new Set(out.map(m => m.slug)).size).toBe(out.length);
+  });
+  it('dated snapshots of one model keep distinct ids', () => {
+    const two = [
+      { ...arena[0], rank: 1, slug: 'gpt-4o-2024-05-13', name: 'GPT-4o (2024-05-13)', org: 'OpenAI' },
+      { ...arena[0], rank: 2, slug: 'gpt-4o-2024-08-06', name: 'GPT-4o (2024-08-06)', org: 'OpenAI' },
+    ];
+    const out = mergeLLMs({ arena: two, or: [] });
+    expect(out[0].id).toBe('openai:gpt4o');
+    expect(out[1].id).toBe('openai:gpt4o@20240806');
+  });
+  it('word order does not stop a media match within one lab', () => {
+    const rows = mergeMedia('text-to-video', [{ rank: 1, slug: 'gemini-omni-1.2-flash', name: 'Gemini Omni 1.2 Flash', org: 'Google', license: 'Proprietary', elo: 1540, ci: 9, votes: 1700, pricePerImage: null, pricePerSecond: null }],
+      [{ slug: 'gemini-omni-flash-1-2', name: 'Gemini Omni Flash 1.2', org: 'Google', pricePerSecond: 0.104 }]);
+    expect(rows[0].pricePerSecond).toBe(0.104);
+  });
+  it('tidies effort labels', () => {
+    expect(tidyEffort('Muse Wonder Full (max)')).toBe('Muse Wonder Full (Max)');
+    expect(tidyEffort('GPT-5.6 Sol (xhigh)')).toBe('GPT-5.6 Sol (xHigh)');
   });
   it('isOpenWeights', () => {
     expect(isOpenWeights('MIT')).toBe(true);

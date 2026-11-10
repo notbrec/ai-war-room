@@ -19,6 +19,9 @@ function copyDir(src, dst) { fs.mkdirSync(dst, { recursive: true }); fs.cpSync(s
 console.log('› fetching replay archive');
 try { execSync('node scripts/fetch-replays.mjs', { cwd: revamp, stdio: 'inherit' }); } catch { console.warn('  (kept previous replays.json)'); }
 
+console.log('› refreshing the first-paint model snapshot');
+try { execSync('node scripts/refresh-fallback.mjs', { cwd: revamp, stdio: 'inherit' }); } catch { console.warn('  (kept previous snapshot)'); }
+
 console.log('› building');
 execSync('npx vite build', { cwd: revamp, stdio: 'inherit' });
 

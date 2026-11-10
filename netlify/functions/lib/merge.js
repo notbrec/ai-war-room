@@ -38,8 +38,25 @@ function ctxLabel(tokens) {
   return `${Math.round(tokens / 1_000)}K`;
 }
 
+const EFFORT_LABEL = { xhigh: 'xHigh', high: 'High', medium: 'Medium', low: 'Low', minimal: 'Minimal', max: 'Max', nonreasoning: 'Non-reasoning', reasoning: 'Reasoning', thinking: 'Thinking' };
+
+/** Reasoning-effort tags in parentheses read the same on every source: "(xhigh)" → "(xHigh)". */
+export function tidyEffort(name) {
+  return String(name ?? '').replace(/\(([^)]+)\)/g, (_, inner) =>
+    `(${inner.split(/,\s*/).map(p => EFFORT_LABEL[p.toLowerCase().replace(/[^a-z]/g, '')] ?? p).join(', ')})`);
+}
+
+/** "claude fable 5.2" + variant "xhigh" → "Claude Fable 5.2 (xHigh)" unless the name already says so. */
+function withVariant(name, variant) {
+  if (!variant?.length) return name;
+  const label = variant.map(v => EFFORT_LABEL[v] ?? v).join(', ');
+  return bareKey(name).endsWith(bareKey(variant.join(''))) || bareKey(name).includes(bareKey(label)) ? name : `${name} (${label})`;
+}
+
+const slugOf = s => String(s ?? '').toLowerCase().replace(/[^a-z0-9.]+/g, '-').replace(/^-+|-+$/g, '');
+
 /**
- * @param {object} src  { arena: [...text rows], vision: [...], search: [...], or: [...OR models], aa: [...AA LLM rows] }
+ * @param {object} src  { arena: [...text rows], vision, search, webdev: [...board rows], or: [...OR models], aa: [...AA LLM rows] }
  * @returns merged LLM records
  */
 export function mergeLLMs(src) {
@@ -51,6 +68,7 @@ export function mergeLLMs(src) {
   const findAA = orgSafe(buildIndex(aa, m => [m.slug, m.name].filter(Boolean)));
   const findVision = orgSafe(buildIndex(src.vision ?? [], m => [m.slug, m.name]));
   const findSearch = orgSafe(buildIndex(src.search ?? [], m => [m.slug, m.name]));
+  const findWebdev = orgSafe(buildIndex(src.webdev ?? [], m => [m.slug, m.name]));
 
   const out = [];
   const seen = new Set();
@@ -58,9 +76,12 @@ export function mergeLLMs(src) {
   for (const a of arena) {
     const orHit = findOR(a.slug, a.org) ?? findOR(a.name, a.org);
     const aaHit = findAA(a.slug, a.org) ?? findAA(a.name, a.org);
-    const id = canonicalModelId(a.slug, a.org);
+    let id = canonicalModelId(a.slug, a.org);
+    // Dated snapshots of one model ("GPT-4o (2024-05-13)" / "(2024-08-06)") share a
+    // canonical id; the better-rated keeps it, the rest are told apart by their stamp.
+    if (seen.has(id)) id = `${id}@${splitVariant(a.slug).dateStamp ?? a.rank}`;
     seen.add(id);
-    out.push(buildRecord({ id, arena: a, or: orHit, aa: aaHit, vision: findVision(a.slug, a.org), search: findSearch(a.slug, a.org) }));
+    out.push(buildRecord({ id, arena: a, or: orHit, aa: aaHit, vision: findVision(a.slug, a.org), search: findSearch(a.slug, a.org), webdev: findWebdev(a.slug, a.org) }));
   }
 
   // Models absent from the arena but carrying an intelligence signal are
@@ -72,7 +93,7 @@ export function mergeLLMs(src) {
     // A variant of an arena model (e.g. same family) may already be represented; skip exact family+variant dupes only.
     seen.add(m.modelId);
     const aaHit = findAA(m.id, m.org) ?? findAA(m.name, m.org);
-    out.push(buildRecord({ id: m.modelId, arena: null, or: m, aa: aaHit, vision: null, search: null }));
+    out.push(buildRecord({ id: m.modelId, arena: null, or: m, aa: aaHit }));
   }
 
   for (const m of aa) {
@@ -80,7 +101,9 @@ export function mergeLLMs(src) {
     if (seen.has(m.modelId)) continue;
     if (!isNum(m.intelligence)) continue;
     seen.add(m.modelId);
-    out.push(buildRecord({ id: m.modelId, arena: null, or: findOR(m.slug ?? m.name, m.org), aa: m, vision: null, search: null }));
+    // The OpenRouter hit is the base model; this row may be one effort level of
+    // it, so the name and slug come from the AA row, not from OpenRouter.
+    out.push(buildRecord({ id: m.modelId, arena: null, or: findOR(m.slug ?? m.name, m.org), aa: m, primary: 'aa' }));
   }
 
   // Rank: arena rank first, then intelligence for the rest.
@@ -89,14 +112,26 @@ export function mergeLLMs(src) {
     if (ax !== ay) return ax - ay;
     return (y.aa?.intelligence ?? -1) - (x.aa?.intelligence ?? -1);
   });
+
+  // Every record needs its own URL: two effort levels of one OpenRouter model
+  // must not share /models/<slug>.
+  const taken = new Set();
+  for (const r of out) {
+    let s = r.slug || slugOf(r.name) || bareKey(r.id);
+    if (taken.has(s)) s = `${s}-${r.variant ?? bareKey(r.id)}`;
+    for (let k = 2; taken.has(s); k++) s = `${r.slug}-${k}`;
+    r.slug = s;
+    taken.add(s);
+  }
   return out;
 }
 
-function buildRecord({ id, arena, or, aa, vision, search }) {
-  const name = arena?.name ?? or?.name ?? aa?.name ?? id;
+function buildRecord({ id, arena, or, aa, vision = null, search = null, webdev = null, primary = null }) {
+  const { family, variant } = splitVariant(arena?.slug ?? (primary === 'aa' ? aa?.slug ?? aa?.name : or?.id) ?? aa?.slug ?? id);
+  const baseName = arena?.name ?? (primary === 'aa' ? aa?.name : null) ?? or?.name ?? aa?.name ?? id;
+  const name = arena ? baseName : withVariant(tidyEffort(baseName), variant);
   const org = canonicalOrg(arena?.org ?? or?.org ?? aa?.org ?? 'Unknown');
   const license = arena?.license ?? (or?.isOpenWeights ? 'Open weights' : null);
-  const { family, variant } = splitVariant(arena?.slug ?? or?.id ?? aa?.slug ?? name);
 
   const priceIn  = or?.pricing?.priceIn  ?? arena?.priceIn  ?? aa?.priceIn  ?? null;
   const priceOut = or?.pricing?.priceOut ?? arena?.priceOut ?? aa?.priceOut ?? null;
@@ -119,21 +154,19 @@ function buildRecord({ id, arena, or, aa, vision, search }) {
   if (aa || or?.aa) sources.push('aa');
   if (or?.designArena?.length) sources.push('designarena');
 
+  const board = b => (b ? { rank: b.rank, elo: b.elo, ci: b.ci, votes: b.votes } : null);
   return {
-    id, slug: arena?.slug ?? (or?.id ? or.id.split('/').pop() : bareKey(name)), name, org,
+    id, slug: arena?.slug ?? slugOf(name), name, org,
     family, variant: variant.join('-') || null,
     license, isOpen: license ? isOpenWeights(license) : !!or?.isOpenWeights,
     isThinking: isReasoningName(arena?.slug ?? name) || (!arena && !!or?.isReasoningVariant),
-    reasoningLevel: reasoningLevel(arena?.slug ?? or?.id ?? name),
+    reasoningLevel: reasoningLevel(arena?.slug ?? (primary === 'aa' ? aa?.slug : or?.id) ?? name),
     supportsReasoning: or?.supportsReasoning ?? null,
     supportsTools: or?.supportsTools ?? null,
     modalities: or?.modalities ?? null,
     inArena: !!arena,
-    arena: arena ? { rank: arena.rank, elo: arena.elo, ci: arena.ci, votes: arena.votes, url: arena.url, isNew: arena.isNew } : null,
-    arenas: {
-      vision: vision ? { rank: vision.rank, elo: vision.elo, ci: vision.ci, votes: vision.votes } : null,
-      search: search ? { rank: search.rank, elo: search.elo, ci: search.ci, votes: search.votes } : null,
-    },
+    arena: arena ? { rank: arena.rank, elo: arena.elo, ci: arena.ci, votes: arena.votes, url: arena.url ?? null, isNew: !!arena.isNew, firstSeen: arena.firstSeen ?? null } : null,
+    arenas: { vision: board(vision), search: board(search), webdev: board(webdev) },
     or: or ? {
       id: or.id, created: or.created, knowledgeCutoff: or.knowledgeCutoff, maxOutput: or.maxOutput,
       designArena: or.designArena?.length ? or.designArena : null,
@@ -153,9 +186,16 @@ function buildRecord({ id, arena, or, aa, vision, search }) {
 /** Merge one arena media board with the matching AA media board. */
 export function mergeMedia(board, arenaRows, aaRows) {
   const findAA = orgSafe(buildIndex(aaRows ?? [], m => [m.slug, m.name].filter(Boolean)));
+  // Word order differs between the two boards ("Gemini Omni 1.2 Flash" vs
+  // "Gemini Omni Flash 1.2"): a sorted-token key catches those, same lab only.
+  const tokens = s => String(s ?? '').toLowerCase().replace(/\+/g, ' plus ').split(/[^a-z0-9]+/).filter(Boolean).sort().join(' ');
+  const byTokens = new Map();
+  for (const m of aaRows ?? []) { const k = tokens(m.name); if (k && !byTokens.has(k)) byTokens.set(k, m); }
+  const sameLab = (x, y) => bareKey(canonicalOrg(x)) === bareKey(canonicalOrg(y));
   const kind = /video/.test(board) ? 'video' : 'image';
   const out = (arenaRows ?? []).map(a => {
-    const hit = findAA(a.slug, a.org) ?? findAA(a.name, a.org);
+    const tok = byTokens.get(tokens(a.name));
+    const hit = findAA(a.slug, a.org) ?? findAA(a.name, a.org) ?? (tok && sameLab(tok.org, a.org) ? tok : null);
     const id = canonicalModelId(a.slug, a.org);
     const nameL = a.name.toLowerCase();
     const resFromName = (nameL.match(/(\d{3,4})p\b/) || [])[1] ? `${nameL.match(/(\d{3,4})p\b/)[1]}p` : (/\b4k\b/.test(nameL) ? '4K' : null);
@@ -164,7 +204,7 @@ export function mergeMedia(board, arenaRows, aaRows) {
     return {
       id, board, kind,
       slug: a.slug, name: a.name, org: a.org, license: a.license, isOpen: isOpenWeights(a.license),
-      rank: a.rank, elo: a.elo, rating: a.rating, ci: a.ci, votes: a.votes, url: a.url, isNew: a.isNew,
+      rank: a.rank, elo: a.elo, rating: a.rating, ci: a.ci, votes: a.votes, url: a.url ?? null, isNew: !!a.isNew, firstSeen: a.firstSeen ?? null,
       pricePerImage, pricePer1kImages: isNum(pricePerImage) ? pricePerImage * 1000 : null,
       pricePerSecond, pricePerMinute: isNum(pricePerSecond) ? pricePerSecond * 60 : null,
       genTime: hit?.genTime ?? null, genTimeP25: hit?.genTimeP25 ?? null, genTimeP75: hit?.genTimeP75 ?? null,

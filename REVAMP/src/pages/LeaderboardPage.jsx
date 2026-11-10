@@ -39,7 +39,7 @@ const LIMITS     = [10, 20, 40];
 const LABS_SHOWN = 12;
 
 /* the benchmark columns worth a place on the rankings page, in this order */
-const MATRIX_IDS = ['arena-text', 'arena-vision', 'arena-search', 'aa-intel', 'aa-coding', 'aa-agentic', 'swe-verified', 'gpqa', 'hle', 'aime'];
+const MATRIX_IDS = ['arena-text', 'arena-vision', 'arena-search', 'arena-webdev', 'aa-intel', 'aa-coding', 'aa-agentic', 'swe-verified', 'gpqa', 'hle', 'aime'];
 
 /** Lab filter chips, built from whatever is on the board right now. */
 function orgsFrom(models) {

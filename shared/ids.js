@@ -39,12 +39,21 @@ export const ORG_ALIASES = {
   'mixedbread-ai': 'Mixedbread', 'sarvamai': 'Sarvam AI', 'deepcogito': 'Deep Cogito',
   'deepseek-ai': 'DeepSeek', 'deepseek': 'DeepSeek',
   'qwen': 'Alibaba', 'alibaba': 'Alibaba', 'alibaba cloud': 'Alibaba', 'alibaba-ath': 'Alibaba',
+  'aorizon': 'Alibaba',   // HappyHorse: arena's org slug; its model page and AA both credit Alibaba
   'meta-llama': 'Meta', 'facebook': 'Meta', 'meta': 'Meta', 'meta ai': 'Meta',
   'google': 'Google', 'googledeepmind': 'Google', 'google-deepmind': 'Google', 'google deepmind': 'Google',
-  'microsoft': 'Microsoft', 'microsoft ai': 'Microsoft', 'anthropic': 'Anthropic', 'amazon': 'Amazon',
+  'microsoft': 'Microsoft', 'microsoft ai': 'Microsoft', 'anthropic': 'Anthropic', 'amazon': 'Amazon', 'amazon bedrock': 'Amazon',
   'tencent': 'Tencent', 'baidu': 'Baidu', 'xiaomi': 'Xiaomi', 'minimax': 'MiniMax',
-  'moonshot': 'Moonshot', 'moonshotai': 'Moonshot', 'moonshot ai': 'Moonshot',
-  'meituan': 'Meituan', 'thinky': 'Thinky',
+  'moonshot': 'Moonshot', 'moonshotai': 'Moonshot', 'moonshot ai': 'Moonshot', 'kimi': 'Moonshot',
+  'meituan': 'Meituan',
+  // arena.ai calls the lab "thinky"; OpenRouter and AA spell it out
+  'thinky': 'Thinking Machines', 'thinkingmachines': 'Thinking Machines', 'thinking machines': 'Thinking Machines',
+  'thinking machines lab': 'Thinking Machines', 'thinking-machines': 'Thinking Machines',
+  'reflection': 'Reflection AI', 'reflection ai': 'Reflection AI', 'reflectionai': 'Reflection AI',
+  'perplexity': 'Perplexity', 'perplexity ai': 'Perplexity', 'poolside': 'Poolside', 'diffbot': 'Diffbot',
+  'skyreel': 'Skywork', 'skyreels': 'Skywork', 'skywork': 'Skywork', 'skywork ai': 'Skywork',
+  'openbmb': 'OpenBMB', 'lightricks': 'Lightricks', 'pixverse': 'PixVerse', 'pruna': 'Pruna AI', 'pruna ai': 'Pruna AI', 'prunaai': 'Pruna AI',
+  'kwaipilot': 'Kwaipilot', 'blinkdl': 'BlinkDL', 'timdettmers': 'Tim Dettmers', 'llava': 'LLaVA',
   'black forest labs': 'Black Forest Labs', 'bfl': 'Black Forest Labs',
   'klingai': 'Kling', 'kling': 'Kling', 'kuaishou': 'Kling',
   'luma ai': 'Luma AI', 'luma': 'Luma AI',
@@ -56,16 +65,30 @@ export const ORG_ALIASES = {
   'nvidia nemo': 'Nvidia', 'openai whisper': 'OpenAI',
 };
 
-/** Canonical lab / creator display name. Unknown strings pass through trimmed. */
+/** Canonical lab / creator display name. Unknown strings pass through trimmed;
+ *  an all-lowercase slug ("luma-ai", "synlan") is title-cased so it reads as a name. */
 export function canonicalOrg(raw) {
   const s = String(raw ?? '').trim();
   if (!s) return 'Unknown';
-  return ORG_ALIASES[s.toLowerCase()] ?? s;
+  const low = s.toLowerCase();
+  const hit = ORG_ALIASES[low] ?? ORG_ALIASES[low.replace(/[-_]+/g, ' ')];
+  if (hit) return hit;
+  if (s === low && /^[a-z0-9][a-z0-9 _-]*$/.test(s)) return s.replace(/[-_]+/g, ' ').replace(/\b[a-z]/g, c => c.toUpperCase());
+  return s;
 }
 
 /** Lowercase alphanumerics only — the base for every comparison key. */
 export function bareKey(s) {
-  return String(s ?? '').toLowerCase().split('/').pop().split(':')[0].replace(/[^a-z0-9]/g, '');
+  // "+" carries meaning ("Command R+" ≠ "Command R"), so it is spelled out as sources do in slugs.
+  return String(s ?? '').toLowerCase().split('/').pop().split(':')[0].replace(/\+/g, 'plus').replace(/[^a-z0-9]/g, '');
+}
+
+/** Name-only identity that survives renames between slug and display spellings:
+ *  "claude-opus-4-5-20251101-high-32k" ≡ "Claude Opus 4.5 (High, 32K, 20251101)",
+ *  "seedance-v1.5-pro" ≡ "Seedance 1.5 Pro". */
+export function looseKey(name) {
+  const { family, variant, dateStamp } = splitVariant(name);
+  return `${family.replace(/v(?=\d)/g, '')}:${[...variant].sort().join('-')}:${dateStamp ?? ''}`;
 }
 
 // Trailing qualifiers that distinguish *variants* of the same weights.
@@ -75,7 +98,7 @@ export const VARIANT_SUFFIXES = [
   'thinking32k', 'thinking16k', 'thinking', 'reasoning',
   'xhigh', 'high', 'medium', 'minimal', 'low', 'max',
   'preview', 'latest', 'beta', 'exp', 'chat', 'instruct', 'text',
-  'fast', 'default', 'online', 'search',
+  'fast', 'default', 'online', 'search', 'grounding',
   // quantisation tags some boards append to open weights
   'nvfp4', 'fp8', 'fp4', 'int4', 'int8', 'bf16',
 ];

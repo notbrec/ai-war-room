@@ -4,7 +4,7 @@
 // "higher is better" or a "$" — it looks the metric up here.
 
 export const SOURCES = {
-  arena:      { id: 'arena',      name: 'arena.ai',            url: 'https://arena.ai/leaderboard',        note: 'Crowd-sourced human preference battles (Elo/Bradley-Terry).' },
+  arena:      { id: 'arena',      name: 'arena.ai',            url: 'https://arena.ai/leaderboard',        note: 'Crowd-sourced human preference battles (Elo/Bradley-Terry), read from Arena\'s official leaderboard dataset.' },
   openrouter: { id: 'openrouter', name: 'OpenRouter',          url: 'https://openrouter.ai/models',        note: 'Public model & endpoint catalogue: pricing, context, providers, uptime.' },
   aa:         { id: 'aa',         name: 'Artificial Analysis', url: 'https://artificialanalysis.ai',       note: 'Independent benchmarks & performance measurements (© Artificial Analysis, shown with attribution).' },
   swebench:   { id: 'swebench',   name: 'SWE-bench',           url: 'https://www.swebench.com',            note: 'Open software-engineering benchmark; results published by the SWE-bench team.' },

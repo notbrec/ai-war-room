@@ -1,4 +1,3 @@
-import { MODEL_CONTENT } from '../content/models.js';
 import { LAB_CONTENT } from '../content/labs.js';
 import { MODELS } from '../models-data.js';
 import { useMobile } from '../hooks/useTheme.js';
@@ -6,7 +5,11 @@ import { RobotMascot } from './Robot.jsx';
 
 const SF = "-apple-system,'SF Pro Display','SF Pro Text',BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif";
 
-const TOP_MODEL_SLUGS = Object.keys(MODEL_CONTENT);
+// Today's top six models (one per family) from the snapshot refreshed at every deploy.
+const TOP_MODELS = (() => {
+  const seen = new Set();
+  return MODELS.filter(m => { const k = m.name.replace(/\s*\(.*\)$/, ''); if (seen.has(k)) return false; seen.add(k); return true; }).slice(0, 6);
+})();
 const LAB_SLUGS       = Object.keys(LAB_CONTENT);
 
 export default function Footer({ onNavigate }) {
@@ -69,14 +72,11 @@ export default function Footer({ onNavigate }) {
           </Column>
 
           <Column title="Models">
-            {TOP_MODEL_SLUGS.slice(0, 6).map(slug => {
-              const m = MODELS.find(x => x.slug === slug);
-              return (
-                <FooterLink key={slug} onClick={() => onNavigate({ type: 'model', slug })}>
-                  {m?.name ?? slug}
-                </FooterLink>
-              );
-            })}
+            {TOP_MODELS.map(m => (
+              <FooterLink key={m.slug} onClick={() => onNavigate({ type: 'model', slug: m.slug })}>
+                {m.name}
+              </FooterLink>
+            ))}
           </Column>
 
           <Column title="Labs">
@@ -103,7 +103,7 @@ export default function Footer({ onNavigate }) {
           flexWrap: 'wrap', gap: 8,
         }}>
           <span>© {new Date().getFullYear()} AI WAR ROOM · aiwarroom.app</span>
-          <span>Data: arena.ai · OpenRouter · SWE-bench · Open ASR Leaderboard · Artificial Analysis (when configured)</span>
+          <span>Data: arena.ai (leaderboard dataset, CC BY 4.0) · OpenRouter · SWE-bench · Open ASR Leaderboard · Artificial Analysis</span>
         </div>
       </div>
     </footer>

@@ -88,7 +88,7 @@ export default function MissionPlannerPage({ onNavigate, slug }) {
       </Panel>
 
       {loading ? <Skeleton height={360} /> : !result || !result.scored.length ? (
-        <EmptyState title="Not enough data for this mission" body={result?.reason ?? `No candidates carry a ${metric(mission.quality).label} value from a configured source.`} />
+        <EmptyState title="Not enough data for this mission" body={result?.reason ?? `No candidate has a value for ${metric(mission.quality).label} from a configured source.`} />
       ) : (
         <>
           {/* The four picks */}

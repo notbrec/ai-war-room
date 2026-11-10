@@ -71,6 +71,7 @@ export function llmColumns({ dark, onOpen, mobile }) {
     { key: 'ci', label: 'Confidence ±', short: '±CI', metricKey: 'ci', group: 'Arena', numeric: true, width: 56, default: false, value: m => m.arena?.ci, render: m => num(m.arena?.ci, 'ci') },
     { key: 'visionElo', label: 'Vision ELO', short: 'Vision', metricKey: 'elo', group: 'Arena', numeric: true, width: 70, default: false, value: m => m.arenas?.vision?.elo, render: m => num(m.arenas?.vision?.elo, 'elo') },
     { key: 'searchElo', label: 'Search ELO', short: 'Search', metricKey: 'elo', group: 'Arena', numeric: true, width: 70, default: false, value: m => m.arenas?.search?.elo, render: m => num(m.arenas?.search?.elo, 'elo') },
+    { key: 'webdevElo', label: 'WebDev ELO', short: 'WebDev', metricKey: 'elo', group: 'Arena', numeric: true, width: 70, default: false, value: m => m.arenas?.webdev?.elo, render: m => num(m.arenas?.webdev?.elo, 'elo') },
     // Intelligence
     { key: 'intelligence', label: 'Intelligence Index', short: 'Intel', metricKey: 'intelligence', group: 'Benchmarks', numeric: true, width: 104, bar: true, barWidth: 36, valueWidth: 36, barColor: BLUE, value: m => m.aa?.intelligence, render: m => num(m.aa?.intelligence, 'intelligence') },
     { key: 'codingIndex', label: 'Coding Index', short: 'Code', metricKey: 'codingIndex', group: 'Benchmarks', numeric: true, width: 104, bar: true, barWidth: 36, valueWidth: 36, barColor: GREEN, default: false, value: m => m.aa?.codingIndex, render: m => num(m.aa?.codingIndex, 'codingIndex') },

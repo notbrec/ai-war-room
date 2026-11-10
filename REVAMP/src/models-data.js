@@ -151,7 +151,8 @@ export const ORG_CONFIG = {
   'Ai2':          { color: '#F0529C', bg: '#FDECF4', bgDark: '#330F20' },
   'IBM':          { color: '#0F62FE', bg: '#E7EFFF', bgDark: '#001141' },
   'StepFun':      { color: '#7C4DFF', bg: '#F0EBFF', bgDark: '#1A0D3D' },
-  'Thinky':       { color: '#FF375F', bg: '#FFECF0', bgDark: '#330711' },
+  'Thinking Machines': { color: '#FF375F', bg: '#FFECF0', bgDark: '#330711' },
+  'Reflection AI':{ color: '#6366F1', bg: '#EEF0FE', bgDark: '#14163A' },
   'Ant Group':    { color: '#1677FF', bg: '#E8F1FF', bgDark: '#001A3D' },
   'Reka':         { color: '#FF6A3D', bg: '#FFF0EB', bgDark: '#2E1006' },
   'Databricks':   { color: '#FF3621', bg: '#FFEDEA', bgDark: '#2E0A05' },
@@ -237,6 +238,9 @@ function fmtContext(n) {
 }
 
 function formatName(slug) {
+  // arena publishes display names ("Claude Opus 4.6 (High)") since October 2026 —
+  // only bare slugs need prettifying.
+  if (/[A-Z\s(]/.test(slug)) return slug;
   return slug
     .replace(/-/g, ' ')
     .replace(/\b\w/g, c => c.toUpperCase())
@@ -352,83 +356,83 @@ export async function fetchOpenRouterMeta() {
   }
 }
 
-// ── Fallback: real arena.ai snapshot (top 66, 2026-09-03) ─────────────────────
-// [slug, org, elo, votes, license, priceIn, priceOut, contextTokens]
-// Mirrors the live /api/leaderboard payload verbatim. It is only shown while
-// the live fetch is in flight, so it carries no estimated or hand-added rows —
-// regenerate it from the live endpoint rather than editing entries by hand.
+// ── Fallback: real arena snapshot (top 66, published 2026-11-09) ─────────────
+// [slug, name, org, elo, votes, license, priceIn, priceOut, contextTokens]
+// Written by scripts/refresh-fallback.mjs from the same merged data the site
+// serves. It is only shown while the live fetch is in flight, so it carries no
+// estimated or hand-added rows — regenerate it, never edit entries by hand.
 const RAW_FALLBACK = [
-  ['claude-fable-5',                          'Anthropic', 1507 , 27189 , 'Proprietary',  10   , 50   , 1000000 ],
-  ['claude-opus-4-6-high',                    'Anthropic', 1505 , 72099 , 'Proprietary',  5    , 25   , 1000000 ],
-  ['claude-fable-5.1-max',                    'Anthropic', 1504 , 2906  , 'Proprietary',  10   , 50   , 1000000 ],
-  ['claude-opus-4-7-high',                    'Anthropic', 1502 , 60103 , 'Proprietary',  5    , 25   , 1000000 ],
-  ['muse-spark-1.2-xhigh',                    'Meta',      1499 , 3240  , 'Proprietary',  1.25 , 4.25 , null    ],
-  ['claude-opus-4-6',                         'Anthropic', 1498 , 76015 , 'Proprietary',  5    , 25   , 1000000 ],
-  ['claude-opus-4-7',                         'Anthropic', 1494 , 61238 , 'Proprietary',  5    , 25   , 1000000 ],
-  ['gemini-3.8-flash-high',                   'Google',    1494 , 5125  , 'Proprietary',  0.75 , 3.75 , 1000000 ],
-  ['claude-opus-5-high',                      'Anthropic', 1493 , 35174 , 'Proprietary',  5    , 25   , 1000000 ],
-  ['muse-spark-1.1',                          'Meta',      1492 , 24064 , 'Proprietary',  1.25 , 4.25 , null    ],
-  ['gemini-3.7-flash-high',                   'Google',    1491 , 5682  , 'Proprietary',  0.75 , 3.75 , 1000000 ],
-  ['kimi-k3-max',                             'Moonshot',  1489 , 18090 , 'Kimi K3 license', null , null , null    ],
-  ['muse-spark',                              'Meta',      1488 , 13572 , 'Proprietary',  null , null , null    ],
-  ['claude-opus-5-max',                       'Anthropic', 1488 , 17119 , 'Proprietary',  5    , 25   , 1000000 ],
-  ['gemini-3.1-pro-preview',                  'Google',    1487 , 102999, 'Proprietary',  1    , 6    , 1000000 ],
-  ['gemini-3-pro',                            'Google',    1486 , 40668 , 'Proprietary',  2    , 12   , 1000000 ],
-  ['gpt-5.6-sol-xhigh',                       'OpenAI',    1483 , 23413 , 'Proprietary',  4    , 20   , null    ],
-  ['claude-opus-4-8-high',                    'Anthropic', 1482 , 48727 , 'Proprietary',  5    , 25   , 1000000 ],
-  ['gpt-5.5-high',                            'OpenAI',    1482 , 63547 , 'Proprietary',  5    , 30   , 1100000 ],
-  ['glm-5.3-max',                             'Z.ai',      1482 , 7668  , 'MIT',          1.4  , 4.4  , 1000000 ],
-  ['gemini-3.6-flash-high',                   'Google',    1480 , 22286 , 'Proprietary',  0.75 , 3.75 , 1000000 ],
-  ['qwen3.8-max',                             'Alibaba',   1480 , 13346 , 'Proprietary',  2    , 6    , 1000000 ],
-  ['gemini-3.5-flash-high',                   'Google',    1479 , 34180 , 'Proprietary',  0.75 , 4.5  , 1000000 ],
-  ['gpt-5.5',                                 'OpenAI',    1477 , 64977 , 'Proprietary',  5    , 30   , 1100000 ],
-  ['gpt-5.4-high',                            'OpenAI',    1477 , 60624 , 'Proprietary',  2.5  , 15   , 1100000 ],
-  ['gpt-5.2-chat-latest-20260210',            'OpenAI',    1476 , 34217 , 'Proprietary',  1.75 , 14   , 128000  ],
-  ['gemini-3.5-flash-medium',                 'Google',    1476 , 32573 , 'Proprietary',  0.75 , 4.5  , 1000000 ],
-  ['grok-4.20-beta1',                         'xAI',       1475 , 26630 , 'Proprietary',  null , null , null    ],
-  ['glm-5.3-flash',                           'Z.ai',      1474 , 4672  , 'MIT',          0.15 , 0.5  , 1000000 ],
-  ['gemini-3-flash',                          'Google',    1474 , 30244 , 'Proprietary',  0.5  , 3    , 1000000 ],
-  ['gpt-5.5-instant',                         'OpenAI',    1474 , 25860 , 'Proprietary',  5    , 30   , 1100000 ],
-  ['qwen3.7-max-preview',                     'Alibaba',   1474 , 3710  , 'Proprietary',  1.475, 4.425, 1000000 ],
-  ['claude-opus-4-8',                         'Anthropic', 1473 , 49404 , 'Proprietary',  5    , 25   , 1000000 ],
-  ['claude-opus-4-5-20251101-high-32k',       'Anthropic', 1473 , 36269 , 'Proprietary',  5    , 25   , 200000  ],
-  ['claude-sonnet-4-6',                       'Anthropic', 1472 , 66316 , 'Proprietary',  1.5  , 7.5  , 1000000 ],
-  ['grok-4.20-beta-0309-reasoning',           'xAI',       1472 , 62251 , 'Proprietary',  1.25 , 2.5  , 1000000 ],
-  ['glm-5.2-max',                             'Z.ai',      1472 , 33966 , 'MIT',          1.4  , 4.4  , 1000000 ],
-  ['grok-4.5',                                'xAI',       1471 , 26158 , 'Proprietary',  2    , 6    , 500000  ],
-  ['grok-4.20-multi-agent-beta-0309',         'xAI',       1470 , 60820 , 'Proprietary',  1.25 , 2.5  , 1000000 ],
-  ['claude-opus-4-5-20251101',                'Anthropic', 1469 , 70052 , 'Proprietary',  5    , 25   , 200000  ],
-  ['mimo-v2.5-pro',                           'Xiaomi',    1468 , 57649 , 'MIT',          0.435, 0.87 , 1100000 ],
-  ['ernie-5.1',                               'Baidu',     1468 , 37129 , 'Proprietary',  null , null , null    ],
-  ['gpt-5.6-terra-xhigh',                     'OpenAI',    1466 , 24200 , 'Proprietary',  2    , 12   , null    ],
-  ['glm-5.1',                                 'Z.ai',      1466 , 45650 , 'MIT',          1.4  , 4.4  , 203000  ],
-  ['qwen3.5-max-preview',                     'Alibaba',   1466 , 21485 , 'Proprietary',  1.2  , 6    , null    ],
-  ['gpt-5.4',                                 'OpenAI',    1466 , 63588 , 'Proprietary',  2.5  , 15   , 1100000 ],
-  ['grok-4.1-thinking',                       'xAI',       1465 , 64198 , 'Proprietary',  null , null , null    ],
-  ['claude-sonnet-5-high',                    'Anthropic', 1462 , 31387 , 'Proprietary',  2    , 10   , 1000000 ],
-  ['grok-4.6-high',                           'xAI',       1461 , 3453  , 'Proprietary',  2    , 6    , 500000  ],
-  ['kimi-k2.6',                               'Moonshot',  1461 , 37568 , 'Modified MIT', 0.95 , 4    , 262000  ],
-  ['qwen3.6-max-preview',                     'Alibaba',   1460 , 5196  , 'Proprietary',  1.027, 6.162, 262000  ],
-  ['deepseek-v4-pro-high-20260813',           'DeepSeek',  1460 , 5557  , 'MIT',          1.32 , 3.96 , null    ],
-  ['grok-4.1',                                'xAI',       1459 , 66382 , 'Proprietary',  null , null , null    ],
-  ['gemini-3-flash-thinking-minimal',         'Google',    1458 , 85921 , 'Proprietary',  0.5  , 3    , 1000000 ],
-  ['deepseek-v4-pro',                         'DeepSeek',  1458 , 54225 , 'MIT',          1.32 , 3.96 , 1000000 ],
-  ['glm-5',                                   'Z.ai',      1458 , 27647 , 'MIT',          1    , 3.2  , 205000  ],
-  ['gemini-3.5-flash-lite',                   'Google',    1457 , 22122 , 'Proprietary',  0.15 , 1.25 , 1000000 ],
-  ['claude-sonnet-4-5-20250929-high-32k',     'Anthropic', 1456 , 81033 , 'Proprietary',  3    , 15   , 200000  ],
-  ['dola-seed-2.0-pro',                       'Bytedance', 1456 , 74277 , 'Proprietary',  null , null , null    ],
-  ['hy3',                                     'Tencent',   1455 , 6958  , 'Apache 2.0',   0.0825, 0.33 , 262000  ],
-  ['qwen3.7-plus',                            'Alibaba',   1455 , 38121 , 'Proprietary',  0.32 , 1.28 , 1000000 ],
-  ['claude-sonnet-4-5-20250929',              'Anthropic', 1455 , 79668 , 'Proprietary',  3    , 15   , 200000  ],
-  ['deepseek-v4-pro-high-preview',            'DeepSeek',  1455 , 51569 , 'MIT',          1.32 , 3.96 , 1000000 ],
-  ['gpt-5.1-high',                            'OpenAI',    1455 , 40293 , 'Proprietary',  0.625, 5    , 400000  ],
-  ['gpt-5.6-luna-xhigh',                      'OpenAI',    1453 , 24740 , 'Proprietary',  0.2  , 1.2  , null    ],
-  ['gemma-4-31b',                             'Google',    1451 , 5898  , 'Apache 2.0',   0.99 , 1.49 , 131000  ],
+  ['gemini-4-carbon-high', 'Gemini 4 Carbon (High)', 'Google', 1526, 4282, 'Proprietary', 2, 10, 1048576],
+  ['gemini-4-argon-high', 'Gemini 4 Argon (High)', 'Google', 1522, 19787, 'Proprietary', 2, 10, 1048576],
+  ['muse-wonder-max', 'Muse Wonder (Max)', 'Meta', 1511, 12032, 'Proprietary', 4, 20, 1048576],
+  ['claude-opus-5.5-high', 'Claude Opus 5.5 (High)', 'Anthropic', 1506, 15249, 'Proprietary', 4, 20, 1000000],
+  ['claude-fable-5-high', 'Claude Fable 5 (High)', 'Anthropic', 1504, 45524, 'Proprietary', 10, 50, 1000000],
+  ['claude-opus-4.6-high', 'Claude Opus 4.6 (High)', 'Anthropic', 1503, 84424, 'Proprietary', 5, 25, 1000000],
+  ['claude-fable-5.1-max', 'Claude Fable 5.1 (Max)', 'Anthropic', 1503, 20087, 'Proprietary', 10, 50, 1000000],
+  ['claude-opus-4.7-high', 'Claude Opus 4.7 (High)', 'Anthropic', 1501, 64308, 'Proprietary', 5, 25, 1000000],
+  ['gemini-3.8-flash-high', 'Gemini 3.8 Flash (High)', 'Google', 1497, 61143, 'Proprietary', 0.825, 4.125, 1048576],
+  ['claude-opus-4.6', 'Claude Opus 4.6', 'Anthropic', 1496, 89228, 'Proprietary', 5, 25, 1000000],
+  ['muse-spark-1.3-max', 'Muse Spark 1.3 (Max)', 'Meta', 1496, 26111, 'Proprietary', 1.25, 4.25, 1048576],
+  ['claude-opus-4.7', 'Claude Opus 4.7', 'Anthropic', 1494, 65369, 'Proprietary', 5, 25, 1000000],
+  ['muse-spark-1.2-xhigh', 'Muse Spark 1.2 (xHigh)', 'Meta', 1493, 15004, 'Proprietary', 1.25, 4.25, 1048576],
+  ['muse-spark-1.1', 'Muse Spark 1.1', 'Meta', 1491, 45562, 'Proprietary', 1.25, 4.25, 1048576],
+  ['claude-opus-5-high', 'Claude Opus 5 (High)', 'Anthropic', 1490, 73697, 'Proprietary', 5, 25, 1000000],
+  ['gemini-3.7-flash-high', 'Gemini 3.7 Flash (High)', 'Google', 1489, 33300, 'Proprietary', 0.75, 3.75, 1048576],
+  ['muse-spark', 'Muse Spark', 'Meta', 1489, 14009, 'Proprietary', null, null, null],
+  ['claude-opus-5-max', 'Claude Opus 5 (Max)', 'Anthropic', 1489, 35710, 'Proprietary', 5, 25, 1000000],
+  ['kimi-k3-max', 'Kimi K3 (Max)', 'Moonshot', 1487, 40867, 'Kimi K3 license', 0.192, 16, 1048576],
+  ['gemini-3.1-pro-preview', 'Gemini 3.1 Pro Preview', 'Google', 1487, 132296, 'Proprietary', 2, 12, 1048576],
+  ['gemini-3-pro', 'Gemini 3 Pro', 'Google', 1486, 41829, 'Proprietary', null, null, null],
+  ['gpt-5.6-sol-xhigh', 'GPT-5.6 Sol (xHigh)', 'OpenAI', 1485, 43994, 'Proprietary', 4, 20, 1050000],
+  ['qwen3.8-max', 'Qwen3.8-Max', 'Alibaba', 1484, 36324, 'Proprietary', 2, 6, 1000000],
+  ['kimi-k3.1-pro-max', 'Kimi K3.1 Pro (Max)', 'Moonshot', 1483, 3443, 'Kimi K3.1 Pro License', 2, 10, 1048576],
+  ['gemini-3.6-flash-high', 'Gemini 3.6 Flash (High)', 'Google', 1483, 35405, 'Proprietary', 0.75, 3.75, 1048576],
+  ['glm-5.3-max', 'GLM-5.3 (Max)', 'Z.ai', 1483, 31017, 'MIT', 0.0699, 1.4, 1048576],
+  ['gpt-6.1-sol-max', 'GPT-6.1 Sol (Max)', 'OpenAI', 1482, 12952, 'Proprietary', 2, 10, 1050000],
+  ['claude-opus-4.8-high', 'Claude Opus 4.8 (High)', 'Anthropic', 1482, 63128, 'Proprietary', 5, 25, 1000000],
+  ['gpt-5.5-high', 'GPT-5.5 (High)', 'OpenAI', 1481, 68359, 'Proprietary', 5, 30, 1050000],
+  ['mimo-v2.6-pro', 'MiMo-V2.6-Pro', 'Xiaomi', 1480, 4066, 'MIT', 0.435, 0.87, 1050000],
+  ['gemini-3.5-flash-high', 'Gemini 3.5 Flash (High)', 'Google', 1478, 47642, 'Proprietary', 1.5, 9, 1048576],
+  ['gemini-3.5-flash-medium', 'Gemini 3.5 Flash (Medium)', 'Google', 1476, 46377, 'Proprietary', 1.5, 9, 1048576],
+  ['gpt-5.5', 'GPT-5.5', 'OpenAI', 1476, 69937, 'Proprietary', 5, 30, 1050000],
+  ['gpt-5.2-chat-20260210', 'GPT-5.2 Chat (20260210)', 'OpenAI', 1476, 35708, 'Proprietary', 1.75, 14, 128000],
+  ['gpt-5.4-high', 'GPT-5.4 (High)', 'OpenAI', 1475, 64103, 'Proprietary', 2.5, 15, 1050000],
+  ['glm-5.2-max', 'GLM-5.2 (Max)', 'Z.ai', 1475, 54173, 'MIT', 0.007, 6.8, 1048576],
+  ['deepseek-v4.1-flash-20260910-max', 'DeepSeek-V4.1-Flash-20260910 (Max)', 'DeepSeek', 1475, 13580, 'MIT', 0.3, 1.2, 1048576],
+  ['grok-4.20-beta-1', 'Grok 4.20 Beta 1', 'xAI', 1475, 27690, 'Proprietary', 1.25, 2.5, 2000000],
+  ['claude-opus-4.8', 'Claude Opus 4.8', 'Anthropic', 1474, 64170, 'Proprietary', 5, 25, 1000000],
+  ['glm-5.3-flash', 'GLM-5.3-Flash', 'Z.ai', 1474, 50189, 'MIT', 0.0399, 0.0784, 1048576],
+  ['gpt-6-astra-max', 'GPT-6 Astra (Max)', 'OpenAI', 1474, 18315, 'Proprietary', 10, 50, 1050000],
+  ['qwen3.7-max-preview', 'Qwen3.7-Max-Preview', 'Alibaba', 1474, 3904, 'Proprietary', 1.475, 4.425, 1000000],
+  ['claude-opus-4.5-high-32k-20251101', 'Claude Opus 4.5 (High, 32K, 20251101)', 'Anthropic', 1474, 37253, 'Proprietary', 5, 25, 200000],
+  ['gpt-5.5-instant', 'GPT-5.5 Instant', 'OpenAI', 1473, 26865, 'Proprietary', 5, 30, null],
+  ['gemini-3-flash', 'Gemini 3 Flash', 'Google', 1473, 31133, 'Proprietary', 0.5, 3, 1048576],
+  ['claude-sonnet-5.5-xhigh', 'Claude Sonnet 5.5 (xHigh)', 'Anthropic', 1472, 13821, 'Proprietary', 2, 10, 1000000],
+  ['grok-4.20-beta-reasoning-0309', 'Grok 4.20 Beta (Reasoning, 0309)', 'xAI', 1472, 65713, 'Proprietary', 1.25, 2.5, 2000000],
+  ['claude-sonnet-4.6', 'Claude Sonnet 4.6', 'Anthropic', 1472, 70017, 'Proprietary', 3, 15, 1000000],
+  ['grok-4.20-multi-agent-beta-0309', 'Grok 4.20 Multi-Agent Beta (0309)', 'xAI', 1471, 64252, 'Proprietary', 1.25, 2.5, 2000000],
+  ['claude-opus-4.5-20251101', 'Claude Opus 4.5 (20251101)', 'Anthropic', 1470, 72313, 'Proprietary', 5, 25, 200000],
+  ['gpt-5.6-terra-xhigh', 'GPT-5.6 Terra (xHigh)', 'OpenAI', 1468, 48825, 'Proprietary', 2, 12, 1050000],
+  ['ernie-5.1', 'ERNIE 5.1', 'Baidu', 1467, 39029, 'Proprietary', null, null, null],
+  ['mimo-v2.5-pro', 'MiMo-V2.5-Pro', 'Xiaomi', 1467, 76793, 'MIT', 0.48, 1.8, 1024000],
+  ['grok-4.5', 'Grok 4.5', 'xAI', 1466, 39155, 'Proprietary', 2, 6, 500000],
+  ['grok-4.1-thinking', 'Grok 4.1 (Thinking)', 'xAI', 1465, 66074, 'Proprietary', null, null, null],
+  ['glm-5.1', 'GLM-5.1', 'Z.ai', 1465, 67074, 'MIT', 1.4, 4.4, 204800],
+  ['qwen3.5-max-preview', 'Qwen3.5-Max-Preview', 'Alibaba', 1465, 22419, 'Proprietary', null, null, null],
+  ['gpt-5.4', 'GPT-5.4', 'OpenAI', 1465, 67105, 'Proprietary', 2.5, 15, 1050000],
+  ['deepseek-v4-pro-high-20260813', 'DeepSeek-V4-Pro (High, 20260813)', 'DeepSeek', 1464, 9584, 'MIT', 0.8837, 1.7675, 1048576],
+  ['claude-sonnet-5-high', 'Claude Sonnet 5 (High)', 'Anthropic', 1461, 53013, 'Proprietary', 2, 10, 1000000],
+  ['kimi-k2.6', 'Kimi K2.6', 'Moonshot', 1461, 39573, 'Modified MIT', 0.65, 3.41, 262144],
+  ['qwen3.6-max-preview', 'Qwen3.6-Max-Preview', 'Alibaba', 1460, 5386, 'Proprietary', null, null, null],
+  ['grok-4.1', 'Grok 4.1', 'xAI', 1459, 68194, 'Proprietary', null, null, null],
+  ['gemini-3-flash-minimal', 'Gemini 3 Flash (Minimal)', 'Google', 1458, 90109, 'Proprietary', 0.5, 3, 1048576],
+  ['deepseek-v4-pro', 'DeepSeek-V4-Pro', 'DeepSeek', 1458, 56906, 'MIT', 0.8837, 1.7675, 1048576],
+  ['glm-5', 'GLM-5', 'Z.ai', 1457, 29020, 'MIT', 1, 3.2, 204800],
 ];
 
-export const MODELS = RAW_FALLBACK.map(([slug, org, elo, votes, license, priceIn, priceOut, ctxRaw], i) => {
-  const name = formatName(slug);
-  const isOpen = ['MIT', 'Apache 2.0', 'Open Source'].includes(license);
+export const MODELS = RAW_FALLBACK.map(([slug, displayName, org, elo, votes, license, priceIn, priceOut, ctxRaw], i) => {
+  const name = displayName || formatName(slug);
+  const isOpen = isOpenWeights(license);
   return {
     rank:       i + 1,
     slug,

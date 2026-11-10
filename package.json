@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@netlify/blobs": "^8.1.0",
+    "hyparquet": "1.31.5",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },

@@ -84,7 +84,7 @@ export default function VoiceCommsPage({ onNavigate, slug }) {
   return (
     <PageFrame mobile={mobile}>
       <GlobalMotion />
-      <PageTitle mobile={mobile} eyebrow="Voice Comms" title="Ears and voices." subtitle="Transcription accuracy and speed from the Open ASR Leaderboard; speech quality, latency and price from Artificial Analysis when configured."
+      <PageTitle mobile={mobile} eyebrow="Voice Comms" title="Ears and voices." subtitle="Transcription accuracy and speed from the Open ASR Leaderboard; voice quality, voice agents, latency and price from Artificial Analysis."
         status={<DataStatus status={speech.status} fetchedAt={speech.data?.fetchedAt} sources={['openasr', ...(aa ? ['aa'] : [])]} loading={speech.loading} onRefresh={speech.reload} />} />
 
       <div style={{ marginBottom: 14 }}>
@@ -106,7 +106,7 @@ export default function VoiceCommsPage({ onNavigate, slug }) {
             <span style={{ marginLeft: 'auto' }}>{view === 'table' && <ColumnPicker columns={columns} visible={colSel.visible} toggle={colSel.toggle} reset={colSel.reset} />}</span>
           </div>
           {speech.loading && !stt.length ? <Skeleton height={400} /> : !stt.length ? (
-            <EmptyState title="Open ASR Leaderboard unavailable" body={speech.sources?.openasr?.error ?? 'Could not load the results CSV.'} action={<Btn small onClick={speech.reload}>Retry</Btn>} />
+            <EmptyState title="Open ASR Leaderboard unavailable" body={speech.sources?.openasr?.error ?? 'Could not load the leaderboard table.'} action={<Btn small onClick={speech.reload}>Retry</Btn>} />
           ) : view === 'table' ? (
             <DataTable columns={columns} rows={sttRows} visible={colSel.visible} sort={sort} onSort={setSort} mobile={mobile} rowKey={r => r.id} expandedKey={expanded} onRowClick={r => setExpanded(expanded === r.id ? null : r.id)}
               renderExpanded={r => (
@@ -165,11 +165,55 @@ export default function VoiceCommsPage({ onNavigate, slug }) {
         )
       )}
       {cat === 's2s' && (
-        speech.s2s.length ? <MediaLikeTable rows={speech.s2s} kind="s2s" mobile={mobile} /> : (
+        speech.s2s.length ? (<>
+          <div style={{ display: 'grid', gridTemplateColumns: mobile ? '1fr 1fr' : 'repeat(4, 1fr)', gap: 10, marginBottom: 14 }}>
+            {(() => {
+              const best = (k, dir = -1) => [...speech.s2s].filter(r => isNum(r[k])).sort((a, b) => dir * (a[k] - b[k]))[0];
+              const elo = best('elo'), bba = best('bigBenchAudio'), fast = best('ttfa', 1), cheap = best('pricePerHour', 1);
+              return (<>
+                <StatTile label="Preferred by listeners" value={elo ? fmtMetric('ttsQuality', elo.elo) : NA} sub={elo ? `${elo.name} · ${elo.org}` : undefined} color={GREEN} />
+                <StatTile label="Best speech reasoning" value={bba ? `${bba.bigBenchAudio.toFixed(1)}%` : NA} sub={bba ? `${bba.name} · Big Bench Audio` : undefined} color={PURPLE} />
+                <StatTile label="Fastest first audio" value={fast ? fmtSec(fast.ttfa) : NA} sub={fast?.name} color={BLUE} />
+                <StatTile label="Cheapest per hour" value={cheap ? `$${cheap.pricePerHour.toFixed(2)}` : NA} sub={cheap?.name} color={GOLD} />
+              </>);
+            })()}
+          </div>
+          <S2STable rows={speech.s2s} mobile={mobile} />
+        </>) : (
           <SchemaReady title="Speech to speech" metrics={['ttsQuality', 'ttft']} extra={['Speech reasoning', 'Conversational dynamics', 'Agentic performance', 'Task success', 'Cost']} note="Speech-to-speech evaluations (Big Bench Audio, speech arena preference, time-to-first-audio) are an Artificial Analysis dataset; nothing is shown until the source is configured." />
         )
       )}
     </PageFrame>
+  );
+}
+
+const fmtSec = v => (isNum(v) ? (v < 1 ? `${Math.round(v * 1000)} ms` : `${v.toFixed(2)} s`) : NA);
+const fmtPctCell = v => (isNum(v) ? `${v.toFixed(1)}%` : <span style={{ color: 'var(--muted2)' }}>{NA}</span>);
+
+/** Voice agents (speech in → speech out), as Artificial Analysis measures them. */
+function S2STable({ rows, mobile }) {
+  const [sort, setSort] = useState({ key: 'elo', dir: 'desc' });
+  const columns = useMemo(() => [
+    { key: 'model', label: 'Model', sticky: true, width: mobile ? 210 : 300, value: r => r.rank, defaultDir: 'asc', render: r => (
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
+        <span style={{ width: 22, textAlign: 'right', fontFamily: MONO, fontSize: 11.5, color: r.rank <= 3 ? 'var(--text)' : 'var(--muted)', fontWeight: r.rank <= 3 ? 700 : 500, fontVariantNumeric: 'tabular-nums' }}>{r.rank}</span>
+        <LabLogo org={r.org} size={16} />
+        <span style={{ minWidth: 0 }}>
+          <span style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.name}</span>
+          <span style={{ display: 'block', fontSize: 10.5, color: 'var(--muted)' }}>{r.org}{r.provider && r.provider !== r.org ? ` · via ${r.provider}` : ''}{r.isOpen ? ' · open weights' : ''}</span>
+        </span>
+      </div>
+    ) },
+    { key: 'elo', label: 'Speech Arena ELO', short: 'ELO', numeric: true, width: 120, bar: true, barColor: GREEN, barWidth: 40, valueWidth: 44, value: r => r.elo, render: r => isNum(r.elo) ? <span style={{ fontWeight: 700 }}>{Math.round(r.elo)}</span> : <span style={{ color: 'var(--muted2)' }}>{NA}</span> },
+    { key: 'qualityIndex', label: 'Quality index', short: 'Index', numeric: true, width: 74, value: r => r.qualityIndex, render: r => isNum(r.qualityIndex) ? r.qualityIndex.toFixed(1) : <span style={{ color: 'var(--muted2)' }}>{NA}</span> },
+    { key: 'bigBenchAudio', label: 'Big Bench Audio (reasoning)', short: 'BBA', numeric: true, width: 120, bar: true, barColor: PURPLE, barWidth: 40, valueWidth: 50, value: r => r.bigBenchAudio, render: r => fmtPctCell(r.bigBenchAudio) },
+    { key: 'tauVoice', label: 'τ-Voice (agentic tasks)', short: 'τ-Voice', numeric: true, width: 80, value: r => r.tauVoice, render: r => fmtPctCell(r.tauVoice) },
+    { key: 'ttfa', label: 'Time to first audio', short: 'TTFA', numeric: true, width: 80, defaultDir: 'asc', value: r => r.ttfa, render: r => fmtSec(r.ttfa) },
+    { key: 'pricePerHour', label: 'Price per hour (in + out)', short: '$/hour', numeric: true, width: 80, defaultDir: 'asc', value: r => r.pricePerHour, render: r => isNum(r.pricePerHour) ? `$${r.pricePerHour.toFixed(2)}` : <span style={{ color: 'var(--muted2)' }}>{NA}</span> },
+  ], [mobile]);
+  return (
+    <DataTable dense mobile={mobile} rows={rows} rowKey={r => r.aaId ?? r.id} columns={columns} visible={columns.map(c => c.key)} sort={sort} onSort={setSort} pageSize={50}
+      footer={<span>Speech Arena ELO, Big Bench Audio, τ-Voice, time to first audio and prices © Artificial Analysis · ELO only where the model has been rated in the Speech Arena</span>} />
   );
 }
 

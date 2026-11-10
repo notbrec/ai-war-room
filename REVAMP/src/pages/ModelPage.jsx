@@ -23,9 +23,15 @@ const TrendChart = lazy(() => import('../components/charts/TrendChart.jsx'));
 
 const SECTIONS = ['Overview', 'Performance', 'Benchmarks', 'Pricing', 'Providers', 'History', 'Capabilities', 'Related'];
 
+// Links shared before arena switched to display names used slugs like
+// "claude-opus-4-6-high"; today's slug is "claude-opus-4.6-high". Same model.
+const slugKey = s => String(s ?? '').toLowerCase().replace(/[^a-z0-9]/g, '');
+const CONTENT_BY_KEY = new Map(Object.entries(MODEL_CONTENT).map(([k, v]) => [slugKey(k), v]));
+
 function findModel(slug, models, liveModels) {
   if (!slug) return null;
-  const hit = models.find(m => m.slug === slug || m.id === slug || m.id === `legacy:${slug}`);
+  const hit = models.find(m => m.slug === slug || m.id === slug || m.id === `legacy:${slug}`)
+    ?? models.find(m => slugKey(m.slug) === slugKey(slug));
   if (hit) return hit;
   const legacy = (liveModels?.length ? liveModels : MODELS).find(m => m.slug === slug);
   return legacy ? fromLegacy(legacy) : null;
@@ -52,7 +58,7 @@ export default function ModelPage({ slug, onNavigate, liveModels }) {
   const [provSort, setProvSort] = useState({ key: 'priceBlended', dir: 'asc' });
 
   const model = useMemo(() => findModel(slug, llms.models, liveModels), [slug, llms.models, liveModels]);
-  const content = MODEL_CONTENT[slug] ?? (model ? MODEL_CONTENT[model.slug] : null);
+  const content = MODEL_CONTENT[slug] ?? (model ? MODEL_CONTENT[model.slug] ?? CONTENT_BY_KEY.get(slugKey(model.slug)) : null) ?? CONTENT_BY_KEY.get(slugKey(slug));
   const loading = llms.loading && !llms.models.length && !model;
 
   const related = useMemo(() => {
@@ -93,7 +99,9 @@ export default function ModelPage({ slug, onNavigate, liveModels }) {
   const elo = model.arena?.elo;
   const desc = getDescription(model.name);
   const type = model.modalities ? (model.modalities.in.includes('image') ? 'Multimodal LLM' : 'Text LLM') : 'LLM';
-  const status = model.arena ? (model.arena.isNew ? 'New on the arena' : 'Active on the arena') : 'Not on the arena board';
+  const status = model.arena
+    ? (model.arena.isNew ? `New on the arena${model.arena.firstSeen ? ` · since ${fmtDate(model.arena.firstSeen)}` : ''}` : 'Active on the arena')
+    : 'Not on the arena board';
 
   return (
     <PageFrame mobile={mobile}>
@@ -152,7 +160,18 @@ export default function ModelPage({ slug, onNavigate, liveModels }) {
             </Panel>
           ) : (
             <Panel title="About">
-              <p style={{ fontSize: 14.5, lineHeight: 1.65, color: 'var(--text)', margin: 0, opacity: 0.9 }}>{desc ?? `${model.name} is a ${model.org} model.${model.arena ? ` It holds arena ELO ${elo} (rank #${model.arena.rank}) from ${fmtMetric('votes', model.arena.votes)} human battles.` : ''}${isNum(model.aa?.intelligence) ? ` Intelligence Index ${fmtMetric('intelligence', model.aa.intelligence)}.` : ''} No long-form profile has been written for it yet — see the <a href="#methodology" onClick={e => { e.preventDefault(); onNavigate('methodology'); }} style={link}>methodology</a> for how these numbers are produced.`}</p>
+              <p style={{ fontSize: 14.5, lineHeight: 1.65, color: 'var(--text)', margin: 0, opacity: 0.9 }}>
+                {desc ?? (
+                  <>
+                    {model.name} is a model from {model.org}.
+                    {model.arena ? ` It holds arena ELO ${elo} (rank #${model.arena.rank}) from ${fmtMetric('votes', model.arena.votes)} human battles.` : ''}
+                    {isNum(model.aa?.intelligence) ? ` Intelligence Index ${fmtMetric('intelligence', model.aa.intelligence)}.` : ''}
+                    {' '}No long-form profile has been written for it yet — see the{' '}
+                    <a href="#methodology" onClick={e => { e.preventDefault(); onNavigate('methodology'); }} style={link}>methodology</a>
+                    {' '}for how these numbers are produced.
+                  </>
+                )}
+              </p>
             </Panel>
           )}
           <div style={{ display: 'grid', gridTemplateColumns: mobile ? '1fr' : '1fr 1fr', gap: 12 }}>
@@ -167,6 +186,7 @@ export default function ModelPage({ slug, onNavigate, liveModels }) {
                     <span>30d <Delta value={model.history?.rankDelta30d} placeholder={model.history ? '=' : NA} /></span>
                     {model.arenas?.vision && <span>Vision ELO <b style={{ color: 'var(--text)' }}>{model.arenas.vision.elo}</b> (#{model.arenas.vision.rank})</span>}
                     {model.arenas?.search && <span>Search ELO <b style={{ color: 'var(--text)' }}>{model.arenas.search.elo}</b> (#{model.arenas.search.rank})</span>}
+                    {model.arenas?.webdev && <span>WebDev ELO <b style={{ color: 'var(--text)' }}>{model.arenas.webdev.elo}</b> (#{model.arenas.webdev.rank})</span>}
                   </div>
                 </div>
               ) : <p style={{ fontSize: 12.5, color: 'var(--muted)', margin: 0 }}>This model is not on the arena text board; it is ranked here on its Intelligence Index only.</p>}

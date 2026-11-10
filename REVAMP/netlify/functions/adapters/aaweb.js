@@ -1,14 +1,14 @@
 // ─── Artificial Analysis — web fallback (no API key) ────────────────────────
 // artificialanalysis.ai is a Next.js site whose leaderboards ship inside the
-// RSC flight payload, exactly like arena.ai. When no ARTIFICIAL_ANALYSIS_API_KEY
-// is configured this adapter reads those payloads and normalises them to the
-// same shapes the official Data API adapter returns, so the merge layer and
-// the UI never know the difference. Attribution ("© Artificial Analysis") is
-// shown wherever the numbers appear, as their terms ask. AA_WEB=0 turns it
-// off; an official key always takes precedence.
+// RSC flight payload (self.__next_f.push chunks). When no
+// ARTIFICIAL_ANALYSIS_API_KEY is configured this adapter reads those payloads
+// and normalises them to the same shapes the official Data API adapter
+// returns, so the merge layer and the UI never know the difference.
+// Attribution ("© Artificial Analysis") is shown wherever the numbers appear,
+// as their terms ask. AA_WEB=0 turns it off; an official key always takes
+// precedence for the LLM board.
 
 import { fetchText, BROWSER_UA } from '../lib/http.js';
-import { flightText } from '../lib/arena.js';
 import { canonicalOrg, canonicalModelId, bareKey } from '../../../shared/ids.js';
 import { blendedPrice } from '../../../shared/metrics.js';
 
@@ -20,7 +20,19 @@ export const AA_WEB_PATHS = {
   'image-to-video': '/video/models',
   'text-to-speech': '/text-to-speech/models',
   stt: '/speech-to-text/non-streaming',
+  s2s: '/speech-to-speech',
 };
+
+/** Reconstruct the RSC flight stream by unescaping every __next_f chunk. */
+export function flightText(html) {
+  let out = '';
+  const re = /self\.__next_f\.push\(\[\d+\s*,\s*("(?:[^"\\]|\\.)*")/g;
+  let m;
+  while ((m = re.exec(html))) {
+    try { out += JSON.parse(m[1]); } catch { /* partial chunk — skip */ }
+  }
+  return out;
+}
 
 export function aaWebEnabled() { return process.env.AA_WEB !== '0'; }
 
@@ -234,8 +246,68 @@ export async function fetchAAWebMedia(board) {
   return rows.map((r, i) => ({ ...r, rank: num(r.elo) != null ? i + 1 : null }));
 }
 
-/** Hosted transcription APIs: WER index, price per minute, speed factor. */
+/** Every object in any `"name":[{…}]` array of the payload that passes `test`.
+ *  RSC dedupes repeats into "$ref" strings, so one chart's array may hold only
+ *  some rows in full; collecting across arrays recovers the whole set. */
+export function objectsWhere(text, test, { mustContain } = {}) {
+  const out = [];
+  const re = /"\w+":\[\{/g;
+  let m;
+  while ((m = re.exec(text))) {
+    const raw = balanced(text, m.index + m[0].length - 2);
+    if (!raw || (mustContain && !raw.includes(mustContain))) continue;
+    let arr;
+    try { arr = JSON.parse(raw); } catch { continue; }
+    for (const o of arr) if (o && typeof o === 'object' && test(o)) out.push(o);
+  }
+  return out;
+}
+
+/**
+ * Speech-to-speech (voice agents): the page carries per-hosted-model rows
+ * (Big Bench Audio, τ-Voice, full-duplex score, time to first audio, price per
+ * hour) spread over several chart arrays, plus a Speech Arena board (ELO, CI,
+ * appearances, quality index) keyed by the same host-model id.
+ */
+export function parseS2S(text) {
+  const byId = new Map();
+  for (const o of objectsWhere(text, o => o.id && 'bbaScore' in o && o.model && typeof o.model === 'object', { mustContain: '"bbaScore"' })) {
+    byId.set(o.id, { ...(byId.get(o.id) ?? {}), ...o });
+  }
+  const hosts = [...byId.values()];
+  if (!hosts.length) throw new Error('aa-web s2s: model rows not found');
+  const arenaBy = new Map(objectsWhere(text, o => o.stsHostModelId && 'elo' in o && (o.sliceKey ?? 'overall') === 'overall', { mustContain: '"stsHostModelId"' })
+    .map(a => [a.stsHostModelId, a]));
+  const pct = v => (num(v) != null ? v * 100 : null);
+  const rows = hosts.map(h => {
+    const a = arenaBy.get(h.id) ?? null;
+    const name = h.shortName ?? h.name ?? h.model?.shortName ?? h.model?.name;
+    const org = canonicalOrg(a?.creatorName ?? h.model?.creator?.name ?? h.host?.name ?? '');
+    const priceIn = num(h.pricePerHourInput), priceOut = num(h.pricePerHourOutput);
+    return {
+      id: canonicalModelId(h.slug ?? name, org), aaId: h.id ?? null, slug: h.slug ?? null, name, org,
+      provider: h.host?.name ? canonicalOrg(h.host.name) : null,
+      elo: num(a?.elo), ci: num(a?.upper95ci) != null && num(a?.lower95ci) != null ? Math.round((a.upper95ci - a.lower95ci) / 2) : null,
+      votes: num(a?.appearances), qualityIndex: num(a?.stsQualityIndexV2Score),
+      taskSuccess: pct(a?.taskCompletionRate),
+      bigBenchAudio: pct(h.bbaScore), tauVoice: pct(h.tauVoiceAggScore), fullDuplex: pct(h.fdbScore),
+      ttfa: num(h.timeToFirstAudioSeconds),
+      pricePerHourInput: priceIn, pricePerHourOutput: priceOut,
+      pricePerHour: priceIn != null || priceOut != null ? (priceIn ?? 0) + (priceOut ?? 0) : null,
+      costPerTask: num(h.averageCostPerTask),
+      isOpen: typeof h.model?.openSource === 'boolean' ? h.model.openSource : null,
+      via: 'aa-web',
+    };
+  }).filter(r => r.name && (r.elo != null || r.bigBenchAudio != null || r.ttfa != null));
+  if (rows.length < 3) throw new Error(`aa-web s2s: only ${rows.length} rows`);
+  // Ranked by the arena ELO where rated, then by Big Bench Audio.
+  rows.sort((x, y) => (y.elo ?? -1) - (x.elo ?? -1) || (y.bigBenchAudio ?? -1) - (x.bigBenchAudio ?? -1));
+  return rows.map((r, i) => ({ ...r, rank: i + 1 }));
+}
+
+/** Hosted transcription APIs (WER index, price per minute, speed factor) and voice agents. */
 export async function fetchAAWebSpeech(kind) {
+  if (kind === 's2s') return parseS2S(await page(AA_WEB_PATHS.s2s));
   if (kind !== 'stt') return null;
   const text = await page(AA_WEB_PATHS.stt);
   const apis = arrayWhere(text, 'hostApiId', o => o.model && typeof o.model === 'object' && 'pricePer1kMinutes' in o);
@@ -255,7 +327,8 @@ export async function fetchAAWebSpeech(kind) {
       id: canonicalModelId(name, org), aaId: a.id ?? null, name, org,
       provider: a.host?.name ?? null, hostApiId: a.hostApiId ?? null,
       wer: wer != null ? wer * 100 : null, werIndex: werIdx != null ? werIdx * 100 : null,
-      pricePerMinute: num(a.pricePer1kMinutes) != null ? a.pricePer1kMinutes / 1000 : null, pricePer1kMinutes: num(a.pricePer1kMinutes),
+      // AA lists $0 for some preview APIs: zero is not a price — unknown
+      pricePerMinute: num(a.pricePer1kMinutes) > 0 ? a.pricePer1kMinutes / 1000 : null, pricePer1kMinutes: num(a.pricePer1kMinutes) > 0 ? a.pricePer1kMinutes : null,
       speedFactor: num(a.performance?.medianSpeedFactor),
       isOpen: typeof m.openWeights === 'boolean' ? m.openWeights : null, releaseDate: m.releaseDate ?? null,
       best: m.bestWerHostModelId != null && m.bestWerHostModelId === a.id, via: 'aa-web',
