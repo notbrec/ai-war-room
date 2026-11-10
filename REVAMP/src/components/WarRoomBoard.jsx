@@ -12,6 +12,7 @@ import { recommend } from '../../shared/recommend.js';
 import { Label, Delta, SourceTag, eloColor, GREEN, GOLD, RED, BLUE, PURPLE } from './ui.jsx';
 import { Skeleton } from './design.jsx';
 import { llmCandidates } from '../data/candidates.js';
+import { topByIntelligence } from '../domains/models/ranking.js';
 
 export function useWarRoomCards() {
   const llms = useLLMs(), media = useMedia(), coding = useCoding(), speech = useSpeech(), prov = useProviders();
@@ -19,7 +20,7 @@ export function useWarRoomCards() {
     const M = llms.models;
     const ranked = M.filter(m => m.inArena);
     const top = ranked[0];
-    const byIntel = [...M].filter(m => isNum(m.aa?.intelligence)).sort((a, b) => b.aa.intelligence - a.aa.intelligence)[0];
+    const byIntel = topByIntelligence(M, 1)[0];
     const bySpeed = [...M].filter(m => isNum(m.aa?.speed)).sort((a, b) => b.aa.speed - a.aa.speed)[0];
     const byTtft = [...M].filter(m => isNum(m.aa?.ttft)).sort((a, b) => a.aa.ttft - b.aa.ttft)[0];
     const byCtx = [...M].filter(m => isNum(m.context)).sort((a, b) => b.context - a.context || (b.arena?.elo ?? 0) - (a.arena?.elo ?? 0))[0];
@@ -39,10 +40,13 @@ export function useWarRoomCards() {
     const llmCard = (m, extra = {}) => m ? ({ name: m.name, org: m.org, id: m.id, slug: m.slug, delta: m.history?.rankDelta7d ?? null, prevRank: m.history?.prevRank7d ?? null, rank: m.arena?.rank ?? null, ...extra }) : null;
 
     return [
-      { key: 'overall', label: '#1 Overall', q: 'Who is the strongest?', color: GREEN, source: 'arena', route: 'leaderboard',
-        ...(top ? llmCard(top, { value: fmtMetric('elo', top.arena.elo), unit: 'ELO', sub: `±${top.arena.ci ?? '—'} · ${fmtMetric('votes', top.arena.votes)} votes` }) : {}) },
-      { key: 'intel', label: 'Highest Intelligence', q: 'Who is the smartest on benchmarks?', color: BLUE, source: 'aa', route: { type: 'leaderboard' },
-        ...(byIntel ? llmCard(byIntel, { value: fmtMetric('intelligence', byIntel.aa.intelligence), unit: 'Index', sub: byIntel.inArena ? `Arena #${byIntel.arena.rank}` : 'Not on the arena board' }) : {}) },
+      // #1 is decided by Artificial Analysis' Intelligence Index: it rates a new
+      // model within days, the arena only after weeks of votes.
+      { key: 'overall', label: '#1 Overall', q: 'Who is the strongest?', color: GREEN, source: 'aa', route: 'leaderboard',
+        ...(byIntel ? llmCard(byIntel, { value: fmtMetric('intelligence', byIntel.aa.intelligence), unit: 'Intelligence Index', sub: byIntel.inArena ? `Arena #${byIntel.arena.rank} · ELO ${byIntel.arena.elo}` : 'Too new for an arena rating' })
+          : top ? llmCard(top, { value: fmtMetric('elo', top.arena.elo), unit: 'ELO', sub: `±${top.arena.ci ?? '—'} · ${fmtMetric('votes', top.arena.votes)} votes` }) : {}) },
+      { key: 'arena', label: 'Arena #1', q: 'Which answers do people prefer?', color: BLUE, source: 'arena', route: 'leaderboard',
+        ...(top ? llmCard(top, { value: fmtMetric('elo', top.arena.elo), unit: 'ELO', sub: `±${top.arena.ci ?? '—'} · ${fmtMetric('votes', top.arena.votes)} human votes` }) : {}) },
       { key: 'value', label: 'Best Value', q: 'Best intelligence per dollar?', color: GOLD, source: 'internal', route: 'planner',
         ...(value ? llmCard(value.m, { value: fmtMetric('priceBlended', value.m.priceBlended), unit: 'blended / 1M', sub: `ELO ${value.m.arena?.elo ?? NA} · ${Math.round((value.parts.quality ?? 0) * 100)}% of top quality` }) : {}) },
       { key: 'speed', label: 'Fastest Model', q: 'Who is the fastest?', color: PURPLE, source: 'aa', route: 'race',

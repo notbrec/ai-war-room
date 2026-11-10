@@ -22,7 +22,9 @@ import BenchMatrix from '../components/BenchMatrix.jsx';
 import { BENCHMARKS } from '../domains/benchmarks/registry.js';
 import { Chip, Segmented, DataStatus, eloColor, Label, StatTile, Btn, BadgeTag, GREEN, PURPLE, BLUE, GOLD } from '../components/ui.jsx';
 import { AddToBattle } from '../domains/comparison/BattleControls.jsx';
-import { fmtMetric, isNum, NA, metric } from '../../shared/metrics.js';
+import { fmtMetric, fmtDate, isNum, NA, metric } from '../../shared/metrics.js';
+import { topByIntelligence, asFighters } from '../domains/models/ranking.js';
+import { LabLogo } from '../components/LabLogo.jsx';
 
 const SORTS = [
   { key: 'elo',          label: 'ELO' },
@@ -59,6 +61,44 @@ function Row({ label, children, last }) {
 
 const bar = (m, value, label, extra = {}) => ({ id: m.id, name: m.name, org: m.org, m, value, label, ...extra });
 
+/** Released this month, benchmarked by Artificial Analysis, not rated on the arena yet. */
+function FreshReleases({ rows, onOpen, mobile }) {
+  return (
+    <div style={{ background: 'var(--card)', border: '0.5px solid var(--sep)', marginBottom: 24 }}>
+      <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap', padding: mobile ? '12px 14px 8px' : '14px 20px 10px', borderBottom: '0.5px solid var(--sep)' }}>
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+          <span style={{ fontFamily: MONO, fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', color: 'var(--text)', textTransform: 'uppercase' }}>Just released</span>
+          <span style={{ fontFamily: MONO, fontSize: 11, color: 'var(--muted2)' }}>benchmarked · not rated on the arena yet</span>
+        </span>
+        <span style={{ fontSize: 11.5, color: 'var(--muted)' }}>Arena ratings need weeks of votes; Artificial Analysis tests a model within days.</span>
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: mobile ? '1fr 1fr' : `repeat(${Math.min(rows.length, 3)}, 1fr)` }}>
+        {rows.map((m, i) => (
+          <button key={m.id} onClick={() => onOpen(m)} className="aiwar-press-btn" style={{
+            background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', fontFamily: 'inherit', minWidth: 0,
+            padding: mobile ? '12px 14px' : '14px 20px',
+            borderTop: i >= (mobile ? 2 : 3) ? '0.5px solid var(--sep)' : 'none',
+            borderLeft: i % (mobile ? 2 : 3) ? '0.5px solid var(--sep)' : 'none',
+            display: 'flex', flexDirection: 'column', gap: 4,
+          }}>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7, minWidth: 0 }}>
+              <LabLogo org={m.org} size={15} />
+              <span style={{ fontSize: 14, fontWeight: 650, color: 'var(--text)', letterSpacing: '-0.02em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{m.name}</span>
+            </span>
+            <span style={{ display: 'flex', alignItems: 'baseline', gap: 6, flexWrap: 'wrap' }}>
+              <span style={{ fontFamily: MONO, fontSize: mobile ? 18 : 22, fontWeight: 700, color: BLUE, fontVariantNumeric: 'tabular-nums' }}>{m.aa.intelligence.toFixed(1)}</span>
+              <span style={{ fontFamily: MONO, fontSize: 10, color: 'var(--muted2)', letterSpacing: '0.06em' }}>INTEL{isNum(m.aa.rank) ? ` · #${m.aa.rank}` : ''}</span>
+            </span>
+            <span style={{ fontSize: 11, color: 'var(--muted)' }}>
+              {m.org} · {fmtDate(m.releaseDate)}{isNum(m.priceIn) && isNum(m.priceOut) ? ` · ${fmtMetric('priceIn', m.priceIn)} / ${fmtMetric('priceOut', m.priceOut)}` : ''}
+            </span>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function LeaderboardPage({ liveModels, onNavigate }) {
   const dark   = useDark();
   const mobile = useMobile();
@@ -76,14 +116,15 @@ export default function LeaderboardPage({ liveModels, onNavigate }) {
   const aa = !!llms.capabilities?.aa;
   const pick = useModelPick(models);
 
-  const [sort, setSort]                   = useState({ key: 'elo', dir: 'desc' });
+  // Default order: Intelligence Index — new releases are rated there within days.
+  const [sort, setSort]                   = useState({ key: 'intelligence', dir: 'desc' });
   const [query, setQuery]                 = useState('');
   const [filterOpen, setFilterOpen]       = useState(false);
   const [filterThinking, setFilterThinking] = useState(false);
   const [filterVision, setFilterVision]   = useState(false);
   const [filterTools, setFilterTools]     = useState(false);
   const [filterIndexed, setFilterIndexed] = useState(false);
-  const [includeUnranked, setIncludeUnranked] = useState(false);
+  const [includeUnranked, setIncludeUnranked] = useState(true);
   const [priceCap, setPriceCap]           = useState(null);
   const [ctxMin, setCtxMin]               = useState(null);
   const [filterOrg, setFilterOrg]         = useState('');
@@ -93,11 +134,27 @@ export default function LeaderboardPage({ liveModels, onNavigate }) {
   const [selected, setSelected]           = useState(() => new Set());
 
   const openModel = useCallback(m => onNavigate({ type: 'model', slug: m.slug }), [onNavigate]);
-  const columns = useMemo(() => llmColumns({ dark, onOpen: openModel, mobile }), [dark, openModel, mobile]);
+  const rankBy = sort.key === 'elo' || sort.key === 'votes' ? 'elo' : 'intelligence';
+  const columns = useMemo(() => llmColumns({ dark, onOpen: openModel, mobile, rankBy }), [dark, openModel, mobile, rankBy]);
   const colSel = useColumnSelection('llm-rankings-v1', columns);
 
   const q = query.trim().toLowerCase();
-  const activeFilters = [filterOpen, filterThinking, filterVision, filterTools, filterIndexed, includeUnranked, priceCap != null, ctxMin != null, !!filterOrg].filter(Boolean).length;
+  // Showing every model is the default; "arena-rated only" is the filter.
+  const activeFilters = [filterOpen, filterThinking, filterVision, filterTools, filterIndexed, !includeUnranked, priceCap != null, ctxMin != null, !!filterOrg].filter(Boolean).length;
+  // Every filter except "arena only" — the Intelligence / speed / latency charts
+  // rank by Artificial Analysis, where a model just out (not yet rated on the
+  // arena) can be the best there is.
+  const passesAll = useCallback(m => {
+    if (q && !m.name.toLowerCase().includes(q) && !m.org.toLowerCase().includes(q) && !(m.family ?? '').includes(q.replace(/[^a-z0-9]/g, ''))) return false;
+    if (filterOpen && !m.isOpen) return false;
+    if (filterThinking && !m.isThinking) return false;
+    if (filterVision && !(m.modalities?.in?.includes('image'))) return false;
+    if (filterTools && !m.supportsTools) return false;
+    if (priceCap != null && !(isNum(m.priceIn) && m.priceIn <= priceCap)) return false;
+    if (ctxMin != null && !(isNum(m.context) && m.context >= ctxMin)) return false;
+    if (filterOrg && m.org !== filterOrg) return false;
+    return true;
+  }, [q, filterOpen, filterThinking, filterVision, filterTools, priceCap, ctxMin, filterOrg]);
   const filtered = useMemo(() => models.filter(m => {
     if (!includeUnranked && !m.inArena) return false;
     if (q && !m.name.toLowerCase().includes(q) && !m.org.toLowerCase().includes(q) && !(m.family ?? '').includes(q.replace(/[^a-z0-9]/g, ''))) return false;
@@ -117,7 +174,12 @@ export default function LeaderboardPage({ liveModels, onNavigate }) {
   const topElo     = ranked.length ? Math.max(...ranked.map(m => m.arena?.elo ?? 0)) : 0;
   const openCount  = ranked.filter(m => m.isOpen).length;
   const allOrgs    = orgsFrom(ranked);
-  const boutModels = useMemo(() => [...ranked].sort((a, b) => (b.arena?.elo ?? 0) - (a.arena?.elo ?? 0)).slice(0, 2).map(m => ({ ...m, elo: m.arena.elo, ci: m.arena.ci, votes: m.arena.votes, votesLabel: fmtMetric('votes', m.arena.votes) })), [ranked]);
+  const arenaTop   = useMemo(() => [...ranked].sort((a, b) => (b.arena?.elo ?? 0) - (a.arena?.elo ?? 0))[0] ?? null, [ranked]);
+  const smartest   = useMemo(() => topByIntelligence(models, 2), [models]);
+  // The bout: top two by Intelligence Index; the arena's top two if AA is unavailable.
+  const boutModels = useMemo(() => smartest.length >= 2
+    ? asFighters(smartest)
+    : [...ranked].sort((a, b) => (b.arena?.elo ?? 0) - (a.arena?.elo ?? 0)).slice(0, 2).map(m => ({ ...m, elo: m.arena.elo, ci: m.arena.ci, votes: m.arena.votes, votesLabel: fmtMetric('votes', m.arena.votes) })), [smartest, ranked]);
 
   // The chart rows: the hand-picked models if any, else the filtered set,
   // best first, cut to the chosen size.
@@ -130,14 +192,43 @@ export default function LeaderboardPage({ liveModels, onNavigate }) {
   const n = chartRows.length;
   const scope = picking ? `${n} selected` : `${activeFilters > 0 || q ? 'Filtered' : 'Top'} ${n}`;
 
+  // Intelligence / speed / latency: the best effort level of each model by
+  // Intelligence Index, arena-rated or not, so a release from this week shows.
+  const indexRows = useMemo(() => {
+    if (picking) return chartRows;
+    const best = new Map();
+    for (const m of models) {
+      if (!isNum(m.aa?.intelligence) || !passesAll(m)) continue;
+      const k = `${m.org}|${m.family}`;
+      const cur = best.get(k);
+      if (!cur || m.aa.intelligence > cur.aa.intelligence) best.set(k, m);
+    }
+    return [...best.values()].sort((a, b) => b.aa.intelligence - a.aa.intelligence).slice(0, limit);
+  }, [picking, chartRows, models, passesAll, limit]);
+  const indexScope = picking ? scope : `Top ${indexRows.length} by Intelligence Index`;
+
+  // Released in the last 30 days and not rated on the arena yet.
+  const fresh = useMemo(() => {
+    const since = new Date(Date.now() - 30 * 86_400_000).toISOString().slice(0, 10);
+    const rated = new Set(models.filter(m => m.inArena).map(m => `${m.org}|${m.family}`));   // any effort level on the board
+    const best = new Map();
+    for (const m of models) {
+      const k = `${m.org}|${m.family}`;
+      if (m.inArena || rated.has(k) || !isNum(m.aa?.intelligence) || !m.releaseDate || String(m.releaseDate).slice(0, 10) < since) continue;
+      const cur = best.get(k);
+      if (!cur || m.aa.intelligence > cur.aa.intelligence) best.set(k, m);
+    }
+    return [...best.values()].sort((a, b) => b.aa.intelligence - a.aa.intelligence).slice(0, mobile ? 4 : 6);
+  }, [models, mobile]);
+
   const charts = useMemo(() => ({
     elo:      chartRows.filter(m => isNum(m.arena?.elo)).map(m => bar(m, m.arena.elo, String(m.arena.elo))),
     cost:     chartRows.filter(m => isNum(m.priceIn) && isNum(m.priceOut)).sort((a, b) => a.priceBlended - b.priceBlended)
                 .map(m => bar(m, m.priceIn + m.priceOut, fmtMetric('priceBlended', m.priceBlended), { parts: [{ value: m.priceIn, opacity: 1 }, { value: m.priceOut, opacity: 0.55 }] })),
     context:  chartRows.filter(m => isNum(m.context)).sort((a, b) => b.context - a.context).map(m => bar(m, m.context, fmtMetric('context', m.context))),
-    intel:    chartRows.filter(m => isNum(m.aa?.intelligence)).sort((a, b) => b.aa.intelligence - a.aa.intelligence).map(m => bar(m, m.aa.intelligence, fmtMetric('intelligence', m.aa.intelligence))),
-    speed:    chartRows.filter(m => isNum(m.aa?.speed)).sort((a, b) => b.aa.speed - a.aa.speed).map(m => bar(m, m.aa.speed, fmtMetric('speed', m.aa.speed))),
-    ttft:     chartRows.filter(m => isNum(m.aa?.ttft)).sort((a, b) => a.aa.ttft - b.aa.ttft).map(m => bar(m, m.aa.ttft, fmtMetric('ttft', m.aa.ttft))),
+    intel:    indexRows.filter(m => isNum(m.aa?.intelligence)).sort((a, b) => b.aa.intelligence - a.aa.intelligence).map(m => bar(m, m.aa.intelligence, fmtMetric('intelligence', m.aa.intelligence))),
+    speed:    indexRows.filter(m => isNum(m.aa?.speed)).sort((a, b) => b.aa.speed - a.aa.speed).map(m => bar(m, m.aa.speed, fmtMetric('speed', m.aa.speed))),
+    ttft:     indexRows.filter(m => isNum(m.aa?.ttft)).sort((a, b) => a.aa.ttft - b.aa.ttft).map(m => bar(m, m.aa.ttft, fmtMetric('ttft', m.aa.ttft))),
   }), [chartRows]);
   const hl = useMemo(() => ({
     elo:     charts.elo.slice(0, 10),
@@ -164,7 +255,7 @@ export default function LeaderboardPage({ liveModels, onNavigate }) {
   const benches = useMemo(() => MATRIX_IDS.map(id => BENCHMARKS.find(b => b.id === id)).filter(Boolean), []);
   const valueOf = useCallback((b, m) => (b.external === 'swe' ? (sweBest.get(m.id) ?? null) : b.external ? null : b.get(m)), [sweBest]);
 
-  const clearFilters = () => { setFilterOpen(false); setFilterThinking(false); setFilterVision(false); setFilterTools(false); setFilterIndexed(false); setIncludeUnranked(false); setPriceCap(null); setCtxMin(null); setFilterOrg(''); setQuery(''); };
+  const clearFilters = () => { setFilterOpen(false); setFilterThinking(false); setFilterVision(false); setFilterTools(false); setFilterIndexed(false); setIncludeUnranked(true); setPriceCap(null); setCtxMin(null); setFilterOrg(''); setQuery(''); };
   const setSortKey = key => {
     const col = columns.find(c => c.key === key);
     const dir = key === 'priceIn' ? 'asc' : (col?.defaultDir ?? 'desc');
@@ -202,7 +293,9 @@ export default function LeaderboardPage({ liveModels, onNavigate }) {
             <RobotMascot variant="eared" size={mobile ? 36 : 48} color="var(--accent)" style={{ flexShrink: 0 }} />
           </div>
           <p style={{ fontSize: mobile ? 15 : 17, lineHeight: 1.45, color: 'var(--muted)', letterSpacing: '-0.015em', margin: '0 0 14px', maxWidth: 720, opacity: 0, animation: `aiwar-fade-up 800ms ${EASE} 120ms both` }}>
-            Every language model by arena ELO, price, context and benchmarks{aa ? ', plus intelligence, speed and latency' : ''}. Pick the models once at the top — every chart and the table follow.
+            {aa
+              ? 'Every language model by Intelligence Index — independent benchmarks that rate a release within days — plus arena ELO from human votes, price, context, speed and latency.'
+              : 'Every language model by arena ELO, price, context and benchmarks.'} Pick the models once at the top — every chart and the table follow.
           </p>
           <div style={{ opacity: 0, animation: `aiwar-fade-up 800ms ${EASE} 160ms both` }}>
             <DataStatus status={status} fetchedAt={llms.data?.fetchedAt} sources={sourcesUsed} loading={llms.loading} onRefresh={llms.reload} />
@@ -213,17 +306,24 @@ export default function LeaderboardPage({ liveModels, onNavigate }) {
         {boutModels.length >= 2 && (
           <Reveal>
             <div style={{ marginBottom: 24 }}>
-              <ChampionBout models={boutModels} onNavigate={onNavigate} mobile={mobile} variant="compact" />
+              <ChampionBout models={boutModels} onNavigate={onNavigate} mobile={mobile} variant="compact" caption={boutModels[0]?.unit === 'Intelligence' ? 'smartest models · Artificial Analysis' : 'top of the arena'} />
             </div>
+          </Reveal>
+        )}
+
+        {/* ── Just released: too new for an arena rating ────────────── */}
+        {fresh.length > 0 && aa && (
+          <Reveal>
+            <FreshReleases rows={fresh} onOpen={openModel} mobile={mobile} />
           </Reveal>
         )}
 
         {/* ── Stats row ────────────────────────────────────────────── */}
         <Reveal>
           <div style={{ display: 'grid', gridTemplateColumns: mobile ? '1fr 1fr' : 'repeat(4, 1fr)', gap: 10, marginBottom: 24 }}>
-            <StatTile label="Models ranked" value={ranked.length > 0 ? <AnimatedNumber value={ranked.length} format={v => Math.round(v).toString()} /> : NA} sub="on the arena text board" />
-            <StatTile label="Total votes" value={ranked.length > 0 ? <AnimatedNumber value={totalVotes} format={v => { const n = Math.round(v); return n >= 1_000_000 ? `${(n / 1_000_000).toFixed(1)}M` : `${Math.round(n / 1000)}K`; }} /> : NA} sub="human head-to-head battles" />
-            <StatTile label="Top ELO" metricKey="elo" value={ranked.length > 0 ? <AnimatedNumber value={topElo} format={v => Math.round(v).toString()} /> : NA} sub={boutModels[0]?.name} color={GREEN} />
+            <StatTile label="Smartest model" metricKey="intelligence" value={smartest[0] ? <AnimatedNumber value={smartest[0].aa.intelligence} format={v => v.toFixed(1)} /> : NA} sub={smartest[0] ? `${smartest[0].name} · Intelligence Index` : undefined} color={BLUE} />
+            <StatTile label="Arena #1" metricKey="elo" value={ranked.length > 0 ? <AnimatedNumber value={topElo} format={v => Math.round(v).toString()} /> : NA} sub={arenaTop ? `${arenaTop.name} · human votes` : undefined} color={GREEN} />
+            <StatTile label="Models ranked" value={models.length > 0 ? <AnimatedNumber value={models.length} format={v => Math.round(v).toString()} /> : NA} sub={`${ranked.length} rated on the arena`} />
             <StatTile label="Open weights" value={ranked.length > 0 ? <AnimatedNumber value={openCount} format={v => Math.round(v).toString()} /> : NA} sub={ranked.length ? `${Math.round((openCount / ranked.length) * 100)}% of the board` : undefined} />
           </div>
         </Reveal>
@@ -257,7 +357,7 @@ export default function LeaderboardPage({ liveModels, onNavigate }) {
             <div style={{ width: '0.5px', height: 18, background: 'var(--sep)', marginInline: 4, flexShrink: 0 }} />
             {CTX_MINS.map(c => <Chip key={c.v} small active={ctxMin === c.v} label={c.l} onClick={() => setCtxMin(ctxMin === c.v ? null : c.v)} />)}
             <div style={{ width: '0.5px', height: 18, background: 'var(--sep)', marginInline: 4, flexShrink: 0 }} />
-            <Chip small active={includeUnranked} label={`+ ${models.length - ranked.length} unranked`} onClick={() => setIncludeUnranked(v => !v)} title="Include models with an Intelligence Index that are not on the arena board" />
+            <Chip small active={!includeUnranked} label="Arena-rated only" onClick={() => setIncludeUnranked(v => !v)} title={`Hide the ${models.length - ranked.length} models that have an Intelligence Index but no arena rating yet`} />
             {activeFilters > 0 && (
               <button onClick={clearFilters} className="aiwar-press-btn" style={{ height: 26, paddingInline: 10, borderRadius: 980, background: 'rgba(255,59,48,0.10)', color: '#CD5C4E', fontSize: 11, fontWeight: 600, border: '0.5px solid rgba(255,59,48,0.30)', cursor: 'pointer', flexShrink: 0 }}>Clear ×{activeFilters}</button>
             )}
@@ -318,17 +418,17 @@ export default function LeaderboardPage({ liveModels, onNavigate }) {
         {/* ── Artificial Analysis sections, only when configured ───── */}
         {aa && charts.intel.length > 0 && (
           <ChartSection id="sec-intel" mobile={mobile} eyebrow="Intelligence" title="Intelligence Index." sub="Artificial Analysis' composite of reasoning, knowledge, maths and coding evaluations.">
-            <BarPanel wide mobile={mobile} title="Intelligence Index" color={PURPLE} subtitle={`${scope} · Artificial Analysis`} items={charts.intel} limit={n} onSelect={open} />
+            <BarPanel wide mobile={mobile} title="Intelligence Index" color={PURPLE} subtitle={`${indexScope} · best effort level per model · Artificial Analysis`} items={charts.intel} limit={indexRows.length} onSelect={open} />
           </ChartSection>
         )}
         {aa && charts.speed.length > 0 && (
           <ChartSection id="sec-speed" mobile={mobile} eyebrow="Speed" title="Output speed." sub="Median output tokens per second, measured by Artificial Analysis.">
-            <BarPanel wide mobile={mobile} title="Output speed" color={PURPLE} subtitle={`${scope} · tokens/s · Artificial Analysis`} items={charts.speed} limit={n} baseline={0} onSelect={open} />
+            <BarPanel wide mobile={mobile} title="Output speed" color={PURPLE} subtitle={`${indexScope} · tokens/s · Artificial Analysis`} items={charts.speed} limit={indexRows.length} baseline={0} onSelect={open} />
           </ChartSection>
         )}
         {aa && charts.ttft.length > 0 && (
           <ChartSection id="sec-latency" mobile={mobile} eyebrow="Latency" title="Time to first token." sub="Seconds until the first token arrives, measured by Artificial Analysis.">
-            <BarPanel wide mobile={mobile} title="Time to first token" color={PURPLE} subtitle={`${scope} · seconds · Artificial Analysis`} items={charts.ttft} limit={n} higherIsBetter={false} baseline={0} onSelect={open} />
+            <BarPanel wide mobile={mobile} title="Time to first token" color={PURPLE} subtitle={`${indexScope} · seconds · reasoning models count their thinking · Artificial Analysis`} items={charts.ttft} limit={indexRows.length} higherIsBetter={false} baseline={0} onSelect={open} />
           </ChartSection>
         )}
 

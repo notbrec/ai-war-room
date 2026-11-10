@@ -44,18 +44,22 @@ function Fighter({ m, side, role, color, mobile, onNavigate }) {
         {m.votesLabel && !mobile && <span style={{ fontSize: 11, color: 'var(--muted2)', fontFamily: MONO, whiteSpace: 'nowrap' }}>{m.votesLabel} votes</span>}
       </span>
       <span style={{ fontFamily: MONO, fontSize: mobile ? 26 : 34, fontWeight: 700, color: 'var(--text)', letterSpacing: '-0.04em', fontVariantNumeric: 'tabular-nums', lineHeight: 1, marginTop: 4 }}>
-        <AnimatedNumber value={m.elo} format={v => Math.round(v).toString()} />
-        <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--muted2)', letterSpacing: '0.08em', marginLeft: 6 }}>ELO</span>
+        <AnimatedNumber value={m.score ?? m.elo} format={v => (m.unit && m.unit !== 'ELO' ? v.toFixed(1) : Math.round(v).toString())} />
+        <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--muted2)', letterSpacing: '0.08em', marginLeft: 6 }}>{m.unit === 'Intelligence' ? 'INTEL' : 'ELO'}</span>
       </span>
     </button>
   );
 }
 
-export default function HeroArena({ models, isLoaded, onNavigate, mobile, snap, stats }) {
-  const data = models ?? MODELS;
+export default function HeroArena({ models, fighters, isLoaded, onNavigate, mobile, snap, stats }) {
+  // `fighters` (top two by Intelligence Index) when the war-room data is in;
+  // until then the arena board's top two, so the hero is never empty.
+  const data = fighters?.length >= 2 ? fighters : (models ?? MODELS);
   const champ = data[0];
   const chall = data[1];
-  const gap = champ && chall ? Math.abs((champ.elo ?? 0) - (chall.elo ?? 0)) : null;
+  const score = m => m?.score ?? m?.elo ?? 0;
+  const intel = champ?.unit === 'Intelligence';
+  const gap = champ && chall ? Math.abs(score(champ) - score(chall)) : null;
 
   return (
     <section style={{ paddingTop: mobile ? 32 : 52 }}>
@@ -70,7 +74,7 @@ export default function HeroArena({ models, isLoaded, onNavigate, mobile, snap, 
           <LivePulse color="#5E9E70" size={7} />
           <span style={{ fontSize: 10.5, fontWeight: 700, color: 'var(--text)', letterSpacing: '0.12em', textTransform: 'uppercase' }}>Live</span>
           <span style={{ fontSize: 10.5, color: 'var(--muted)', letterSpacing: '0.02em' }}>
-            {snap.exact ? snap.count : `${snap.count}+`} models · {stats.orgs ?? '—'} labs · arena.ai + OpenRouter
+            {snap.exact ? snap.count : `${snap.count}+`} models · {stats.orgs ?? '—'} labs · Artificial Analysis + arena.ai + OpenRouter
           </span>
         </div>
 
@@ -89,7 +93,7 @@ export default function HeroArena({ models, isLoaded, onNavigate, mobile, snap, 
           maxWidth: 620, margin: '0 auto',
           opacity: 0, animation: `aiwar-fade-up 800ms ${EASE} 760ms both`,
         }}>
-          Real arena votes, live prices, real benchmarks — language, code, image, video and voice on one board.
+          Independent benchmarks, real arena votes, live prices — language, code, image, video and voice on one board.
           Nothing is typed in by hand.
         </p>
       </div>
@@ -129,7 +133,7 @@ export default function HeroArena({ models, isLoaded, onNavigate, mobile, snap, 
           <span style={{ fontFamily: MONO, fontSize: mobile ? 14 : 20, fontWeight: 700, letterSpacing: '0.20em', color: 'var(--accent)', paddingLeft: '0.2em' }}>VS</span>
           {gap != null && isLoaded && (
             <span style={{ fontFamily: MONO, fontSize: 10.5, color: 'var(--muted)', whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums' }}>
-              Δ {Math.round(gap)} ELO
+              Δ {intel ? `${gap.toFixed(1)} pts · Intelligence Index` : `${Math.round(gap)} ELO`}
             </span>
           )}
         </div>

@@ -18,6 +18,7 @@ import ReplayTeaser from '../components/ReplayTeaser.jsx';
 import { useWarRoomCards } from '../components/WarRoomBoard.jsx';
 import { DataStatus, Btn, eloColor, eloTier, GREEN, GOLD, RED } from '../components/ui.jsx';
 import { SOURCES } from '../../shared/metrics.js';
+import { topByIntelligence, asFighters } from '../domains/models/ranking.js';
 
 const TOOLS = [
   { id: 'compare', label: 'Battle Mode',     desc: 'Up to four models head to head, metric by metric.' },
@@ -86,6 +87,8 @@ export default function HomePage({ onNavigate, liveModels, countSnapshot }) {
     open: data.filter(m => m.isOpen).length,
   }), [data]);
   const snap = countSnapshot ?? { count: 350, exact: false };
+  // Champion and challenger: the two best models by Intelligence Index.
+  const fighters = useMemo(() => asFighters(topByIntelligence(wr.models, 2)), [wr.models]);
   const gapY = mobile ? 52 : 84;
 
   // Highlights — the same numbers the board reads, as bars
@@ -113,7 +116,8 @@ export default function HomePage({ onNavigate, liveModels, countSnapshot }) {
     <div style={{ background: 'transparent', fontFamily: SF, minHeight: '100vh', position: 'relative' }}>
       <div style={{ position: 'relative', maxWidth: 1200, margin: '0 auto', padding: mobile ? '0 18px 80px' : '0 32px 112px' }}>
 
-        <HeroArena models={liveModels} isLoaded={isLoaded} onNavigate={onNavigate} mobile={mobile} snap={snap} stats={stats} />
+        {/* names appear once the Intelligence Index is in (or has failed), so the hero never swaps champions mid-animation */}
+        <HeroArena models={liveModels} fighters={fighters} isLoaded={fighters.length >= 2 || (isLoaded && !wr.loading)} onNavigate={onNavigate} mobile={mobile} snap={snap} stats={stats} />
 
         {/* the tape */}
         <div style={{ margin: mobile ? '28px -18px 0' : '40px 0 0', opacity: 0, animation: `aiwar-fade-in 900ms ${EASE} 1200ms both` }}>

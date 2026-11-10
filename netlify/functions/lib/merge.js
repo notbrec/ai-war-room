@@ -72,10 +72,15 @@ export function mergeLLMs(src) {
 
   const out = [];
   const seen = new Set();
+  // Rows already shown as part of an arena record are not listed a second time
+  // ("Claude Opus 4.7" via OpenRouter's "claude-4.7-opus" slug used to appear twice).
+  const usedOR = new Set(), usedAA = new Set();
 
   for (const a of arena) {
     const orHit = findOR(a.slug, a.org) ?? findOR(a.name, a.org);
     const aaHit = findAA(a.slug, a.org) ?? findAA(a.name, a.org);
+    if (orHit) usedOR.add(orHit);
+    if (aaHit) usedAA.add(aaHit);
     let id = canonicalModelId(a.slug, a.org);
     // Dated snapshots of one model ("GPT-4o (2024-05-13)" / "(2024-08-06)") share a
     // canonical id; the better-rated keeps it, the rest are told apart by their stamp.
@@ -89,16 +94,18 @@ export function mergeLLMs(src) {
   for (const m of or) {
     if (!m.aa?.intelligence && !m.aa?.codingIndex) continue;
     if (!m.modalities.out.includes('text')) continue;
-    if (seen.has(m.modelId)) continue;
-    // A variant of an arena model (e.g. same family) may already be represented; skip exact family+variant dupes only.
-    seen.add(m.modelId);
+    if (seen.has(m.modelId) || usedOR.has(m)) continue;
     const aaHit = findAA(m.id, m.org) ?? findAA(m.name, m.org);
+    // The AA row this resolves to may already be part of an arena record too.
+    if (aaHit && usedAA.has(aaHit)) continue;
+    seen.add(m.modelId);
+    if (aaHit) usedAA.add(aaHit);
     out.push(buildRecord({ id: m.modelId, arena: null, or: m, aa: aaHit }));
   }
 
   for (const m of aa) {
     if (m.deprecated) continue;   // retired on AA: joins above, never listed on its own
-    if (seen.has(m.modelId)) continue;
+    if (seen.has(m.modelId) || usedAA.has(m)) continue;
     if (!isNum(m.intelligence)) continue;
     seen.add(m.modelId);
     // The OpenRouter hit is the base model; this row may be one effort level of
@@ -112,6 +119,11 @@ export function mergeLLMs(src) {
     if (ax !== ay) return ax - ay;
     return (y.aa?.intelligence ?? -1) - (x.aa?.intelligence ?? -1);
   });
+
+  // Rank by Artificial Analysis Intelligence Index — the board that rates a
+  // model within days of release, while the arena needs weeks of votes.
+  out.filter(r => isNum(r.aa?.intelligence)).sort((x, y) => y.aa.intelligence - x.aa.intelligence)
+    .forEach((r, i) => { r.aa.rank = i + 1; });
 
   // Every record needs its own URL: two effort levels of one OpenRouter model
   // must not share /models/<slug>.

@@ -107,11 +107,23 @@ const BENCH_KEYS = {
   itbenchSre: 'itbench_sre', analystAgent: 'analyst_agent',
 };
 
+// Since late 2026 the page ships `initialModels` rows with the scores nested
+// under kebab-case ids and speed as outputSpeed / timeToFirstToken.
+const SCORE_KEYS = {
+  'humanitys-last-exam': 'hle', 'gpqa-diamond': 'gpqa', 'artificial-analysis-long-context-reasoning': 'lcr',
+  'terminalbench-hard': 'terminalbench_hard', 'terminalbench-2-1': 'terminalbench_v21', 'terminalbench-4-0': 'terminalbench_v40',
+  'tau2-bench': 'tau2', 'tau3-banking': 'tau_banking', 'ifbench': 'ifbench', 'mmmu-pro': 'mmmu_pro', 'livecodebench': 'livecodebench',
+  'aime-2025': 'aime_25', 'scicode': 'scicode', 'critpt': 'critpt', 'gdpval-aa-normalized': 'gdpval',
+  'apex-agents-aa': 'apex_agents', 'aa-analyst-agent': 'analyst_agent', 'itbench-aa': 'itbench_sre',
+};
+
 export function normaliseWebLLM(r, meta) {
   const org = canonicalOrg(r.modelCreatorName ?? meta?.creator?.name ?? '');
   const name = r.shortName ?? r.name ?? r.slug;
   const benchmarks = {};
   for (const [k, out] of Object.entries(BENCH_KEYS)) { const v = num(r[k]); if (v != null) benchmarks[out] = v; }
+  for (const [k, out] of Object.entries(SCORE_KEYS)) { const v = num(r.scores?.[k]); if (v != null && benchmarks[out] == null) benchmarks[out] = v; }
+  if (benchmarks.aa_omniscience == null && num(r.omniscience) != null) benchmarks.aa_omniscience = r.omniscience;
   const priceIn = num(r.price1mInputTokens), priceOut = num(r.price1mOutputTokens);
   return {
     aaId: r.slug ?? null, slug: r.slug ?? null, name, org,
@@ -122,8 +134,12 @@ export function normaliseWebLLM(r, meta) {
     benchmarks,
     priceIn, priceOut, priceBlended: blendedPrice(priceIn, priceOut),
     priceCacheRead: num(r.cacheHitPrice), priceCacheWrite: num(r.cacheWritePrice),
-    speed: num(r.medianOutputTokensPerSecond), ttft: num(r.medianTimeToFirstTokenSeconds),
-    ttfat: num(r.medianTimeToFirstAnswerTokenSeconds), e2e: num(r.medianEndToEndResponseTimeSeconds),
+    speed: num(r.outputSpeed ?? r.medianOutputTokensPerSecond),
+    ttft: num(r.timeToFirstToken ?? r.medianTimeToFirstTokenSeconds),
+    ttfat: num(r.timeToFirstAnswerToken ?? r.medianTimeToFirstAnswerTokenSeconds),
+    e2e: num(r.medianEndToEndResponseTimeSeconds),
+    // time and cost to run the full Intelligence Index suite (per task)
+    indexTimePerTask: num(r.intelligenceIndexTimePerTask), indexCostPerTask: num(r.intelligenceIndexCostPerTask),
     context: num(r.contextWindowTokens),
     isOpen: typeof r.isOpenWeights === 'boolean' ? r.isOpenWeights : null,
     isReasoning: r.isReasoning === true, deprecated: r.deprecated === true,

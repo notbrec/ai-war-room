@@ -17,7 +17,7 @@ import { fmtMetric, metric, isNum } from '../../shared/metrics.js';
 /* The board, in reading order. `mission` cards come from the recommend
    engine; the rest are computed here from the merged datasets. */
 const FRONTS = [
-  { key: 'chat',          mission: 'chat',          label: 'Language',         q: 'Strongest overall',              color: GREEN,  route: 'leaderboard', live: true },
+  { key: 'chat',          mission: 'chat',          label: 'Language',         q: 'Preferred in blind chats',       color: GREEN,  route: 'leaderboard', live: true },
   { key: 'coding',        mission: 'coding',        label: 'Coding',           q: 'Best for software engineering',  color: GREEN,  route: 'coding' },
   { key: 'reasoning',     mission: 'reasoning',     label: 'Hard reasoning',   q: 'Best on the Intelligence Index', color: BLUE,   route: 'benchmarks' },
   { key: 'agents',        mission: 'agents',        label: 'Agents & tools',   q: 'Best at tool use',               color: BLUE,   route: 'benchmarks' },

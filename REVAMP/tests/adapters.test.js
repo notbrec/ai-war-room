@@ -3,7 +3,8 @@ import { normaliseORModel, normaliseOREndpoint } from '../netlify/functions/adap
 import { normaliseSWEEntry } from '../netlify/functions/adapters/swebench.js';
 import { normaliseASRRow, rowsFromConfig, paramsFromName } from '../netlify/functions/adapters/openasr.js';
 import { normaliseAALLM, normaliseAAMedia, aaConfigured } from '../netlify/functions/adapters/artificialanalysis.js';
-import { parseS2S } from '../netlify/functions/adapters/aaweb.js';
+import { parseS2S, normaliseWebLLM } from '../netlify/functions/adapters/aaweb.js';
+import { topByIntelligence, asFighters } from '../src/domains/models/ranking.js';
 import { toModel, toMediaRow, validateBoard, normaliseOrg, rowGroups, newcomersFrom, slugify, tidyName } from '../netlify/functions/lib/arena.js';
 import { mergeLLMs, mergeMedia, summariseProviders, isOpenWeights, tidyEffort } from '../netlify/functions/lib/merge.js';
 import { carryListing } from '../netlify/functions/lib/domains.js';
@@ -226,6 +227,35 @@ describe('arena listing carry-forward', () => {
   });
 });
 
+describe('aa models page (late-2026 shape)', () => {
+  it('reads speed, latency and nested scores', () => {
+    const r = normaliseWebLLM({ slug: 'claude-fable-5-2', name: 'Claude Fable 5.2', shortName: 'Claude Fable 5.2', modelCreatorName: 'Anthropic', intelligenceIndex: 64.6,
+      outputSpeed: 103.2, timeToFirstToken: 2.4, timeToFirstAnswerToken: 30.1, omniscience: 40, scores: { 'humanitys-last-exam': 0.52, 'gpqa-diamond': 0.91, 'tau2-bench': 0.88 },
+      price1mInputTokens: 8, price1mOutputTokens: 40 });
+    expect(r.speed).toBe(103.2);
+    expect(r.ttft).toBe(2.4);
+    expect(r.ttfat).toBe(30.1);
+    expect(r.benchmarks.hle).toBe(0.52);
+    expect(r.benchmarks.gpqa).toBe(0.91);
+    expect(r.benchmarks.tau2).toBe(0.88);
+    expect(r.benchmarks.aa_omniscience).toBe(40);
+  });
+});
+
+describe('headline ranking', () => {
+  it('takes each model once, at its best effort level', () => {
+    const ms = [
+      { id: 'a', org: 'Anthropic', family: 'claudefable52', name: 'Claude Fable 5.2', aa: { intelligence: 64.6 } },
+      { id: 'b', org: 'Anthropic', family: 'claudefable52', name: 'Claude Fable 5.2 (High)', aa: { intelligence: 61.8 } },
+      { id: 'c', org: 'Google', family: 'gemini4carbon', name: 'Gemini 4 Carbon (High)', aa: { intelligence: 60 }, arena: { elo: 1526 } },
+      { id: 'd', org: 'Google', family: 'x', name: 'No index', aa: null },
+    ];
+    const top = topByIntelligence(ms, 2);
+    expect(top.map(m => m.id)).toEqual(['a', 'c']);
+    expect(asFighters(top)[0]).toMatchObject({ score: 64.6, unit: 'Intelligence' });
+  });
+});
+
 describe('aa speech-to-speech page', () => {
   const host = (id, name, bba, ttfa) => ({ id, name, shortName: name, slug: name.toLowerCase().replace(/\W+/g, '-'), model: { openSource: false }, host: { name: 'Google' }, bbaScore: bba, timeToFirstAudioSeconds: ttfa, pricePerHourInput: 0.3, pricePerHourOutput: 1.4, tauVoiceAggScore: 0.3 });
   const text = `x{"stsIndexHostModels":${JSON.stringify([host('a', 'Live A', 0.9, 0.8), host('b', 'Live B', 0.7, 1.2)])},"other":["$ref"],` +
@@ -334,6 +364,19 @@ describe('merge', () => {
     const rows = mergeMedia('text-to-video', [{ rank: 1, slug: 'gemini-omni-1.2-flash', name: 'Gemini Omni 1.2 Flash', org: 'Google', license: 'Proprietary', elo: 1540, ci: 9, votes: 1700, pricePerImage: null, pricePerSecond: null }],
       [{ slug: 'gemini-omni-flash-1-2', name: 'Gemini Omni Flash 1.2', org: 'Google', pricePerSecond: 0.104 }]);
     expect(rows[0].pricePerSecond).toBe(0.104);
+  });
+  it('an OpenRouter or AA row already inside an arena record is not listed again, and ranks follow the Intelligence Index', () => {
+    const orOpus = { ...or[0], id: 'anthropic/claude-4.7-opus', canonicalSlug: 'anthropic/claude-4.7-opus-20260416', name: 'Claude Opus 4.7', modelId: 'anthropic:claude47opus' };
+    const aa = [
+      { slug: 'claude-opus-4-7', name: 'Claude Opus 4.7', org: 'Anthropic', modelId: 'anthropic:claudeopus47', intelligence: 40 },
+      { slug: 'claude-fable-5-2', name: 'Claude Fable 5.2', org: 'Anthropic', modelId: 'anthropic:claudefable52', intelligence: 64.6 },
+    ];
+    const out = mergeLLMs({ arena: [{ ...arena[0], slug: 'claude-opus-4.7', name: 'Claude Opus 4.7', org: 'Anthropic' }], or: [orOpus], aa });
+    expect(out.filter(m => m.name === 'Claude Opus 4.7')).toHaveLength(1);
+    const fable = out.find(m => m.name === 'Claude Fable 5.2');
+    expect(fable.inArena).toBe(false);
+    expect(fable.aa.rank).toBe(1);
+    expect(out.find(m => m.name === 'Claude Opus 4.7').aa.rank).toBe(2);
   });
   it('tidies effort labels', () => {
     expect(tidyEffort('Muse Wonder Full (max)')).toBe('Muse Wonder Full (Max)');

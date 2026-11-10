@@ -20,14 +20,17 @@ const EDGE_MASK = 'linear-gradient(90deg, transparent 0, #000 14%, #000 86%, tra
                so the fight shrinks to a token between the two names and
                the ranking stays the point of the page.
    ────────────────────────────────────────────────────────────────────── */
-export default function ChampionBout({ models, onNavigate, mobile, variant = 'arena' }) {
+export default function ChampionBout({ models, onNavigate, mobile, variant = 'arena', caption = 'top of the arena' }) {
   if (!models || models.length < 2) return null;
   const compact = variant === 'compact';
   const champ = models[0];
   const chall = models[1];
   const champOrg = ORG_CONFIG[champ.org] ?? { color: 'var(--accent)' };
   const challOrg = ORG_CONFIG[chall.org] ?? { color: 'var(--text)' };
-  const gap = Math.abs((champ.elo ?? 0) - (chall.elo ?? 0));
+  // Fighters carry `score` + `unit` (Intelligence Index or arena ELO); plain arena rows only `elo`.
+  const scoreOf = m => m.score ?? m.elo ?? 0;
+  const unit = champ.unit ?? 'ELO';
+  const gap = Math.abs(scoreOf(champ) - scoreOf(chall));
 
   const Fighter = ({ m, org, side, color }) => (
     <button
@@ -66,7 +69,7 @@ export default function ChampionBout({ models, onNavigate, mobile, variant = 'ar
         color: 'var(--text)', letterSpacing: '-0.03em',
         fontVariantNumeric: 'tabular-nums', marginTop: 2,
       }}>
-        <AnimatedNumber value={m.elo} format={v => Math.round(v).toString()} />
+        <AnimatedNumber value={scoreOf(m)} format={v => (unit === 'ELO' ? Math.round(v).toString() : v.toFixed(1))} />
       </span>
     </button>
   );
@@ -91,12 +94,12 @@ export default function ChampionBout({ models, onNavigate, mobile, variant = 'ar
             fontFamily: MONO, fontSize: 11, fontWeight: 700, letterSpacing: '0.12em',
             color: 'var(--text)', textTransform: 'uppercase',
           }}>Live bout</span>
-          <span style={{ fontFamily: MONO, fontSize: 11, color: 'var(--muted2)' }}>top of the arena</span>
+          <span style={{ fontFamily: MONO, fontSize: 11, color: 'var(--muted2)' }}>{caption}</span>
         </span>
         <span style={{
           fontFamily: MONO, fontSize: 11, color: 'var(--muted)', letterSpacing: '0.02em',
           fontVariantNumeric: 'tabular-nums',
-        }}>Δ {Math.round(gap)} ELO</span>
+        }}>Δ {unit === 'ELO' ? Math.round(gap) : gap.toFixed(1)} {unit === 'ELO' ? 'ELO' : 'pts'}</span>
       </div>
 
       {/* the arena — full-bleed only in the hero slot */}

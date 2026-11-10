@@ -102,7 +102,7 @@ async function loadAALLMs() {
 // the last good copy is served instead. Visitors never trigger extra calls.
 const AA_API_WINDOW = HOURS(12);
 const aaLLMs = () => (aaConfigured() || aaWebEnabled())
-  ? cached(key('aa:llms:v3'), AA_API_WINDOW, loadAALLMs, { minValid: isList(10), retryAfterMs: AA_API_WINDOW })
+  ? cached(key('aa:llms:v4'), AA_API_WINDOW, loadAALLMs, { minValid: isList(10), retryAfterMs: AA_API_WINDOW })
   : Promise.resolve(AA_OFF);
 
 // Media, voices and transcription: the Data API returns only ELO / rank / CI
@@ -320,7 +320,7 @@ export async function loadHistory() {
 // ── Status ─────────────────────────────────────────────────────────────────
 export async function loadStatus() {
   const entries = await Promise.all([
-    readBlob(key('arena:text')), readBlob(key('openrouter:models')), readBlob(key('swebench')), readBlob(key('openasr')), readBlob(key('aa:llms:v3')),
+    readBlob(key('arena:text')), readBlob(key('openrouter:models')), readBlob(key('swebench')), readBlob(key('openasr')), readBlob(key('aa:llms:v4')),
   ]);
   const [a, o, s, r, aa] = entries;
   const st = e => e?.fetchedAt ? { status: 'cached', fetchedAt: e.fetchedAt } : { status: 'cold', fetchedAt: null };

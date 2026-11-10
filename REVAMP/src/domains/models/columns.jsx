@@ -24,10 +24,10 @@ export function fromLegacy(m) {
 
 const num = (v, key) => (isNum(v) ? <span>{fmtMetric(key, v)}</span> : <span style={{ color: 'var(--muted2)' }}>{NA}</span>);
 
-export function ModelCell({ m, dark, rank, onOpen, compact = false }) {
+export function ModelCell({ m, dark, rank, onOpen, compact = false, rankBy = 'elo' }) {
   const org = ORG_CONFIG[m.org] ?? { color: '#8E8E93', bg: '#F2F2F7', bgDark: '#2C2C2E' };
   const iconBg = dark ? (org.bgDark ?? '#2C2C2E') : org.bg;
-  const r = rank ?? m.arena?.rank;
+  const r = rank ?? (rankBy === 'intelligence' ? m.aa?.rank : m.arena?.rank);
   const top = isNum(r) && r <= 3;
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: compact ? 8 : 10, minWidth: 0 }}>
@@ -50,17 +50,20 @@ export function ModelCell({ m, dark, rank, onOpen, compact = false }) {
           {isNum(m.arena?.elo) && <span style={{ fontSize: 9.5, color: eloColor(m.arena.elo), fontWeight: 700, fontFamily: MONO }}>{eloTier(m.arena.elo)}</span>}
           {m.isThinking && <span title="Reasoning / thinking variant" style={{ fontSize: 9, color: PURPLE }}>🧠</span>}
           {m.isOpen && <span title="Open weights" style={{ fontSize: 9, color: GREEN }}>🔓</span>}
-          {!m.inArena && <span title="Not on the arena board — ranked by intelligence only" style={{ fontSize: 9, color: 'var(--muted2)', fontFamily: MONO }}>UNRANKED</span>}
+          {!m.inArena && <span title="Not rated on the arena yet — ranked by Intelligence Index" style={{ fontSize: 9, color: 'var(--muted2)', fontFamily: MONO }}>NO ARENA ELO</span>}
         </div>
       </div>
     </div>
   );
 }
 
-export function llmColumns({ dark, onOpen, mobile }) {
+export function llmColumns({ dark, onOpen, mobile, rankBy = 'elo' }) {
+  const rankValue = rankBy === 'intelligence'
+    ? m => m.aa?.rank ?? 10_000 + (m.arena?.rank ?? 5_000)
+    : m => m.arena?.rank ?? 10_000 + (1000 - (m.aa?.intelligence ?? 0));
   return [
-    { key: 'model', label: 'Model', sticky: true, width: mobile ? 196 : 290, sortable: true, value: m => m.arena?.rank ?? 10_000 + (1000 - (m.aa?.intelligence ?? 0)), defaultDir: 'asc',
-      render: m => <ModelCell m={m} dark={dark} onOpen={onOpen} compact={mobile} /> },
+    { key: 'model', label: 'Model', sticky: true, width: mobile ? 196 : 290, sortable: true, value: rankValue, defaultDir: 'asc',
+      render: m => <ModelCell m={m} dark={dark} onOpen={onOpen} compact={mobile} rankBy={rankBy} /> },
     // Arena
     { key: 'elo', label: 'Arena ELO', short: 'ELO', metricKey: 'elo', group: 'Arena', numeric: true, width: 132, bar: true, barWidth: 40, valueWidth: 62, barColor: GREEN, value: m => m.arena?.elo,
       render: m => isNum(m.arena?.elo) ? <span><span style={{ fontWeight: 700 }}>{m.arena.elo}</span><span style={{ fontSize: 10, color: 'var(--muted2)', marginLeft: 4 }}>±{m.arena.ci ?? '—'}</span></span> : <span style={{ color: 'var(--muted2)' }}>{NA}</span> },
