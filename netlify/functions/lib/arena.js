@@ -16,9 +16,14 @@
 // The dataset carries name, organisation, licence, rating, CI and votes. Prices
 // and context come from OpenRouter / Artificial Analysis in merge.js, as before.
 
-import { parquetMetadata, parquetMetadataAsync, parquetReadObjects } from 'hyparquet';
 import { canonicalOrg, displayName, looseKey } from '../../../shared/ids.js';
 import { APP_UA } from './http.js';
+
+// hyparquet is ESM-only. Netlify bundles functions to CommonJS and leaves
+// node_modules external, so a static import becomes require() and the whole
+// function fails to load on Node 20. A dynamic import works in both formats.
+let hp = null;
+const hyparquet = () => (hp ??= import('hyparquet'));
 
 const DATASET = 'lmarena-ai/leaderboard-dataset';
 export const ARENA_DATASET_URL = `https://huggingface.co/datasets/${DATASET}`;
@@ -204,6 +209,7 @@ const OVERALL = r => (r.category ?? 'overall') === 'overall';
 async function readLatest(subset) {
   const shards = await listShards(subset, 'latest');
   if (!shards.length) throw new Error(`arena ${subset}: no latest file`);
+  const { parquetMetadata, parquetReadObjects } = await hyparquet();
   const out = [];
   for (const s of shards) {
     const buf = await timedFetch(s.url, { timeoutMs: 20_000 });
@@ -226,6 +232,7 @@ export async function readNewcomers(subset, latestDate, { windowDays = NEW_WINDO
   if (!latestDate) return null;
   const cutoff = new Date(Date.parse(`${latestDate}T00:00:00Z`) - windowDays * 86_400_000).toISOString().slice(0, 10);
   const shards = await listShards(subset, 'full');
+  const { parquetMetadataAsync, parquetReadObjects } = await hyparquet();
   const rows = [];
   for (const s of shards) {
     const file = rangeBuffer(s.url, s.size);
