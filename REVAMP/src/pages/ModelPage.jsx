@@ -18,6 +18,7 @@ import { fmtMetric, fmtDate, isNum, NA, SOURCES } from '../../shared/metrics.js'
 import { series } from '../../shared/history.js';
 import { AddToBattle } from '../domains/comparison/BattleControls.jsx';
 import { DESIGN_CATEGORY_LABEL } from '../domains/benchmarks/registry.js';
+import { topByIntelligence } from '../domains/models/ranking.js';
 
 const TrendChart = lazy(() => import('../components/charts/TrendChart.jsx'));
 
@@ -64,7 +65,10 @@ export default function ModelPage({ slug, onNavigate, liveModels }) {
   const related = useMemo(() => {
     if (!model) return { family: [], lab: [] };
     const family = llms.models.filter(m => m.family === model.family && m.org === model.org && m.id !== model.id).slice(0, 8);
-    const lab = llms.models.filter(m => m.org === model.org && m.inArena && m.id !== model.id && m.family !== model.family).slice(0, 6);
+    // the lab's other models, newest-and-best first: by Intelligence Index, then the arena board
+    const others = llms.models.filter(m => m.org === model.org && m.family !== model.family);
+    const famSeen = new Set();
+    const lab = [...topByIntelligence(others, 6), ...others.filter(m => m.inArena)].filter(m => { const k = m.family; if (famSeen.has(k)) return false; famSeen.add(k); return true; }).slice(0, 6);
     return { family, lab };
   }, [model, llms.models]);
   const providers = model ? prov.models.find(p => p.modelId === model.id) : null;

@@ -7,6 +7,7 @@ import { LabLogo } from '../components/LabLogo.jsx';
 import { RobotMascot } from '../components/Robot.jsx';
 import { ORG_CONFIG } from '../models-data.js';
 import { useLLMs, useMedia, useSpeech, useCoding, useDomain } from '../data/useDomain.js';
+import { topByIntelligence } from '../domains/models/ranking.js';
 import { useBattle, removeFromBattle, clearBattle, addToBattle, KIND_LABEL } from '../domains/comparison/battleStore.js';
 import MediaBattle from '../domains/comparison/MediaBattle.jsx';
 import AudioLanes from '../domains/comparison/AudioLanes.jsx';
@@ -80,7 +81,8 @@ export default function BattlePage({ onNavigate }) {
   // Candidates for the picker (same kind)
   const candidates = useMemo(() => {
     switch (kind) {
-      case 'llm': return llms.models.filter(m => m.inArena).slice(0, 150).map(m => ({ id: m.id, name: m.name, org: m.org }));
+      // headline order: best by Intelligence Index first (incl. releases not yet on the arena), then the arena board
+      case 'llm': { const seen = new Set(); return [...topByIntelligence(llms.models, 60), ...llms.models.filter(m => m.inArena)].filter(m => !seen.has(m.id) && seen.add(m.id)).slice(0, 220).map(m => ({ id: m.id, name: m.name, org: m.org })); }
       case 'image': case 'video': return Object.values(media.boards ?? {}).flat().filter(m => m.kind === kind).map(m => ({ id: m.id, name: `${m.name} (${m.board})`, org: m.org, board: m.board }));
       case 'stt': return speech.stt.map(m => ({ id: m.id, name: m.name, org: m.org }));
       case 'coding': return (coding.boards?.Verified ?? []).map(m => ({ id: m.id, name: `${m.agent} + ${m.model}`, org: m.modelOrg, board: 'Verified' }));

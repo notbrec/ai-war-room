@@ -37,13 +37,13 @@ export default function BenchmarksPage({ onNavigate, slug }) {
   const coding = useCoding();
   const speech = useSpeech();
   const [group, setGroup] = useState('preference');
-  const [benchId, setBenchId] = useState(slug ?? 'arena-text');
+  const [benchId, setBenchId] = useState(slug ?? 'aa-intel');   // the headline ranking; arena ELO is one click away
   const [mode, setMode] = useState('single');
-  const [matrixIds, setMatrixIds] = useState(['arena-text', 'aa-intel', 'aa-coding', 'aa-agentic']);
+  const [matrixIds, setMatrixIds] = useState(['aa-intel', 'arena-text', 'arena-webdev', 'gpqa']);
   const [compare, setCompare] = useState(() => new Set());
   const [query, setQuery] = useState('');
   const [sort, setSort] = useState({ key: 'score', dir: 'desc' });
-  const [mSort, setMSort] = useState({ key: 'arena-text', dir: 'desc' });
+  const [mSort, setMSort] = useState({ key: 'aa-intel', dir: 'desc' });
 
   const models = llms.models;
   const all = useMemo(() => {

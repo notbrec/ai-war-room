@@ -187,10 +187,18 @@ export default function LeaderboardPage({ liveModels, onNavigate }) {
   const chartRows = useMemo(() => {
     const src = picking ? pick.picked : filtered;
     const rows = [...src].sort((a, b) => (b.arena?.elo ?? -1) - (a.arena?.elo ?? -1));
-    return picking ? rows : rows.filter(m => isNum(m.arena?.elo)).slice(0, limit);
-  }, [picking, pick.picked, filtered, limit]);
+    if (picking) return rows;
+    // The arena's top N, plus the models that make the Intelligence Index top N
+    // without an arena rating yet (this week's releases) — so price, context
+    // and the other charts show them too; the ELO chart simply has no bar.
+    const arenaTop = rows.filter(m => isNum(m.arena?.elo)).slice(0, limit);
+    const ids = new Set(filtered.map(m => m.id));
+    const fresh = topByIntelligence(models.filter(m => ids.has(m.id)), limit).filter(m => !m.inArena && !arenaTop.some(a => a.id === m.id));
+    return [...fresh, ...arenaTop];
+  }, [picking, pick.picked, filtered, limit, models]);
   const n = chartRows.length;
-  const scope = picking ? `${n} selected` : `${activeFilters > 0 || q ? 'Filtered' : 'Top'} ${n}`;
+  const newcomers = picking ? 0 : chartRows.filter(m => !m.inArena).length;
+  const scope = picking ? `${n} selected` : `${activeFilters > 0 || q ? 'Filtered' : 'Top'} ${n - newcomers}${newcomers ? ` + ${newcomers} not yet on the arena` : ''}`;
 
   // Intelligence / speed / latency: the best effort level of each model by
   // Intelligence Index, arena-rated or not, so a release from this week shows.

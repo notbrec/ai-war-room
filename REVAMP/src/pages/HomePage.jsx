@@ -16,7 +16,7 @@ import { useCoding, useMedia } from '../data/useDomain.js';
 import { fmtMetric, isNum } from '../../shared/metrics.js';
 import ReplayTeaser from '../components/ReplayTeaser.jsx';
 import { useWarRoomCards } from '../components/WarRoomBoard.jsx';
-import { DataStatus, Btn, eloColor, eloTier, GREEN, GOLD, RED } from '../components/ui.jsx';
+import { DataStatus, Btn, eloColor, eloTier, GREEN, GOLD, RED, BLUE } from '../components/ui.jsx';
 import { SOURCES } from '../../shared/metrics.js';
 import { topByIntelligence, asFighters } from '../domains/models/ranking.js';
 
@@ -96,15 +96,14 @@ export default function HomePage({ onNavigate, liveModels, countSnapshot }) {
   const hl = useMemo(() => {
     const ranked = wr.models.filter(m => m.inArena);
     const top = ranked.slice(0, 10);
-    const labs = {};
-    for (const m of ranked) if (!labs[m.org]) labs[m.org] = m;
+    const smart = topByIntelligence(wr.models, 10);
     const swe = (coding.boards?.Verified ?? []).slice(0, 10);
     const t2i = (media.boards?.['text-to-image'] ?? []).slice(0, 10);
     const t2v = (media.boards?.['text-to-video'] ?? []).slice(0, 10);
     return {
+      intel: smart.map(m => ({ id: m.id, name: m.name, org: m.org, slug: m.slug, value: m.aa.intelligence, label: m.aa.intelligence.toFixed(1) })),
       elo:   top.map(m => ({ id: m.id, name: m.name, org: m.org, slug: m.slug, value: m.arena.elo, label: String(m.arena.elo) })),
-      labs:  Object.values(labs).slice(0, 10).map(m => ({ id: m.org, name: m.org, org: m.org, slug: m.slug, value: m.arena.elo, label: String(m.arena.elo) })),
-      price: top.filter(m => isNum(m.priceBlended)).sort((x, y) => x.priceBlended - y.priceBlended).map(m => ({ id: m.id, name: m.name, org: m.org, slug: m.slug, value: m.priceBlended, label: fmtMetric('priceBlended', m.priceBlended) })),
+      price: smart.filter(m => isNum(m.priceBlended)).sort((x, y) => x.priceBlended - y.priceBlended).map(m => ({ id: m.id, name: m.name, org: m.org, slug: m.slug, value: m.priceBlended, label: fmtMetric('priceBlended', m.priceBlended) })),
       swe:   swe.map(r => ({ id: r.id, name: r.model ?? r.name, org: r.modelOrg, value: r.resolved, label: fmtMetric('resolved', r.resolved) })),
       image: t2i.map(r => ({ id: r.id, name: r.name, org: r.org, kind: 'images', value: r.elo, label: String(r.elo) })),
       video: t2v.map(r => ({ id: r.id, name: r.name, org: r.org, kind: 'videos', value: r.elo, label: String(r.elo) })),
@@ -136,9 +135,9 @@ export default function HomePage({ onNavigate, liveModels, countSnapshot }) {
         <section style={{ marginTop: gapY }}>
           <SectionHead mobile={mobile} eyebrow="Highlights" title="The numbers, at a glance." action={<Btn small onClick={() => onNavigate('leaderboard')}>Full ranking →</Btn>} />
           <HighlightGrid mobile={mobile}>
-            <Reveal><BarPanel mobile={mobile} title="Arena ELO" color={GREEN} subtitle="Top 10 language models · arena.ai" items={hl.elo} onSelect={openBar} /></Reveal>
-            <Reveal delay={60}><BarPanel mobile={mobile} title="Labs" color="var(--accent)" subtitle="Each lab's best model · arena.ai" items={hl.labs} onSelect={openBar} /></Reveal>
-            <Reveal delay={120}><BarPanel mobile={mobile} title="Price" color={GOLD} subtitle="Top 10 · $ per 1M blended · OpenRouter" items={hl.price} higherIsBetter={false} onSelect={openBar} /></Reveal>
+            <Reveal><BarPanel mobile={mobile} title="Intelligence" color={BLUE} subtitle="Top 10 models · Intelligence Index · Artificial Analysis" items={hl.intel} onSelect={openBar} /></Reveal>
+            <Reveal delay={60}><BarPanel mobile={mobile} title="Arena ELO" color={GREEN} subtitle="Top 10 by human votes · arena.ai" items={hl.elo} onSelect={openBar} /></Reveal>
+            <Reveal delay={120}><BarPanel mobile={mobile} title="Price" color={GOLD} subtitle="The 10 smartest · $ per 1M blended · OpenRouter" items={hl.price} higherIsBetter={false} onSelect={openBar} /></Reveal>
             <Reveal><BarPanel mobile={mobile} title="Coding" color={GREEN} subtitle="SWE-bench Verified · % resolved" items={hl.swe} onSelect={openBar} /></Reveal>
             <Reveal delay={60}><BarPanel mobile={mobile} title="Image" color={GOLD} subtitle="Text-to-image ELO · arena.ai" items={hl.image} onSelect={openBar} /></Reveal>
             <Reveal delay={120}><BarPanel mobile={mobile} title="Video" color={GOLD} subtitle="Text-to-video ELO · arena.ai" items={hl.video} onSelect={openBar} /></Reveal>

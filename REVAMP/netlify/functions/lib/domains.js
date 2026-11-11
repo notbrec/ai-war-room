@@ -180,11 +180,22 @@ export async function loadMedia() {
 export async function loadProviders() {
   const [llms, or] = await Promise.all([loadLLMs(), orModels()]);
   if (!llms.ok || !or.data) return { ok: false, error: 'llms or openrouter unavailable', sources: { openrouter: status(or) } };
-  // Top of the board with an OpenRouter listing — bounded so the cold path stays inside the function budget.
-  const targets = llms.models.filter(m => m.or?.id).slice(0, 90);
+  // The best models by Intelligence Index first (this week's releases are not
+  // on the arena yet), then the top of the arena board; one model per
+  // OpenRouter listing; bounded so the cold path stays inside the function budget.
+  const best = new Map();
+  for (const m of llms.models) {
+    if (!m.or?.id || !isNum(m.aa?.intelligence)) continue;
+    const k = `${m.org}|${m.family}`;
+    if (!best.has(k) || m.aa.intelligence > best.get(k).aa.intelligence) best.set(k, m);
+  }
+  const smartest = [...best.values()].sort((a, b) => b.aa.intelligence - a.aa.intelligence).slice(0, 25);
+  const seenOr = new Set();
+  const targets = [...smartest, ...llms.models.filter(m => m.or?.id)]
+    .filter(m => !seenOr.has(m.or.id) && seenOr.add(m.or.id)).slice(0, 90);
   const ids = targets.map(m => m.or.id);
   const idToModel = Object.fromEntries(targets.map(m => [m.or.id, m.id]));
-  const eps = await cached(key('openrouter:endpoints'), HOURS(6), async () => {
+  const eps = await cached(key('openrouter:endpoints:v2'), HOURS(6), async () => {
     const byOr = await fetchOREndpoints(ids, { limit: 8, modelIdFor: id => idToModel[id] });
     const byModel = {};
     for (const [orId, list] of Object.entries(byOr)) byModel[idToModel[orId]] = list;

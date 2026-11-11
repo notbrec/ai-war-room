@@ -3,6 +3,8 @@ import { LAB_CONTENT } from '../content/labs.js';
 import ArticleLayout, { ArticleSections } from '../components/ArticleLayout.jsx';
 import { BarPanel } from '../components/Highlights.jsx';
 import { isNum } from '../../shared/metrics.js';
+import { useLLMs } from '../data/useDomain.js';
+import { topByIntelligence } from '../domains/models/ranking.js';
 
 const ORG_BY_SLUG = {
   'anthropic': 'Anthropic',
@@ -15,6 +17,7 @@ const ORG_BY_SLUG = {
 
 export default function LabPage({ slug, onNavigate, liveModels }) {
   const lab = LAB_CONTENT[slug];
+  const llms = useLLMs();
 
   if (!lab) {
     return (
@@ -33,6 +36,10 @@ export default function LabPage({ slug, onNavigate, liveModels }) {
   const list    = liveModels?.length ? liveModels : MODELS;
   const labModels = list.filter(m => m.org === orgName).slice(0, 8);
   const orgCfg  = ORG_CONFIG[orgName] ?? { color: '#8E8E93' };
+  // The lab's best models by Intelligence Index (one per model, best effort
+  // level), which includes releases the arena has not rated yet.
+  const smartest = topByIntelligence(llms.models.filter(m => m.org === orgName), 8);
+  const barColor = orgCfg.color === '#FFFFFF' ? 'var(--text)' : orgCfg.color;
 
   return (
     <ArticleLayout
@@ -54,10 +61,17 @@ export default function LabPage({ slug, onNavigate, liveModels }) {
       }
       footer={
         <>
+          {smartest.length > 0 && (
+            <div style={{ marginBottom: 16 }}>
+              <BarPanel title={`Smartest ${orgName} models`} subtitle="Intelligence Index · best effort level per model · Artificial Analysis" color={barColor} limit={smartest.length}
+                items={smartest.map(m => ({ id: m.id, name: m.name, org: orgName, value: m.aa.intelligence, label: m.aa.intelligence.toFixed(1), slug: m.slug }))}
+                onSelect={it => onNavigate({ type: 'model', slug: it.slug })} />
+            </div>
+          )}
           {labModels.length > 0 && (
             <>
               <div style={{ marginBottom: 24 }}>
-                <BarPanel title={`Top ${orgName} models`} subtitle="Arena ELO · arena.ai" color={orgCfg.color === '#FFFFFF' ? 'var(--text)' : orgCfg.color} limit={labModels.length}
+                <BarPanel title={`Top ${orgName} models on the arena`} subtitle="Arena ELO · human votes · arena.ai" color={barColor} limit={labModels.length}
                   items={labModels.filter(m => isNum(m.elo)).map(m => ({ id: m.slug, name: m.name, org: orgName, value: m.elo, label: String(m.elo), slug: m.slug }))}
                   onSelect={it => onNavigate({ type: 'model', slug: it.slug })} />
               </div>

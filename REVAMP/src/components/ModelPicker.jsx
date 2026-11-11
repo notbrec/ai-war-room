@@ -8,6 +8,7 @@ import { MONO, SF, EASE } from './design.jsx';
 import { LabLogo } from './LabLogo.jsx';
 import { Label, Chip, Btn } from './ui.jsx';
 import { isNum } from '../../shared/metrics.js';
+import { topByIntelligence } from '../domains/models/ranking.js';
 
 const KEY = 'aiwar-picked-llm-v1';
 
@@ -27,12 +28,24 @@ export function useModelPick(models) {
 
 const elo = m => m.arena?.elo ?? -1;
 
+// Presets follow the headline ranking: the best effort level of each model by
+// Intelligence Index (so a release the arena has not rated yet is included),
+// then arena-only models by ELO.
+function ranked(ms, keep = () => true) {
+  const pool = ms.filter(keep);
+  const top = topByIntelligence(pool, pool.length);
+  const fams = new Set(top.map(m => `${m.org}|${m.family}`));
+  const rest = pool.filter(m => m.inArena && !fams.has(`${m.org}|${m.family}`)).sort((a, b) => elo(b) - elo(a));
+  const seen = new Set();
+  return [...top, ...rest].filter(m => { const k = `${m.org}|${m.family}`; if (seen.has(k)) return false; seen.add(k); return true; });
+}
+
 export const PRESETS = [
-  { id: 'top10',  label: 'Top 10',        pick: ms => [...ms].filter(m => m.inArena).sort((a, b) => elo(b) - elo(a)).slice(0, 10) },
-  { id: 'labs',   label: 'Best per lab',  pick: ms => { const seen = new Set(); return [...ms].filter(m => m.inArena).sort((a, b) => elo(b) - elo(a)).filter(m => !seen.has(m.org) && seen.add(m.org)).slice(0, 12); } },
-  { id: 'open',   label: 'Open weights',  pick: ms => [...ms].filter(m => m.inArena && m.isOpen).sort((a, b) => elo(b) - elo(a)).slice(0, 10) },
-  { id: 'cheap',  label: 'Under $1/M',    pick: ms => [...ms].filter(m => m.inArena && isNum(m.priceBlended) && m.priceBlended <= 1).sort((a, b) => elo(b) - elo(a)).slice(0, 10) },
-  { id: 'think',  label: 'Reasoning',     pick: ms => [...ms].filter(m => m.inArena && m.isThinking).sort((a, b) => elo(b) - elo(a)).slice(0, 10) },
+  { id: 'top10',  label: 'Top 10',        pick: ms => ranked(ms).slice(0, 10) },
+  { id: 'labs',   label: 'Best per lab',  pick: ms => { const seen = new Set(); return ranked(ms).filter(m => !seen.has(m.org) && seen.add(m.org)).slice(0, 12); } },
+  { id: 'open',   label: 'Open weights',  pick: ms => ranked(ms, m => m.isOpen).slice(0, 10) },
+  { id: 'cheap',  label: 'Under $1/M',    pick: ms => ranked(ms, m => isNum(m.priceBlended) && m.priceBlended <= 1).slice(0, 10) },
+  { id: 'think',  label: 'Reasoning',     pick: ms => ranked(ms, m => m.isThinking).slice(0, 10) },
 ];
 
 export default function ModelPicker({ models, pick, mobile }) {
@@ -45,7 +58,7 @@ export default function ModelPicker({ models, pick, mobile }) {
     if (!s) return [];
     const taken = new Set(pick.ids);
     return models.filter(m => !taken.has(m.id) && (`${m.name} ${m.org}`.toLowerCase().includes(s)))
-      .sort((a, b) => elo(b) - elo(a)).slice(0, 8);
+      .sort((a, b) => (a.aa?.rank ?? 1e9) - (b.aa?.rank ?? 1e9) || elo(b) - elo(a)).slice(0, 8);
   }, [q, models, pick.ids]);
   useEffect(() => { setCursor(0); }, [q]);
   useEffect(() => {
