@@ -90,6 +90,8 @@ export default function BattlePage({ onNavigate }) {
     }
   }, [kind, llms.models, media.boards, speech.stt, coding.boards]);
 
+  // One click to the obvious fight: the two smartest models by Intelligence Index.
+  const topTwo = useMemo(() => topByIntelligence(llms.models, 2), [llms.models]);
   const sets = SETS[kind] ?? [];
   const winnersCount = useMemo(() => {
     const counts = new Map(recs.map(r => [r, 0]));
@@ -115,7 +117,7 @@ export default function BattlePage({ onNavigate }) {
 
       {!kind || battle.items.length === 0 ? (
         <EmptyState icon="⚔" title="No contestants yet" body="Press the BATTLE button on any row of the LLM rankings, Code Ops, Image / Video arenas or Voice Comms to add a contestant. Mixed kinds are refused — an image model can't fight a language model on meaningful metrics."
-          action={<div style={{ display: 'flex', gap: 8, justifyContent: 'center', flexWrap: 'wrap' }}><Btn small solid onClick={() => onNavigate('leaderboard')}>LLM rankings</Btn><Btn small onClick={() => onNavigate('images')}>Image arena</Btn><Btn small onClick={() => onNavigate('videos')}>Video arena</Btn><Btn small onClick={() => onNavigate('coding')}>Code Ops</Btn></div>} />
+          action={<div style={{ display: 'flex', gap: 8, justifyContent: 'center', flexWrap: 'wrap' }}>{topTwo.length === 2 && <Btn small solid onClick={() => topTwo.forEach(m => addToBattle({ id: m.id, kind: 'llm', name: m.name, org: m.org }))}>Start: {topTwo[0].name} vs {topTwo[1].name}</Btn>}<Btn small solid={topTwo.length < 2} onClick={() => onNavigate('leaderboard')}>LLM rankings</Btn><Btn small onClick={() => onNavigate('images')}>Image arena</Btn><Btn small onClick={() => onNavigate('videos')}>Video arena</Btn><Btn small onClick={() => onNavigate('coding')}>Code Ops</Btn></div>} />
       ) : loading ? <Skeleton height={420} /> : (
         <>
           <Panel style={{ marginBottom: 12 }}>
