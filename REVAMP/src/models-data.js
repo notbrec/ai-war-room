@@ -4,6 +4,7 @@
 // Pricing:  live from OpenRouter API (auto-refreshed every 30 min)
 
 import DESCRIPTIONS from './model-descriptions.json';
+import { splitVariant } from '../shared/ids.js';
 
 export const OPENROUTER_MODELS_URL = 'https://openrouter.ai/api/v1/models';
 export const LEADERBOARD_URL       = '/api/leaderboard';
@@ -104,19 +105,33 @@ function variants(raw) {
   return [...out].filter(Boolean);
 }
 
-/** Look up a description for a model by its display name */
-export function getDescription(name) {
+/** Look up a description for a model by its display name; `family` (the
+ *  canonical family key, e.g. "gemini4carbon") lets every effort level of a
+ *  model ("… (High)", "… (Low)") share one profile. */
+export function getDescription(name, family) {
+  // 1. a profile written for this exact variant ("Claude Opus 4.7 Thinking")
+  const exact = DESCRIPTIONS[descKey(name)];
+  if (exact) return exact;
+  // 2. the family's profile, shared by every effort level
+  // (a family passed in comes from the model's own record and is trusted; one
+  //  derived here from the name must at least prefix it)
+  const fam = family ?? splitVariant(name).family;
+  if (fam && DESCRIPTIONS[fam] && (family || descKey(name).startsWith(fam))) return DESCRIPTIONS[fam];
+  // 3. older catalogue keys (org prefixes, date stamps)
   const tries = variants(name);
   for (const v of tries) {
     if (DESCRIPTIONS[v]) return DESCRIPTIONS[v];
     if (DESC_INDEX_NO_PREFIX[v]) return DESC_INDEX_NO_PREFIX[v];
   }
-  // Last-ditch: find any JSON key that contains our shortest stripped variant
-  // (guards against extra tail like "-32k" that isn't in PDF key, or company prefix)
+  // Last-ditch: a catalogue key that only adds a tail ("-32k") or a lab prefix.
+  // Never the other way round — "claudeopus55" must not fall back to the
+  // older "claudeopus5" profile.
   const shortest = tries.sort((a, b) => a.length - b.length)[0];
   if (shortest && shortest.length >= 6) {
+    // a digit right after a version number is a different version ("5" → "55")
+    const versionTail = key => /\d$/.test(shortest) && /^\d/.test(key.slice(shortest.length));
     for (const key of Object.keys(DESCRIPTIONS)) {
-      if (key === shortest || key.endsWith(shortest) || key.startsWith(shortest) || shortest.startsWith(key)) {
+      if (key === shortest || key.endsWith(shortest) || (key.startsWith(shortest) && !versionTail(key))) {
         if (Math.abs(key.length - shortest.length) <= 10) return DESCRIPTIONS[key];
       }
     }
@@ -398,7 +413,7 @@ const RAW_FALLBACK = [
   ['gpt-5.2-chat-20260210', 'GPT-5.2 Chat (20260210)', 'OpenAI', 1476, 35708, 'Proprietary', 1.75, 14, 128000],
   ['gpt-5.4-high', 'GPT-5.4 (High)', 'OpenAI', 1475, 64103, 'Proprietary', 2.5, 15, 1050000],
   ['glm-5.2-max', 'GLM-5.2 (Max)', 'Z.ai', 1475, 54173, 'MIT', 0.007, 6.8, 1048576],
-  ['deepseek-v4.1-flash-20260910-max', 'DeepSeek-V4.1-Flash-20260910 (Max)', 'DeepSeek', 1475, 13580, 'MIT', 0.3, 1.2, 1048576],
+  ['deepseek-v4.1-flash-20260910-max', 'DeepSeek-V4.1-Flash-20260910 (Max)', 'DeepSeek', 1475, 13580, 'MIT', 0.051, 0.567, 1048576],
   ['grok-4.20-beta-1', 'Grok 4.20 Beta 1', 'xAI', 1475, 27690, 'Proprietary', 1.25, 2.5, 2000000],
   ['claude-opus-4.8', 'Claude Opus 4.8', 'Anthropic', 1474, 64170, 'Proprietary', 5, 25, 1000000],
   ['glm-5.3-flash', 'GLM-5.3-Flash', 'Z.ai', 1474, 50189, 'MIT', 0.0399, 0.0784, 1048576],
@@ -417,7 +432,7 @@ const RAW_FALLBACK = [
   ['mimo-v2.5-pro', 'MiMo-V2.5-Pro', 'Xiaomi', 1467, 76793, 'MIT', 0.48, 1.8, 1024000],
   ['grok-4.5', 'Grok 4.5', 'xAI', 1466, 39155, 'Proprietary', 2, 6, 500000],
   ['grok-4.1-thinking', 'Grok 4.1 (Thinking)', 'xAI', 1465, 66074, 'Proprietary', null, null, null],
-  ['glm-5.1', 'GLM-5.1', 'Z.ai', 1465, 67074, 'MIT', 1.4, 4.4, 204800],
+  ['glm-5.1', 'GLM-5.1', 'Z.ai', 1465, 67074, 'MIT', 1.33, 4.18, 204800],
   ['qwen3.5-max-preview', 'Qwen3.5-Max-Preview', 'Alibaba', 1465, 22419, 'Proprietary', null, null, null],
   ['gpt-5.4', 'GPT-5.4', 'OpenAI', 1465, 67105, 'Proprietary', 2.5, 15, 1050000],
   ['deepseek-v4-pro-high-20260813', 'DeepSeek-V4-Pro (High, 20260813)', 'DeepSeek', 1464, 9584, 'MIT', 0.9553, 1.9105, 1048576],

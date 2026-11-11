@@ -474,7 +474,7 @@ export default function LeaderboardPage({ liveModels, onNavigate }) {
 }
 
 function ExpandedModel({ m, topElo, mobile, onNavigate }) {
-  const description = getDescription(m.name);
+  const description = getDescription(m.name, m.family);
   const tierColor = eloColor(m.arena?.elo);
   const cells = [
     ['intelligence', m.aa?.intelligence], ['codingIndex', m.aa?.codingIndex], ['agenticIndex', m.aa?.agenticIndex],

@@ -97,7 +97,7 @@ export default function ModelPage({ slug, onNavigate, liveModels }) {
   const org = ORG_CONFIG[model.org] ?? { color: '#8E8E93', bg: '#F2F2F7', bgDark: '#2C2C2E' };
   const iconBg = dark ? (org.bgDark ?? '#2C2C2E') : org.bg;
   const elo = model.arena?.elo;
-  const desc = getDescription(model.name);
+  const desc = getDescription(model.name, model.family);
   const type = model.modalities ? (model.modalities.in.includes('image') ? 'Multimodal LLM' : 'Text LLM') : 'LLM';
   const status = model.arena
     ? (model.arena.isNew ? `New on the arena${model.arena.firstSeen ? ` · since ${fmtDate(model.arena.firstSeen)}` : ''}` : 'Active on the arena')

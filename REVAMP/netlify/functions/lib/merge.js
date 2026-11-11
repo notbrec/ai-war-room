@@ -143,7 +143,9 @@ function buildRecord({ id, arena, or, aa, vision = null, search = null, webdev =
   const baseName = arena?.name ?? (primary === 'aa' ? aa?.name : null) ?? or?.name ?? aa?.name ?? id;
   const name = arena ? baseName : withVariant(tidyEffort(baseName), variant);
   const org = canonicalOrg(arena?.org ?? or?.org ?? aa?.org ?? 'Unknown');
-  const license = arena?.license ?? (or?.isOpenWeights ? 'Open weights' : null);
+  // Licence: the arena lists it; otherwise OpenRouter or Artificial Analysis
+  // say whether the weights are downloadable. Unknown stays null, never a guess.
+  const license = arena?.license ?? ((or?.isOpenWeights || aa?.isOpen === true) ? 'Open weights' : (aa?.isOpen === false ? 'Proprietary' : null));
 
   const priceIn  = or?.pricing?.priceIn  ?? arena?.priceIn  ?? aa?.priceIn  ?? null;
   const priceOut = or?.pricing?.priceOut ?? arena?.priceOut ?? aa?.priceOut ?? null;
@@ -170,7 +172,7 @@ function buildRecord({ id, arena, or, aa, vision = null, search = null, webdev =
   return {
     id, slug: arena?.slug ?? slugOf(name), name, org,
     family, variant: variant.join('-') || null,
-    license, isOpen: license ? isOpenWeights(license) : !!or?.isOpenWeights,
+    license, isOpen: license ? isOpenWeights(license) : !!(or?.isOpenWeights || aa?.isOpen),
     isThinking: isReasoningName(arena?.slug ?? name) || (!arena && !!or?.isReasoningVariant),
     reasoningLevel: reasoningLevel(arena?.slug ?? (primary === 'aa' ? aa?.slug : or?.id) ?? name),
     supportsReasoning: or?.supportsReasoning ?? null,
