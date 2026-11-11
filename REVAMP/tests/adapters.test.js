@@ -1,4 +1,5 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, afterEach } from 'vitest';
+import { fetchAALLMs } from '../netlify/functions/adapters/artificialanalysis.js';
 import { normaliseORModel, normaliseOREndpoint } from '../netlify/functions/adapters/openrouter.js';
 import { normaliseSWEEntry } from '../netlify/functions/adapters/swebench.js';
 import { normaliseASRRow, rowsFromConfig, paramsFromName } from '../netlify/functions/adapters/openasr.js';
@@ -130,6 +131,42 @@ describe('artificial analysis adapter', () => {
     expect(m.ttft).toBe(0.6);
     expect(m.priceBlended).toBe(11.25);
     expect(m.org).toBe('OpenAI');
+  });
+  // The Free-tier row, verbatim from the example in AA's API docs.
+  const freeRow = { id: 'cd684ea4', name: 'GLM-5.3 (Max)', slug: 'glm-5-3', release_date: '2026-08-18', model_creator: { id: 'x', name: 'Z AI' },
+    evaluations: { artificial_analysis_intelligence_index: 31.7, artificial_analysis_coding_index: null, artificial_analysis_agentic_index: null, artificial_analysis_legal_index: 35.8 },
+    artificial_analysis_intelligence_index_cost: { total_cost: 3495.62 },
+    pricing: { price_1m_input_tokens: 1.4, price_1m_output_tokens: 4.4, price_1m_cache_hit_tokens: 0.26, price_1m_cache_write_tokens: null },
+    performance: { median_output_tokens_per_second: 80.07, median_time_to_first_token_seconds: 2.22, median_time_to_first_answer_token_seconds: 27.19, median_end_to_end_response_time_seconds: 33.44 },
+    performance_v3: { mean_output_tokens_per_second: 62.36, mean_time_to_first_token_seconds: 3.45, mean_time_to_first_answer_token_seconds: 79.11 } };
+  it('reads the Free-tier language model shape, preferring Performance v3', () => {
+    const m = normaliseAALLM(freeRow);
+    expect(m.intelligence).toBe(31.7);
+    expect(m.org).toBe('Z.ai');
+    expect(m.speed).toBe(62.36);
+    expect(m.ttft).toBe(3.45);
+    expect(m.ttfat).toBe(79.11);
+    expect(m.priceCacheRead).toBe(0.26);
+    expect(m.codingIndex).toBeNull();
+    expect(m.via).toBe('aa-api');
+  });
+  it('falls back to the median block when v3 is missing', () => {
+    expect(normaliseAALLM({ ...freeRow, performance_v3: null }).speed).toBe(80.07);
+  });
+  it('calls the /free endpoint and follows every page', async () => {
+    const urls = [];
+    vi.stubEnv('ARTIFICIAL_ANALYSIS_API_KEY', 'test-key');
+    vi.stubGlobal('fetch', async (url, init) => {
+      urls.push(String(url));
+      expect(init.headers['x-api-key']).toBe('test-key');
+      const page = Number(new URL(url).searchParams.get('page'));
+      const body = { tier: 'free', pagination: { page, page_size: 1, total_pages: 2, has_more: page < 2 }, data: [{ ...freeRow, slug: `m-${page}`, name: `M ${page}` }] };
+      return new Response(JSON.stringify(body), { status: 200, headers: { 'Content-Type': 'application/json' } });
+    });
+    const rows = await fetchAALLMs();
+    expect(urls).toEqual(['https://artificialanalysis.ai/api/v2/language/models/free?page=1', 'https://artificialanalysis.ai/api/v2/language/models/free?page=2']);
+    expect(rows.map(r => r.slug)).toEqual(['m-1', 'm-2']);
+    vi.unstubAllGlobals(); vi.unstubAllEnvs();
   });
   it('normalises media rows', () => {
     const m = normaliseAAMedia({ name: 'Veo 3.1', slug: 'veo-3-1', model_creator: { name: 'Google' }, elo: 1200.4, ci_95: 12, median_generation_time_seconds: 80, price_per_second: 0.5 });

@@ -420,13 +420,13 @@ const RAW_FALLBACK = [
   ['glm-5.1', 'GLM-5.1', 'Z.ai', 1465, 67074, 'MIT', 1.4, 4.4, 204800],
   ['qwen3.5-max-preview', 'Qwen3.5-Max-Preview', 'Alibaba', 1465, 22419, 'Proprietary', null, null, null],
   ['gpt-5.4', 'GPT-5.4', 'OpenAI', 1465, 67105, 'Proprietary', 2.5, 15, 1050000],
-  ['deepseek-v4-pro-high-20260813', 'DeepSeek-V4-Pro (High, 20260813)', 'DeepSeek', 1464, 9584, 'MIT', 0.8804, 1.7609, 1048576],
+  ['deepseek-v4-pro-high-20260813', 'DeepSeek-V4-Pro (High, 20260813)', 'DeepSeek', 1464, 9584, 'MIT', 0.9553, 1.9105, 1048576],
   ['claude-sonnet-5-high', 'Claude Sonnet 5 (High)', 'Anthropic', 1461, 53013, 'Proprietary', 2, 10, 1000000],
   ['kimi-k2.6', 'Kimi K2.6', 'Moonshot', 1461, 39573, 'Modified MIT', 0.65, 3.41, 262144],
   ['qwen3.6-max-preview', 'Qwen3.6-Max-Preview', 'Alibaba', 1460, 5386, 'Proprietary', null, null, null],
   ['grok-4.1', 'Grok 4.1', 'xAI', 1459, 68194, 'Proprietary', null, null, null],
   ['gemini-3-flash-minimal', 'Gemini 3 Flash (Minimal)', 'Google', 1458, 90109, 'Proprietary', 0.5, 3, 1048576],
-  ['deepseek-v4-pro', 'DeepSeek-V4-Pro', 'DeepSeek', 1458, 56906, 'MIT', 0.8804, 1.7609, 1048576],
+  ['deepseek-v4-pro', 'DeepSeek-V4-Pro', 'DeepSeek', 1458, 56906, 'MIT', 0.9553, 1.9105, 1048576],
   ['glm-5', 'GLM-5', 'Z.ai', 1457, 29020, 'MIT', 1, 3.2, 204800],
 ];
 

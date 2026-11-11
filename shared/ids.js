@@ -11,7 +11,7 @@
 
 export const ORG_ALIASES = {
   'spacexai': 'xAI', 'xai': 'xAI', 'x.ai': 'xAI', 'x-ai': 'xAI',
-  'z.ai': 'Z.ai', 'zai': 'Z.ai', 'z-ai': 'Z.ai', 'zhipu': 'Z.ai', 'zhipu ai': 'Z.ai', 'thudm': 'Z.ai', 'chatglm': 'Z.ai',
+  'z.ai': 'Z.ai', 'zai': 'Z.ai', 'z-ai': 'Z.ai', 'z ai': 'Z.ai', 'zhipu': 'Z.ai', 'zhipu ai': 'Z.ai', 'thudm': 'Z.ai', 'chatglm': 'Z.ai',
   'bytedance': 'Bytedance', 'byte dance': 'Bytedance', 'bytedance seed': 'Bytedance', 'doubao': 'Bytedance',
   'ai2': 'Ai2', 'allenai': 'Ai2', 'allen institute': 'Ai2', 'allen institute for ai': 'Ai2',
   'stepfun': 'StepFun', 'step fun': 'StepFun',

@@ -78,13 +78,15 @@ async function loadAALLMs() {
   }
   if (!rows) return aaWebEnabled() ? fetchAAWebLLMs() : null;
   if (aaWebEnabled()) {
-    // The pages measure more models than the API exposes (the API reports 0
-    // for many), so every field the API leaves empty is filled from the page
-    // row of the same slug; the API value wins wherever both exist.
+    // The Free API carries indexes, prices and speed only; the pages add the
+    // per-benchmark scores, context, open weights and retirement flags. Every
+    // field the API leaves empty is filled from the page row of the same slug
+    // (the API value wins where both exist), and a model only the page lists
+    // is kept, so switching sources never shrinks the board.
     try {
       const web = await fetchAAWebLLMs();
       const bySlug = new Map(web.map(r => [r.slug, r]));
-      const FILL = ['speed', 'ttft', 'ttfat', 'e2e', 'context', 'priceIn', 'priceOut', 'priceBlended', 'priceCacheRead', 'priceCacheWrite', 'releaseDate', 'isOpen'];
+      const FILL = ['speed', 'ttft', 'ttfat', 'e2e', 'context', 'priceIn', 'priceOut', 'priceBlended', 'priceCacheRead', 'priceCacheWrite', 'releaseDate', 'isOpen', 'isReasoning', 'indexTimePerTask', 'indexCostPerTask'];
       for (const r of rows) {
         const w = bySlug.get(r.slug);
         if (!w) continue;
@@ -93,16 +95,19 @@ async function loadAALLMs() {
         if (w.benchmarks) { r.benchmarks = r.benchmarks ?? {}; for (const [k, v] of Object.entries(w.benchmarks)) if (r.benchmarks[k] == null && v != null) r.benchmarks[k] = v; }
         if (r.intelligence == null && w.intelligence != null) r.intelligence = w.intelligence;
       }
+      const inApi = new Set(rows.map(r => r.slug));
+      rows.push(...web.filter(w => w.slug && !inApi.has(w.slug)));
     } catch { /* the pages are optional here; the API rows stand on their own */ }
   }
   return rows;
 }
-// The Data API is metered, so it is refreshed twice a day at most: a 12 h
-// window, and after a failed refresh nothing is retried for another 12 h —
-// the last good copy is served instead. Visitors never trigger extra calls.
+// The Data API is metered (Free: 100 requests / 24 h), so it is refreshed
+// twice a day at most: a 12 h window — 2 refreshes × 2 pages = ~4 requests a
+// day — and after a failed refresh nothing is retried for another 12 h; the
+// last good copy is served instead. Visitors never trigger extra calls.
 const AA_API_WINDOW = HOURS(12);
 const aaLLMs = () => (aaConfigured() || aaWebEnabled())
-  ? cached(key('aa:llms:v4'), AA_API_WINDOW, loadAALLMs, { minValid: isList(10), retryAfterMs: AA_API_WINDOW })
+  ? cached(key('aa:llms:v5'), AA_API_WINDOW, loadAALLMs, { minValid: isList(10), retryAfterMs: AA_API_WINDOW })
   : Promise.resolve(AA_OFF);
 
 // Media, voices and transcription: the Data API returns only ELO / rank / CI
@@ -320,7 +325,7 @@ export async function loadHistory() {
 // ── Status ─────────────────────────────────────────────────────────────────
 export async function loadStatus() {
   const entries = await Promise.all([
-    readBlob(key('arena:text')), readBlob(key('openrouter:models')), readBlob(key('swebench')), readBlob(key('openasr')), readBlob(key('aa:llms:v4')),
+    readBlob(key('arena:text')), readBlob(key('openrouter:models')), readBlob(key('swebench')), readBlob(key('openasr')), readBlob(key('aa:llms:v5')),
   ]);
   const [a, o, s, r, aa] = entries;
   const st = e => e?.fetchedAt ? { status: 'cached', fetchedAt: e.fetchedAt } : { status: 'cold', fetchedAt: null };

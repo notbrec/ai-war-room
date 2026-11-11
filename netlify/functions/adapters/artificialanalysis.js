@@ -1,28 +1,38 @@
-// ─── Artificial Analysis adapter (official Data API) ────────────────────────
-// https://artificialanalysis.ai/api-reference — requires an API key sent as
-// `x-api-key`. Set ARTIFICIAL_ANALYSIS_API_KEY in the Netlify environment.
-// The free tier requires attribution, which the UI shows wherever these
-// numbers appear.
+// ─── Artificial Analysis adapter (official Data API, Free tier) ─────────────
+// https://artificialanalysis.ai/data-api/docs — key sent as `x-api-key`, set
+// as ARTIFICIAL_ANALYSIS_API_KEY in the Netlify environment. The legacy
+// /api/v2/data/* routes were retired on 4 Nov 2026 (410 Gone); a Free key
+// reads the `/free` siblings, which list 200 models per page and allow 100
+// requests per 24 h. The free tier requires attribution, which the UI shows
+// wherever these numbers appear.
 //
-// When no key is configured every function here returns null and the site
-// shows N/A for speed / latency / generation-time / TTS / STT quality —
-// never a made-up number.
+// When no key is configured every function here returns null and the
+// published pages (aaweb.js) answer instead — never a made-up number.
 
 import { fetchJSON } from '../lib/http.js';
 import { canonicalOrg, canonicalModelId } from '../../../shared/ids.js';
 
-const BASE = 'https://artificialanalysis.ai/api/v2/data';
+const BASE = 'https://artificialanalysis.ai/api/v2';
+const MAX_PAGES = 5;   // ~285 models today = 2 pages; the cap bounds a runaway
 
 export function aaKey() {
   return process.env.ARTIFICIAL_ANALYSIS_API_KEY || process.env.AA_API_KEY || null;
 }
 export function aaConfigured() { return !!aaKey(); }
 
+/** Every page of a list endpoint ({ data, pagination: { has_more } }). */
 async function get(path) {
   const key = aaKey();
   if (!key) return null;
-  const json = await fetchJSON(`${BASE}${path}`, { headers: { 'x-api-key': key }, timeoutMs: 25_000 });
-  return Array.isArray(json?.data) ? json.data : (Array.isArray(json) ? json : null);
+  const rows = [];
+  for (let page = 1; page <= MAX_PAGES; page++) {
+    const json = await fetchJSON(`${BASE}${path}?page=${page}`, { headers: { 'x-api-key': key }, timeoutMs: 25_000 });
+    const data = Array.isArray(json?.data) ? json.data : (Array.isArray(json) ? json : null);
+    if (!data) break;
+    rows.push(...data);
+    if (!json?.pagination?.has_more) break;
+  }
+  return rows.length ? rows : null;
 }
 
 const num = v => (typeof v === 'number' && Number.isFinite(v) ? v : (typeof v === 'string' && v.trim() !== '' && Number.isFinite(+v) ? +v : null));
@@ -35,6 +45,8 @@ export function normaliseAALLM(m) {
   const org = canonicalOrg(m.model_creator?.name ?? m.model_creator?.slug ?? m.creator ?? '');
   const ev = m.evaluations ?? {};
   const pr = m.pricing ?? {};
+  const perf = m.performance ?? {};
+  const v3 = m.performance_v3 ?? {};
   const name = m.name ?? m.slug ?? m.id;
   // Everything that is an evaluation score, minus the composite indexes.
   const benchmarks = {};
@@ -57,15 +69,21 @@ export function normaliseAALLM(m) {
     priceIn: pick(pr, 'price_1m_input_tokens'),
     priceOut: pick(pr, 'price_1m_output_tokens'),
     priceBlended: pick(pr, 'price_1m_blended_3_to_1'),
-    speed: pos(m, 'median_output_tokens_per_second'),
-    ttft: pos(m, 'median_time_to_first_token_seconds'),
-    ttfat: pos(m, 'median_time_to_first_answer_token', 'median_time_to_first_answer_token_seconds'),
-    e2e: pos(m, 'median_end_to_end_response_time_seconds', 'median_total_response_time_seconds'),
+    priceCacheRead: pick(pr, 'price_1m_cache_hit_tokens'),
+    priceCacheWrite: pick(pr, 'price_1m_cache_write_tokens'),
+    // `performance_v3` (means over the measured workloads) is the current
+    // methodology and what AA's own pages show; the median `performance` block
+    // returns null from 10 Dec 2026 and is only a fallback until then.
+    speed: pos(v3, 'mean_output_tokens_per_second') ?? pos(perf, 'median_output_tokens_per_second') ?? pos(m, 'median_output_tokens_per_second'),
+    ttft: pos(v3, 'mean_time_to_first_token_seconds') ?? pos(perf, 'median_time_to_first_token_seconds') ?? pos(m, 'median_time_to_first_token_seconds'),
+    ttfat: pos(v3, 'mean_time_to_first_answer_token_seconds') ?? pos(perf, 'median_time_to_first_answer_token_seconds') ?? pos(m, 'median_time_to_first_answer_token', 'median_time_to_first_answer_token_seconds'),
+    e2e: pos(perf, 'median_end_to_end_response_time_seconds') ?? pos(m, 'median_end_to_end_response_time_seconds', 'median_total_response_time_seconds'),
+    via: 'aa-api',
   };
 }
 
 export async function fetchAALLMs() {
-  const rows = await get('/llms/models');
+  const rows = await get('/language/models/free');
   return rows ? rows.map(normaliseAALLM) : null;
 }
 
@@ -96,12 +114,15 @@ export function normaliseAAMedia(m) {
   };
 }
 
+// Free-tier media lists. The site reads media, voices and transcription from
+// AA's published pages (richer: prices, generation times), so these only
+// answer when AA_WEB=0.
 export const AA_MEDIA_PATHS = {
-  'text-to-image':  '/media/text-to-image',
-  'image-edit':     '/media/image-editing',
-  'text-to-video':  '/media/text-to-video',
-  'image-to-video': '/media/image-to-video',
-  'text-to-speech': '/media/text-to-speech',
+  'text-to-image':  '/media/text-to-image/models/free',
+  'image-edit':     '/media/image-editing/models/free',
+  'text-to-video':  '/media/text-to-video/models/free',
+  'image-to-video': '/media/image-to-video/models/free',
+  'text-to-speech': '/media/text-to-speech/models/free',
 };
 
 export async function fetchAAMedia(board) {
@@ -113,7 +134,7 @@ export async function fetchAAMedia(board) {
 
 /** Speech-to-text and speech-to-speech, if the account has access. */
 export async function fetchAASpeech(kind) {
-  const path = kind === 'stt' ? '/media/speech-to-text' : '/media/speech-to-speech';
+  const path = kind === 'stt' ? '/media/speech-to-text/models/free' : '/media/speech-to-speech/models/free';
   try {
     const rows = await get(path);
     return rows ? rows.map(normaliseAAMedia) : null;
