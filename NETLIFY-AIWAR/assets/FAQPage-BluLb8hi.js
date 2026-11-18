@@ -1,4 +1,4 @@
-import{u as b,j as e,y as u,k as v,z as r,at as x,au as c,aq as k,av as A,M as j}from"./index-BTHcGKXj.js";import{r as p}from"./react-jVyfcstf.js";const l=[{cat:"Ratings",q:"What exactly is an ELO score?",a:`ELO is a relative skill rating system invented by Arpad Elo to rank chess players. Each
+import{u as b,j as e,y as u,k as v,z as r,av as x,aw as c,as as k,ax as A,M as j}from"./index-prE80muS.js";import{r as p}from"./react-jVyfcstf.js";const l=[{cat:"Ratings",q:"What exactly is an ELO score?",a:`ELO is a relative skill rating system invented by Arpad Elo to rank chess players. Each
     rated entity — whether a grandmaster or an AI model — starts at a base number (usually around
     1500). When two compete head-to-head, the loser transfers a small portion of their rating to
     the winner. Upsets transfer more points than expected wins, so the system self-corrects over

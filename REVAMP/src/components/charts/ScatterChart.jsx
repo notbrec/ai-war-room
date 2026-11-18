@@ -46,6 +46,7 @@ export default function ScatterChart({
   highlight = null,                       // Set<id>
   selected = null,                        // Set<id>
   onSelect, height = 420, tooltipExtra, emptyText = 'No points with both values',
+  noun = 'models',                        // what one point is, for the count under the chart
 }) {
   const wrapRef = useRef(null);
   const clipId = `aiwar-clip-${useId().replace(/[^a-zA-Z0-9]/g, '')}`;
@@ -305,7 +306,7 @@ export default function ScatterChart({
             )}
           </div>
           <span style={{ fontSize: 10, fontFamily: MONO, color: 'var(--muted2)', letterSpacing: '0.04em', whiteSpace: 'nowrap' }}>
-            {valid.length} MODELS{width >= 560 ? ' · SCROLL TO ZOOM · DRAG TO PAN' : ''}
+            {valid.length} {noun.toUpperCase()}{width >= 560 ? ' · SCROLL TO ZOOM · DRAG TO PAN' : ''}
           </span>
         </div>
       )}

@@ -87,9 +87,9 @@ export function Chip({ active, color = 'var(--text)', label, icon, onClick, smal
 }
 
 /* ─── Segmented — mutually exclusive tabs ────────────────────────────────── */
-export function Segmented({ options, value, onChange, small = false }) {
+export function Segmented({ options, value, onChange, small = false, nowrap = false }) {
   return (
-    <div role="tablist" style={{ display: 'inline-flex', border: '0.5px solid var(--sep)', background: 'var(--card)', padding: 2, gap: 2, flexWrap: 'wrap' }}>
+    <div role="tablist" style={{ display: 'inline-flex', border: '0.5px solid var(--sep)', background: 'var(--card)', padding: 2, gap: 2, flexWrap: nowrap ? 'nowrap' : 'wrap' }}>
       {options.map(o => {
         const on = o.value === value;
         return (

@@ -31,7 +31,7 @@ export function ModelCell({ m, dark, rank, onOpen, compact = false, rankBy = 'el
   const top = isNum(r) && r <= 3;
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: compact ? 8 : 10, minWidth: 0 }}>
-      <span style={{ width: 30, flexShrink: 0, textAlign: 'right' }}>
+      <span style={{ width: compact ? 22 : 30, flexShrink: 0, textAlign: 'right' }}>
         <span style={{ fontSize: 12, fontWeight: top ? 700 : 500, color: top ? 'var(--text)' : 'var(--muted)', fontFamily: MONO, fontVariantNumeric: 'tabular-nums' }}>{isNum(r) ? r : '—'}</span>
       </span>
       <div style={{ width: compact ? 26 : 32, height: compact ? 26 : 32, background: iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
@@ -41,7 +41,7 @@ export function ModelCell({ m, dark, rank, onOpen, compact = false, rankBy = 'el
         <div style={{ display: 'flex', alignItems: 'center', gap: 5, minWidth: 0 }}>
           <button onClick={e => { e.stopPropagation(); onOpen?.(m); }} className="aiwar-link-underline" style={{
             background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: 'inherit',
-            fontSize: 13, fontWeight: 600, color: 'var(--text)', letterSpacing: '-0.02em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: compact ? 150 : 220, textAlign: 'left',
+            fontSize: 13, fontWeight: 600, color: 'var(--text)', letterSpacing: '-0.02em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: compact ? 124 : 220, textAlign: 'left',
           }}>{m.name}</button>
           {m.arena?.isNew && <BadgeTag color={GREEN}>New</BadgeTag>}
         </div>
@@ -50,7 +50,7 @@ export function ModelCell({ m, dark, rank, onOpen, compact = false, rankBy = 'el
           {isNum(m.arena?.elo) && <span style={{ fontSize: 9.5, color: eloColor(m.arena.elo), fontWeight: 700, fontFamily: MONO }}>{eloTier(m.arena.elo)}</span>}
           {m.isThinking && <span title="Reasoning / thinking variant" style={{ fontSize: 9, color: PURPLE }}>🧠</span>}
           {m.isOpen && <span title="Open weights" style={{ fontSize: 9, color: GREEN }}>🔓</span>}
-          {!m.inArena && <span title="Not rated on the arena yet — ranked by Intelligence Index" style={{ fontSize: 9, color: 'var(--muted2)', fontFamily: MONO }}>NO ARENA ELO</span>}
+          {!m.inArena && !compact && <span title="Not rated on the arena yet — ranked by Intelligence Index" style={{ fontSize: 9, color: 'var(--muted2)', fontFamily: MONO }}>NO ARENA ELO</span>}
         </div>
       </div>
     </div>

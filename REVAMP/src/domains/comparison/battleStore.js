@@ -39,6 +39,14 @@ export function removeFromBattle(id) {
   write({ kind: items.length ? state.kind : null, items });
 }
 export function clearBattle() { write({ kind: null, items: [] }); }
+/** Replace the roster in one write (presets, "compare with rivals"). Items must share a kind. */
+export function setBattle(items) {
+  const list = (items ?? []).filter(i => i?.id && i?.kind).slice(0, MAX);
+  if (!list.length) return clearBattle();
+  const kind = list[0].kind;
+  const seen = new Set();
+  write({ kind, items: list.filter(i => i.kind === kind && !seen.has(i.id) && seen.add(i.id)).map(i => ({ id: i.id, kind, name: i.name, org: i.org, board: i.board ?? null })) });
+}
 export function toggleBattle(item) { return inBattle(item.id) ? (removeFromBattle(item.id), { ok: true, removed: true }) : addToBattle(item); }
 
 export function useBattle() {

@@ -2,7 +2,7 @@
 // Resolves by arena slug, canonical id or legacy slug. Editorial long-form
 // content (content/models.js) stays as the Overview when it exists.
 
-import { useMemo, useState, lazy, Suspense } from 'react';
+import { useMemo, useRef, useState, lazy, Suspense } from 'react';
 import { MODELS, ORG_CONFIG, getDescription, useDescriptions } from '../models-data.js';
 import { MODEL_CONTENT } from '../content/models.js';
 import { ArticleSections } from '../components/ArticleLayout.jsx';
@@ -19,6 +19,7 @@ import { series } from '../../shared/history.js';
 import { AddToBattle } from '../domains/comparison/BattleControls.jsx';
 import { DESIGN_CATEGORY_LABEL, aaBenchmarkInfo } from '../domains/benchmarks/registry.js';
 import { topByIntelligence } from '../domains/models/ranking.js';
+import ModelOverview from '../domains/models/ModelOverview.jsx';
 
 const TrendChart = lazy(() => import('../components/charts/TrendChart.jsx'));
 
@@ -56,6 +57,9 @@ export default function ModelPage({ slug, onNavigate, liveModels }) {
   const hist = useHistory();
   const coding = useCoding();
   const [section, setSection] = useState('Overview');
+  const tabsRef = useRef(null);
+  // a link inside the overview opens a tab: bring the tab bar back into view
+  const goSection = s => { setSection(s); requestAnimationFrame(() => { const el = tabsRef.current; if (el && el.getBoundingClientRect().top < 0) window.scrollTo({ top: window.scrollY + el.getBoundingClientRect().top - 110, behavior: 'instant' }); }); };
   const [sweSort, setSweSort] = useState({ key: 'resolved', dir: 'desc' });
   const [provSort, setProvSort] = useState({ key: 'priceBlended', dir: 'asc' });
 
@@ -121,7 +125,7 @@ export default function ModelPage({ slug, onNavigate, liveModels }) {
         <div style={{ display: 'flex', gap: mobile ? 12 : 18, alignItems: 'flex-start', flexWrap: 'wrap', opacity: 0, animation: `aiwar-fade-up 280ms ${EASE} both` }}>
           <div style={{ width: mobile ? 52 : 68, height: mobile ? 52 : 68, background: iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><LabLogo org={model.org} size={mobile ? 28 : 36} /></div>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <h1 style={{ fontSize: mobile ? 'clamp(26px,7vw,36px)' : 'clamp(34px,4vw,52px)', fontWeight: 700, letterSpacing: '-0.045em', lineHeight: 1.0, color: 'var(--text)', margin: '0 0 8px', overflowWrap: 'anywhere' }}>{model.name}</h1>
+            <h1 style={{ fontSize: mobile ? 'clamp(26px,7vw,36px)' : 'clamp(34px,4vw,52px)', fontWeight: 700, letterSpacing: '-0.045em', lineHeight: 1.02, color: 'var(--text)', margin: '0 0 8px', overflowWrap: 'break-word' }}>{model.name}</h1>
             <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center', fontSize: 12, color: 'var(--muted)' }}>
               <span style={{ color: 'var(--text)', fontWeight: 600 }}>{model.org}</span>
               <span>·</span><span>{type}</span>
@@ -131,7 +135,7 @@ export default function ModelPage({ slug, onNavigate, liveModels }) {
               <BadgeTag color={model.arena ? GREEN : GOLD}>{status}</BadgeTag>
             </div>
           </div>
-          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center', width: mobile ? '100%' : undefined }}>
             <AddToBattle item={{ id: model.id, kind: 'llm', name: model.name, org: model.org }} small={false} label="Add to battle" />
             {model.or && <Btn small onClick={() => onNavigate({ type: 'providers', slug: model.id })}>Providers</Btn>}
           </div>
@@ -151,63 +155,21 @@ export default function ModelPage({ slug, onNavigate, liveModels }) {
         <StatTile label="Context" metricKey="context" value={model.contextLabel ?? NA} sub={isNum(model.maxOutput) ? `max out ${fmtMetric('maxOutput', model.maxOutput)}` : undefined} />
       </div>
 
-      <div style={{ marginBottom: 16, overflowX: 'auto' }}><Segmented small value={section} onChange={setSection} options={SECTIONS.map(s => ({ value: s, label: s }))} /></div>
+      <div ref={tabsRef} className="aiwar-tabs-scroll" style={{ marginBottom: 16 }}><Segmented small nowrap={mobile} value={section} onChange={setSection} options={SECTIONS.map(s => ({ value: s, label: s }))} /></div>
 
       {section === 'Overview' && (
         <div style={{ display: 'grid', gap: 12 }}>
-          {content ? (
-            <Panel>
+          <ModelOverview model={model} models={llms.models} family={related.family} lab={related.lab} providers={providers} desc={desc} mobile={mobile}
+            onNavigate={onNavigate} onSection={goSection} sweRuns={sweRuns} />
+          {content && (
+            <Panel pad={mobile ? 16 : 24}>
               <Label style={{ display: 'block', marginBottom: 8 }}>Analyst profile</Label>
               <h2 style={{ fontSize: mobile ? 22 : 28, fontWeight: 700, letterSpacing: '-0.035em', color: 'var(--text)', margin: '0 0 6px', lineHeight: 1.1 }}>{content.headline}</h2>
               <p style={{ fontSize: 15, color: 'var(--muted)', margin: '0 0 8px', lineHeight: 1.5 }}>{content.tagline}</p>
-              <div style={{ fontSize: mobile ? 15.5 : 16.5, lineHeight: 1.7, color: 'var(--text)', letterSpacing: '-0.011em' }}><ArticleSections sections={content.sections} /></div>
+              <div style={{ fontSize: mobile ? 15.5 : 16.5, lineHeight: 1.7, color: 'var(--text)', letterSpacing: '-0.011em', maxWidth: 760 }}><ArticleSections sections={content.sections} /></div>
               <p style={{ marginTop: 12, fontSize: 12, color: 'var(--muted2)' }}>Editorial analysis based on public arena data, model documentation and observed behaviour. Figures on this page refresh automatically from the sources listed.</p>
             </Panel>
-          ) : (
-            <Panel title="About">
-              <p style={{ fontSize: 14.5, lineHeight: 1.65, color: 'var(--text)', margin: 0, opacity: 0.9 }}>
-                {desc ?? (
-                  <>
-                    {model.name} is a model from {model.org}.
-                    {model.arena ? ` It holds arena ELO ${elo} (rank #${model.arena.rank}) from ${fmtMetric('votes', model.arena.votes)} human battles.` : ''}
-                    {isNum(model.aa?.intelligence) ? ` Intelligence Index ${fmtMetric('intelligence', model.aa.intelligence)}.` : ''}
-                    {' '}No long-form profile has been written for it yet — see the{' '}
-                    <a href="#methodology" onClick={e => { e.preventDefault(); onNavigate('methodology'); }} style={link}>methodology</a>
-                    {' '}for how these numbers are produced.
-                  </>
-                )}
-              </p>
-            </Panel>
           )}
-          <div style={{ display: 'grid', gridTemplateColumns: mobile ? '1fr' : '1fr 1fr', gap: 12 }}>
-            <Panel title="Arena standing" action={<SourceTag id="arena" />}>
-              {model.arena ? (
-                <div style={{ display: 'grid', gap: 10 }}>
-                  <ComparisonBar label="ELO vs board leader" valueText={`${elo} / ${llms.models[0]?.arena?.elo ?? '—'}`} width={Math.max(0.05, (elo - 1280) / Math.max(1, (llms.models[0]?.arena?.elo ?? 1500) - 1280))} color={eloColor(elo)} />
-                  <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', fontSize: 12, color: 'var(--muted)' }}>
-                    <span>Rank <b style={{ color: 'var(--text)' }}>#{model.arena.rank}</b></span>
-                    <span>Votes <b style={{ color: 'var(--text)' }}>{fmtMetric('votes', model.arena.votes)}</b></span>
-                    <span>7d <Delta value={model.history?.rankDelta7d} placeholder={model.history ? '=' : NA} /></span>
-                    <span>30d <Delta value={model.history?.rankDelta30d} placeholder={model.history ? '=' : NA} /></span>
-                    {model.arenas?.vision && <span>Vision ELO <b style={{ color: 'var(--text)' }}>{model.arenas.vision.elo}</b> (#{model.arenas.vision.rank})</span>}
-                    {model.arenas?.search && <span>Search ELO <b style={{ color: 'var(--text)' }}>{model.arenas.search.elo}</b> (#{model.arenas.search.rank})</span>}
-                    {model.arenas?.webdev && <span>WebDev ELO <b style={{ color: 'var(--text)' }}>{model.arenas.webdev.elo}</b> (#{model.arenas.webdev.rank})</span>}
-                  </div>
-                </div>
-              ) : <p style={{ fontSize: 12.5, color: 'var(--muted)', margin: 0 }}>This model is not on the arena text board; it is ranked here on its Intelligence Index only.</p>}
-            </Panel>
-            <Panel title="Identity">
-              <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '6px 14px', fontSize: 12.5 }}>
-                <Label>Family</Label><span style={{ fontFamily: MONO, color: 'var(--text)' }}>{model.family}{model.variant ? <span style={{ color: 'var(--muted)' }}> · variant {model.variant}</span> : null}</span>
-                <Label>Licence</Label><span style={{ color: model.isOpen ? GREEN : 'var(--text)' }}>{model.license ?? NA}</span>
-                <Label>Released</Label><span>{fmtDate(model.releaseDate)}</span>
-                <Label>Knowledge cutoff</Label><span>{model.or?.knowledgeCutoff ?? NA}</span>
-                <Label>Canonical id</Label><span style={{ fontFamily: MONO, fontSize: 11, color: 'var(--muted)' }}>{model.id}</span>
-                {model.or?.id && <><Label>OpenRouter</Label><a href={`https://openrouter.ai/${model.or.id}`} target="_blank" rel="noreferrer noopener" style={{ ...link, fontFamily: MONO, fontSize: 11 }}>{model.or.id} ↗</a></>}
-                {model.arena?.url && <><Label>Model card</Label><a href={model.arena.url} target="_blank" rel="noreferrer noopener" style={{ ...link, fontSize: 11, overflowWrap: 'anywhere' }}>{model.arena.url.replace(/^https?:\/\//, '').slice(0, 60)} ↗</a></>}
-              </div>
-            </Panel>
-          </div>
         </div>
       )}
 

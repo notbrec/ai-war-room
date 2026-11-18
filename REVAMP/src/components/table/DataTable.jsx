@@ -18,6 +18,11 @@
 //  • when the table fits its container the header sticks under the nav bar;
 //    when it must scroll sideways the first column sticks instead and casts a
 //    shadow once you have scrolled
+//  • a table that scrolls sideways says so: a slim rail on its top edge shows
+//    how much is off-screen and where you are, and the right edge is shaded
+//    until the last column is in view
+//  • on a phone a data bar moves under its number (2 px, full cell width), so
+//    the first metric sits whole next to the name instead of half off-screen
 
 import { Fragment, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { MONO, SF, EASE } from '../design.jsx';
@@ -140,12 +145,44 @@ export default function DataTable({
 }) {
   const [shown, setShown] = useState(pageSize);
   useEffect(() => { setShown(pageSize); }, [rows, pageSize]);
-  const cols = columns.filter(c => c.sticky || visible.includes(c.key)).filter(c => !mobile || c.mobile !== false);
+  const shownCols = columns.filter(c => c.sticky || visible.includes(c.key)).filter(c => !mobile || c.mobile !== false);
+  // On a phone there is room for the name and about one metric, so the column
+  // the table is sorted by docks next to the name: sort by anything and that
+  // value is on screen, without scrolling sideways to find it.
+  const cols = useMemo(() => {
+    if (!mobile || !sort?.key) return shownCols;
+    const docked = shownCols.find(c => c.key === sort.key && !c.sticky);
+    if (!docked) return shownCols;
+    return [...shownCols.filter(c => c.sticky), docked, ...shownCols.filter(c => !c.sticky && c !== docked)];
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mobile, sort?.key, shownCols.map(c => c.key).join('|'), columns]);
 
   const wrapRef = useRef(null), tableRef = useRef(null);
   const fits = useFitsWidth(wrapRef, tableRef, [cols.length, mobile]);
   const [scrolledX, setScrolledX] = useState(false);
-  const onScroll = e => { const s = e.currentTarget.scrollLeft > 2; if (s !== scrolledX) setScrolledX(s); };
+  const [more, setMore] = useState(false);          // content still hidden to the right
+  const thumbRef = useRef(null);
+  // The rail thumb is moved straight on the DOM node: a scroll event must not re-render 60 rows.
+  const syncRail = el => {
+    if (!el) return;
+    const { scrollLeft, scrollWidth, clientWidth } = el;
+    const t = thumbRef.current;
+    if (t && scrollWidth > 0) {
+      t.style.width = `${(clientWidth / scrollWidth) * 100}%`;
+      t.style.transform = `translateX(${(scrollLeft / clientWidth) * 100}%)`;
+    }
+    const s = scrollLeft > 2; if (s !== scrolledX) setScrolledX(s);
+    const m = scrollLeft + clientWidth < scrollWidth - 2; if (m !== more) setMore(m);
+  };
+  const onScroll = e => syncRail(e.currentTarget);
+  useLayoutEffect(() => {
+    const el = wrapRef.current; if (!el) return;
+    syncRail(el);
+    const ro = new ResizeObserver(() => syncRail(el));
+    ro.observe(el); if (tableRef.current) ro.observe(tableRef.current);
+    return () => ro.disconnect();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fits, cols.length, mobile, rows.length]);
 
   const sorted = useMemo(() => {
     if (!sort?.key) return rows;
@@ -185,6 +222,8 @@ export default function DataTable({
   const dirOf = c => c.higherIsBetter ?? (c.metricKey ? metric(c.metricKey).higherIsBetter : null);
   const clickSort = col => {
     if (!onSort || col.sortable === false) return;
+    // the newly sorted column docks beside the name on a phone — bring it into view
+    if (mobile && sort?.key !== col.key && wrapRef.current) wrapRef.current.scrollLeft = 0;
     if (sort?.key === col.key) onSort({ key: col.key, dir: sort.dir === 'asc' ? 'desc' : 'asc' });
     else {
       // First click sorts "best first": higher-is-better → desc, lower-is-better → asc, text → asc.
@@ -197,6 +236,9 @@ export default function DataTable({
   const bands = groupBands(cols);
   const showBands = !mobile && bands.filter(b => b.group).length >= 2;
   const padY = dense ? 7 : 10;
+  const padX = mobile ? 8 : 10;
+  // on a phone a bar column is only as wide as its number (the bar sits under it)
+  const widthOf = c => (mobile && c.bar ? (c.valueWidth ?? 40) + 2 * padX + 4 : c.width);
   const alignOf = c => c.align ?? (c.numeric ? 'right' : 'left');
   const stickTop = stickyHeader && fits;
   const bandH = showBands ? 22 : 0;
@@ -206,9 +248,11 @@ export default function DataTable({
 
   return (
     <div className="aiwar-surface aiwar-dt">
+      {!fits && <div className="aiwar-dt-rail" aria-hidden><span ref={thumbRef} /></div>}
+      {!fits && <span className="aiwar-dt-edge" data-on={more ? '1' : '0'} aria-hidden />}
       <div ref={wrapRef} className="aiwar-dt-scroll" data-scrolled={scrolledX ? '1' : '0'} onScroll={onScroll}
-        style={{ overflowX: fits ? 'visible' : 'auto', WebkitOverflowScrolling: 'touch' }}>
-        <table ref={tableRef} style={{ width: '100%', minWidth: cols.reduce((s, c) => s + (c.width ?? 100), 0), fontFamily: SF }}>
+        style={{ overflowX: fits ? 'visible' : 'auto', WebkitOverflowScrolling: 'touch', overscrollBehaviorX: fits ? undefined : 'contain' }}>
+        <table ref={tableRef} style={{ width: '100%', minWidth: cols.reduce((s, c) => s + (widthOf(c) ?? 100), 0), fontFamily: SF }}>
           <thead>
             {showBands && (
               <tr className="aiwar-dt-groups">
@@ -237,9 +281,9 @@ export default function DataTable({
                     zIndex: c.sticky ? 5 : 3,
                     borderBottom: `1px solid ${active ? 'var(--text)' : 'var(--sep)'}`, borderRight: c.sticky ? '0.5px solid var(--sep)' : undefined,
                     borderLeft: groupStart.has(c.key) ? '0.5px solid var(--sep)' : undefined,
-                    padding: `${dense ? 8 : 10}px ${i === cols.length - 1 ? 14 : 10}px ${dense ? 7 : 9}px ${i === 0 ? 14 : 10}px`, textAlign: align,
+                    padding: `${dense ? 8 : 10}px ${i === cols.length - 1 ? 14 : padX}px ${dense ? 7 : 9}px ${i === 0 ? 14 : padX}px`, textAlign: align,
                     fontSize: 10.5, fontWeight: 600, color: active ? 'var(--text)' : 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: MONO,
-                    whiteSpace: 'nowrap', cursor: sortable ? 'pointer' : 'default', userSelect: 'none', width: c.width, minWidth: c.width,
+                    whiteSpace: 'nowrap', cursor: sortable ? 'pointer' : 'default', userSelect: 'none', width: widthOf(c), minWidth: widthOf(c),
                     transition: 'color 160ms ease, border-color 160ms ease',
                   }}>
                     <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, flexDirection: align === 'right' ? 'row-reverse' : 'row' }}>
@@ -281,11 +325,16 @@ export default function DataTable({
                           borderRight: c.sticky ? '0.5px solid var(--sep)' : undefined,
                           borderLeft: hi && i === 0 ? `3px solid ${hi}` : groupStart.has(c.key) ? '0.5px solid var(--sep2)' : undefined,
                           borderBottom: '0.5px solid var(--sep2)',
-                          padding: `${padY}px ${i === cols.length - 1 ? 14 : 10}px ${padY}px ${i === 0 ? (hi ? 11 : 14) : 10}px`,
+                          padding: `${padY}px ${i === cols.length - 1 ? 14 : padX}px ${padY}px ${i === 0 ? (hi ? 11 : 14) : padX}px`,
                           textAlign: align, fontSize: dense ? 12.5 : 13, color: 'var(--text)', whiteSpace: 'nowrap', lineHeight: 1.3,
                           fontVariantNumeric: 'tabular-nums', fontFamily: c.mono !== false && c.numeric ? MONO : SF, maxWidth: c.maxWidth, overflow: c.maxWidth ? 'hidden' : undefined, textOverflow: c.maxWidth ? 'ellipsis' : undefined,
                         }}>
-                          {ratio != null ? (
+                          {ratio != null && mobile ? (
+                            <span className="aiwar-dt-cell-under">
+                              <span className="aiwar-dt-val">{content}</span>
+                              <span className="aiwar-bar-under" aria-hidden style={{ color: c.barColor ?? 'var(--text)' }}><span style={{ width: `${(ratio * 100).toFixed(1)}%` }} /></span>
+                            </span>
+                          ) : ratio != null ? (
                             <span className="aiwar-dt-cell-bar">
                               <span className="aiwar-bar-track" aria-hidden style={{ width: c.barWidth ?? 44, color: c.barColor ?? 'var(--text)' }}><span style={{ width: `${(ratio * 100).toFixed(1)}%` }} /></span>
                               <span className="aiwar-dt-val" style={{ minWidth: c.valueWidth ?? 40 }}>{content}</span>

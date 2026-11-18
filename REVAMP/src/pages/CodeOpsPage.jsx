@@ -52,15 +52,16 @@ export default function CodeOpsPage({ onNavigate, slug }) {
   }), [rows, q, checkedOnly, withCost, openModel, openSystem]);
 
   const columns = useMemo(() => [
-    { key: 'sub', label: 'Agent + model', sticky: true, width: mobile ? 220 : 320, value: r => r.rank, defaultDir: 'asc',
+    { key: 'sub', label: 'Agent + model', sticky: true, width: mobile ? 204 : 320, value: r => r.rank, defaultDir: 'asc',
       render: r => (
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
           <span style={{ width: 24, textAlign: 'right', fontFamily: MONO, fontSize: 11, color: 'var(--muted)' }}>{r.rank}</span>
           <LabLogo org={r.modelOrg} size={16} />
           <div style={{ minWidth: 0 }}>
-            <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', letterSpacing: '-0.02em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: mobile ? 160 : 260 }}>{r.model ?? '—'}</div>
-            <div style={{ fontSize: 10.5, color: 'var(--muted)', display: 'flex', gap: 5, alignItems: 'center' }}>
-              <span style={{ color: BLUE, fontWeight: 600 }}>{r.agent}</span>{r.reasoningEffort && <BadgeTag color={PURPLE}>{r.reasoningEffort}</BadgeTag>}{r.attempts === '2+' && <BadgeTag color={GOLD}>2+ attempts</BadgeTag>}
+            <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', letterSpacing: '-0.02em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: mobile ? 132 : 260 }}>{r.model ?? '—'}</div>
+            {/* on a phone the line is capped: the harness name truncates and "2+ attempts" shortens to "2+" */}
+            <div style={{ fontSize: 10.5, color: 'var(--muted)', display: 'flex', gap: 5, alignItems: 'center', maxWidth: mobile ? 132 : undefined }}>
+              <span style={{ color: BLUE, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>{r.agent}</span>{r.reasoningEffort && <BadgeTag color={PURPLE}>{r.reasoningEffort}</BadgeTag>}{r.attempts === '2+' && <BadgeTag color={GOLD}>{mobile ? '2+' : '2+ attempts'}</BadgeTag>}
             </div>
           </div>
         </div>
