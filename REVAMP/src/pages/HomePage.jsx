@@ -2,7 +2,7 @@
 // Nothing is tucked away: the fight, every situation card, the picks for
 // every job, the top ten, the labs, the tools, a real battle, every front.
 
-import { lazy, Suspense, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { MODELS, ORG_CONFIG } from '../models-data.js';
 import { useMobile } from '../hooks/useTheme.js';
 import { SF, MONO, EASE, Reveal, AnimatedNumber, LivePulse, ComparisonBar, Skeleton, TrendArrow } from '../components/design.jsx';
@@ -81,6 +81,15 @@ export default function HomePage({ onNavigate, liveModels, countSnapshot }) {
   const data     = liveModels ?? MODELS;
   const wr       = useWarRoomCards();
 
+  // The hero paints first; everything under it mounts right after that frame,
+  // so a slow phone shows the page instead of waiting on the whole board.
+  const [below, setBelow] = useState(false);
+  useEffect(() => {
+    let t = null;
+    const raf = requestAnimationFrame(() => { t = setTimeout(() => setBelow(true), 0); });
+    return () => { cancelAnimationFrame(raf); clearTimeout(t); };
+  }, []);
+
   const stats = useMemo(() => ({
     orgs: new Set(data.map(m => m.org)).size,
     votes: data.reduce((s, m) => s + (m.votes ?? 0), 0),
@@ -119,10 +128,11 @@ export default function HomePage({ onNavigate, liveModels, countSnapshot }) {
         <HeroArena models={liveModels} fighters={fighters} isLoaded={fighters.length >= 2 || (isLoaded && !wr.loading)} onNavigate={onNavigate} mobile={mobile} snap={snap} stats={stats} />
 
         {/* the tape */}
-        <div style={{ margin: mobile ? '28px -18px 0' : '40px 0 0', opacity: 0, animation: `aiwar-fade-in 900ms ${EASE} 1200ms both` }}>
+        <div style={{ margin: mobile ? '28px -18px 0' : '40px 0 0', opacity: 0, animation: `aiwar-fade-in 280ms ${EASE} both` }}>
           <Ticker models={liveModels} onNavigate={onNavigate} mobile={mobile} />
         </div>
 
+        {below ? <>
         {/* The board — who wins what, on every front */}
         <section style={{ marginTop: gapY }}>
           <SectionHead mobile={mobile} eyebrow="The board" title="Who wins what."
@@ -184,6 +194,7 @@ export default function HomePage({ onNavigate, liveModels, countSnapshot }) {
         <section style={{ marginTop: mobile ? 36 : 56 }}>
           <Reveal><SourcesStrip sources={wr.sources} mobile={mobile} onNavigate={onNavigate} /></Reveal>
         </section>
+        </> : <div style={{ minHeight: '100vh' }} />}
 
       </div>
     </div>

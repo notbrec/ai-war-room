@@ -92,7 +92,7 @@ export default function MediaBattle({ kind, roster, candidates, priceKey, mobile
             {roster.map((r, i) => {
               const color = labColor(r.org, ORG_CONFIG);
               return (
-                <div key={r.id} className="aiwar-surface" style={{ minWidth: mobile ? '82vw' : 0, scrollSnapAlign: 'start', display: 'flex', flexDirection: 'column', animation: `aiwar-fade-up 500ms ${EASE} ${i * 70}ms both` }}>
+                <div key={r.id} className="aiwar-surface" style={{ minWidth: mobile ? '82vw' : 0, scrollSnapAlign: 'start', display: 'flex', flexDirection: 'column', animation: `aiwar-fade-up 280ms ${EASE} both` }}>
                   <div style={{ padding: '9px 12px', borderBottom: '0.5px solid var(--sep)', display: 'flex', alignItems: 'center', gap: 8 }}>
                     <span aria-hidden style={{ width: 8, height: 8, background: color, flexShrink: 0 }} />
                     <Label>Model {String.fromCharCode(65 + i)}</Label>

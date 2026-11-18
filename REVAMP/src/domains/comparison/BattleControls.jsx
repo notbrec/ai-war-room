@@ -51,7 +51,7 @@ export function BattleDrawer({ onNavigate, page }) {
       position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: 150, fontFamily: SF,
       background: 'var(--nav)', backdropFilter: 'saturate(180%) blur(20px)', WebkitBackdropFilter: 'saturate(180%) blur(20px)',
       borderTop: '0.5px solid var(--sep)', boxShadow: '0 -12px 32px rgba(0,0,0,0.18)',
-      animation: `aiwar-fade-up 400ms ${EASE} both`,
+      animation: `aiwar-fade-up 280ms ${EASE} both`,
     }}>
       <div style={{ maxWidth: 1100, margin: '0 auto', padding: mobile ? '8px 12px' : '10px 24px', display: 'flex', alignItems: 'center', gap: 10 }}>
         <RobotMascot variant="classic" size={18} color="var(--accent)" />

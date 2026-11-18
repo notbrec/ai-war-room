@@ -47,16 +47,26 @@ export default function CyberBackground({ dark }) {
 
   const svgRef   = useRef(null);
   const fieldRef = useRef(null);
+  // Parallax drift, driven by scroll only. (A loop that read scrollY on every
+  // frame forced a full layout per frame while the page was being built.)
   useEffect(() => {
-    let raf, curField = 0;
+    let raf = null, cur = 0, target = 0;
     const tick = () => {
-      const y = window.scrollY || 0;
-      curField += (-y * 0.025 - curField) * 0.08;
-      if (fieldRef.current) fieldRef.current.style.transform = `translate3d(0, ${curField.toFixed(2)}px, 0)`;
-      raf = requestAnimationFrame(tick);
+      cur += (target - cur) * 0.08;
+      if (Math.abs(target - cur) < 0.05) cur = target;
+      if (fieldRef.current) fieldRef.current.style.transform = `translate3d(0, ${cur.toFixed(2)}px, 0)`;
+      raf = cur === target ? null : requestAnimationFrame(tick);
     };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
+    const onScroll = () => {
+      target = -(window.scrollY || 0) * 0.025;
+      if (raf == null) raf = requestAnimationFrame(tick);
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    if (window.scrollY) onScroll();
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      if (raf != null) cancelAnimationFrame(raf);
+    };
   }, []);
 
   return (

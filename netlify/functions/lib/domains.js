@@ -3,7 +3,7 @@
 // single outage degrades one column, not the page, and a cold lambda can
 // fill the caches over a few requests instead of one long one.
 
-import { cached, HOURS, readBlob, writeBlob, listBlobs, deleteBlob, hasDurableStore } from './cache.js';
+import { cachedSWR, HOURS, readBlob, writeBlob, listBlobs, deleteBlob, hasDurableStore } from './cache.js';
 import { fetchArenaBoard, ARENA_BOARDS } from './arena.js';
 import { fetchORModels, fetchOREndpoints } from '../adapters/openrouter.js';
 import { aaConfigured, fetchAALLMs, fetchAAMedia, fetchAASpeech } from '../adapters/artificialanalysis.js';
@@ -15,6 +15,7 @@ import { mergeLLMs, mergeMedia, summariseProviders } from './merge.js';
 import { dateKey, snapshotLLMs, snapshotMedia, snapshotsEqual, diffRows, snapshotAtLeast, pruneKeys } from '../../../shared/history.js';
 import { isNum } from '../../../shared/metrics.js';
 import { looseKey } from '../../../shared/ids.js';
+import { mapLimit } from './http.js';
 
 const VERSION = 'v1';
 const key = (name) => `warroom:${VERSION}:${name}`;
@@ -47,11 +48,11 @@ export function carryListing(prior, rows) {
 
 const arenaBoard = (board, ttl = HOURS(6)) => {
   const k = key(`arena:${board}`);
-  return cached(k, ttl, async () => carryListing(await readBlob(k), await fetchArenaBoard(board)), { minValid: d => Array.isArray(d) && d.length > 10 });
+  return cachedSWR(k, ttl, async () => carryListing(await readBlob(k), await fetchArenaBoard(board)), { minValid: d => Array.isArray(d) && d.length > 10 });
 };
 
 const orModels = () =>
-  cached(key('openrouter:models'), HOURS(3), fetchORModels, { minValid: d => Array.isArray(d) && d.length > 50 });
+  cachedSWR(key('openrouter:models'), HOURS(3), fetchORModels, { minValid: d => Array.isArray(d) && d.length > 50 });
 
 // Artificial Analysis: the official Data API when a key is configured, else
 // the published leaderboard pages (adapters/aaweb.js), else nothing.
@@ -107,23 +108,23 @@ async function loadAALLMs() {
 // last good copy is served instead. Visitors never trigger extra calls.
 const AA_API_WINDOW = HOURS(12);
 const aaLLMs = () => (aaConfigured() || aaWebEnabled())
-  ? cached(key('aa:llms:v5'), AA_API_WINDOW, loadAALLMs, { minValid: isList(10), retryAfterMs: AA_API_WINDOW })
+  ? cachedSWR(key('aa:llms:v5'), AA_API_WINDOW, loadAALLMs, { minValid: isList(10), retryAfterMs: AA_API_WINDOW })
   : Promise.resolve(AA_OFF);
 
 // Media, voices and transcription: the Data API returns only ELO / rank / CI
 // for these (no prices, no generation times) and has no speech-to-text
 // endpoint at all, so the published pages stay the source even with a key.
 const aaMedia = (board) => aaWebEnabled()
-  ? cached(key(`aa-web:media:${board}`), HOURS(6), () => fetchAAWebMedia(board), { minValid: isList(3) })
-  : aaConfigured() ? cached(key(`aa:media:${board}`), HOURS(6), () => fetchAAMedia(board), { minValid: isList(3) }) : Promise.resolve(AA_OFF);
+  ? cachedSWR(key(`aa-web:media:${board}`), HOURS(6), () => fetchAAWebMedia(board), { minValid: isList(3) })
+  : aaConfigured() ? cachedSWR(key(`aa:media:${board}`), HOURS(6), () => fetchAAMedia(board), { minValid: isList(3) }) : Promise.resolve(AA_OFF);
 
 const aaSpeech = (kind) => aaWebEnabled()
-  ? cached(key(`aa-web:speech:${kind}`), HOURS(6), () => fetchAAWebSpeech(kind), { minValid: isList(3) })
-  : aaConfigured() ? cached(key(`aa:speech:${kind}`), HOURS(6), () => fetchAASpeech(kind), { minValid: isList(3) }) : Promise.resolve(AA_OFF);
+  ? cachedSWR(key(`aa-web:speech:${kind}`), HOURS(6), () => fetchAAWebSpeech(kind), { minValid: isList(3) })
+  : aaConfigured() ? cachedSWR(key(`aa:speech:${kind}`), HOURS(6), () => fetchAASpeech(kind), { minValid: isList(3) }) : Promise.resolve(AA_OFF);
 
-const swe = () => cached(key('swebench'), HOURS(12), fetchSWEBench, { minValid: d => d && Array.isArray(d.Verified) && d.Verified.length > 10 });
-const asr = () => cached(key('openasr'), HOURS(24), fetchOpenASR, { minValid: d => Array.isArray(d) && d.length > 5 });
-const genai = () => cached(key('genaibench'), HOURS(24), () => fetchGenAIBench(), { minValid: d => d && d.boards && Object.keys(d.boards).length > 0 });
+const swe = () => cachedSWR(key('swebench'), HOURS(12), fetchSWEBench, { minValid: d => d && Array.isArray(d.Verified) && d.Verified.length > 10 });
+const asr = () => cachedSWR(key('openasr'), HOURS(24), fetchOpenASR, { minValid: d => Array.isArray(d) && d.length > 5 });
+const genai = () => cachedSWR(key('genaibench'), HOURS(24), () => fetchGenAIBench(), { minValid: d => d && d.boards && Object.keys(d.boards).length > 0 });
 
 // ── LLMs ───────────────────────────────────────────────────────────────────
 export async function loadLLMs() {
@@ -195,7 +196,7 @@ export async function loadProviders() {
     .filter(m => !seenOr.has(m.or.id) && seenOr.add(m.or.id)).slice(0, 90);
   const ids = targets.map(m => m.or.id);
   const idToModel = Object.fromEntries(targets.map(m => [m.or.id, m.id]));
-  const eps = await cached(key('openrouter:endpoints:v2'), HOURS(6), async () => {
+  const eps = await cachedSWR(key('openrouter:endpoints:v2'), HOURS(6), async () => {
     const byOr = await fetchOREndpoints(ids, { limit: 8, modelIdFor: id => idToModel[id] });
     const byModel = {};
     for (const [orId, list] of Object.entries(byOr)) byModel[idToModel[orId]] = list;
@@ -280,8 +281,8 @@ let snapMemo = { at: 0, snaps: null };
 async function listSnapshots({ force = false } = {}) {
   if (!force && snapMemo.snaps && Date.now() - snapMemo.at < 15 * 60 * 1000) return snapMemo.snaps;
   const keys = await listBlobs(HIST_PREFIX);
-  const snaps = [];
-  for (const k of keys) { const s = await readBlob(k); if (s?.date) snaps.push(s); }
+  // In parallel: one blob per stored day, read one by one, cost a cold lambda seconds.
+  const snaps = (await mapLimit(keys, 16, k => readBlob(k))).filter(s => s?.date);
   snaps.sort((a, b) => (a.date < b.date ? -1 : 1));
   snapMemo = { at: Date.now(), snaps };
   return snaps;

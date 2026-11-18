@@ -12,6 +12,11 @@
 
 import { getStore } from '@netlify/blobs';
 import { loadLLMs } from './lib/domains.js';
+import { setBackgroundRunner } from './lib/cache.js';
+
+// Kept in Netlify's durable CDN cache and served stale while it revalidates
+// (see warroom.js), so a visitor never waits for the merge below.
+const CDN_CACHE = 'public, durable, s-maxage=300, stale-while-revalidate=604800';
 
 const CACHE_KEY = 'leaderboard-v6'; // bumped: arena dataset source
 const CACHE_TTL = 60 * 60 * 1000;   // 1 hour — the upstream caches set the real cadence
@@ -50,12 +55,30 @@ export async function fetchFromArena() {
   };
 }
 
-export default async () => {
+export default async (req, context) => {
   const headers = {
     'Content-Type': 'application/json',
     'Access-Control-Allow-Origin': '*',
     'Cache-Control': 'public, max-age=300',
+    'Netlify-CDN-Cache-Control': CDN_CACHE,
   };
+  const waitUntil = typeof context?.waitUntil === 'function' ? p => context.waitUntil(p) : null;
+  setBackgroundRunner(waitUntil);
+  try { return await respond(headers, waitUntil); }
+  finally { setBackgroundRunner(null); }
+};
+
+async function rebuild(store) {
+  const fresh = { ...(await fetchFromArena()), cachedAt: new Date().toISOString() };
+  if (store) {
+    try { await store.setJSON(CACHE_KEY, fresh); } catch (e) { console.warn('Cache write failed:', e.message); }
+  }
+  return fresh;
+}
+
+let rebuilding = null;
+
+async function respond(headers, waitUntil) {
 
   let store = null;
   try { store = getStore('aiwar-cache'); } catch { /* blobs unavailable */ }
@@ -73,13 +96,21 @@ export default async () => {
         headers: { ...headers, 'X-Cache': 'HIT', 'X-Cache-Age': `${Math.round(age / 60000)}min`, 'X-Parser': cached.parser ?? '' },
       });
     }
+    // Past the TTL: answer with the copy we have and rebuild after the response.
+    if (waitUntil && age < CACHE_TTL * 6 && cached.models?.length) {
+      if (!rebuilding) {
+        rebuilding = rebuild(store).catch(e => console.error('Leaderboard background rebuild failed:', e.message)).finally(() => { rebuilding = null; });
+        waitUntil(rebuilding);
+      }
+      return new Response(JSON.stringify(cached), {
+        status: 200,
+        headers: { ...headers, 'X-Cache': 'REVALIDATING', 'X-Cache-Age': `${Math.round(age / 60000)}min`, 'X-Parser': cached.parser ?? '' },
+      });
+    }
   }
 
   try {
-    const fresh = { ...(await fetchFromArena()), cachedAt: new Date().toISOString() };
-    if (store) {
-      try { await store.setJSON(CACHE_KEY, fresh); } catch (e) { console.warn('Cache write failed:', e.message); }
-    }
+    const fresh = await rebuild(store);
     return new Response(JSON.stringify(fresh), {
       status: 200,
       headers: { ...headers, 'X-Cache': 'MISS', 'X-Parser': fresh.parser },
@@ -92,8 +123,8 @@ export default async () => {
         headers: { ...headers, 'X-Cache': 'STALE', 'X-Error': err.message.slice(0, 180) },
       });
     }
-    return new Response(JSON.stringify({ error: err.message }), { status: 500, headers });
+    return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: { ...headers, 'Netlify-CDN-Cache-Control': 'no-store' } });
   }
-};
+}
 
 export const config = { path: '/api/leaderboard' };

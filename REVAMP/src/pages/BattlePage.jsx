@@ -161,7 +161,7 @@ export default function BattlePage({ onNavigate }) {
                   const wins = winnersCount.get(r) ?? 0;
                   const isOverall = overall && overall[0] === r && overall[1] > 0;
                   return (
-                    <div key={i} style={{ background: 'var(--card)', border: `0.5px solid ${isOverall ? GREEN : 'var(--sep)'}`, borderTop: `2px solid ${ORG_CONFIG[org]?.color ?? 'var(--text)'}`, padding: mobile ? '8px 8px' : '12px 14px', minWidth: 0, animation: `aiwar-fade-up 500ms ${EASE} ${i * 70}ms both` }}>
+                    <div key={i} style={{ background: 'var(--card)', border: `0.5px solid ${isOverall ? GREEN : 'var(--sep)'}`, borderTop: `2px solid ${ORG_CONFIG[org]?.color ?? 'var(--text)'}`, padding: mobile ? '8px 8px' : '12px 14px', minWidth: 0, animation: `aiwar-fade-up 280ms ${EASE} both` }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}><Label>{String.fromCharCode(65 + i)}</Label>{isOverall && <BadgeTag color={GREEN}>Most wins</BadgeTag>}</div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>{!mobile && <LabLogo org={org} size={14} />}<span style={{ fontSize: mobile ? 12 : 14, fontWeight: 700, color: 'var(--text)', letterSpacing: '-0.025em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{nm}</span></div>
                       <div style={{ fontSize: 10.5, color: 'var(--muted)', marginTop: 2 }}>{org} · <span style={{ fontFamily: MONO }}>{wins} row win{wins === 1 ? '' : 's'}</span></div>

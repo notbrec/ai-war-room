@@ -266,14 +266,14 @@ export default function FAQPage({ onNavigate, liveModels }) {
 
         {/* ── Header ─────────────────────────────────────────────── */}
         <header style={{ marginBottom: 36 }}>
-          <div style={{ opacity: 0, animation: `aiwar-fade-up 700ms ${EASE} both` }}>
+          <div style={{ opacity: 0, animation: `aiwar-fade-up 280ms ${EASE} both` }}>
             <Eyebrow>FAQ</Eyebrow>
           </div>
           <h1 style={{
             fontSize: mobile ? 'clamp(36px,9vw,48px)' : 'clamp(52px,5.8vw,76px)',
             fontWeight: 700, letterSpacing: '-0.05em', lineHeight: 0.98,
             color: 'var(--text)', margin: '10px 0 18px',
-            opacity: 0, animation: `aiwar-fade-up 800ms ${EASE} 80ms both`,
+            opacity: 0, animation: `aiwar-fade-up 280ms ${EASE} both`,
           }}>
             Honest answers.<br />No marketing.
           </h1>
@@ -281,7 +281,7 @@ export default function FAQPage({ onNavigate, liveModels }) {
             fontSize: mobile ? 17 : 21, lineHeight: 1.45,
             color: 'var(--muted)', letterSpacing: '-0.02em',
             margin: 0,
-            opacity: 0, animation: `aiwar-fade-up 800ms ${EASE} 160ms both`,
+            opacity: 0, animation: `aiwar-fade-up 280ms ${EASE} both`,
           }}>
             The questions we get most often about ELO, arena battles, picking a
             model, pricing, and how the leaderboard works.

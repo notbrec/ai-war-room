@@ -1,18 +1,28 @@
 import { useState, useEffect } from 'react';
 
+let themeAnimTimer = null;
+
 export function useTheme() {
-  const [dark, setDark] = useState(() => {
-    const saved = localStorage.getItem('aiwar-theme');
-    if (saved) return saved === 'dark';
-    return window.matchMedia('(prefers-color-scheme: dark)').matches;
-  });
+  // The blocking script in index.html has already picked the theme (saved
+  // choice, else dark) and painted it; start from that, so the first render
+  // never flips the page — or makes the fight clips load in both gradings.
+  const [dark, setDark] = useState(() => document.documentElement.classList.contains('dark'));
+  const [chosen, setChosen] = useState(false);
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark', dark);
-    localStorage.setItem('aiwar-theme', dark ? 'dark' : 'light');
-  }, [dark]);
+    if (!chosen) return;
+    try { localStorage.setItem('aiwar-theme', dark ? 'dark' : 'light'); } catch {}
+  }, [dark, chosen]);
 
-  const toggle = () => setDark(d => !d);
+  const toggle = () => {
+    const html = document.documentElement;
+    html.classList.add('aiwar-theme-anim');
+    clearTimeout(themeAnimTimer);
+    themeAnimTimer = setTimeout(() => html.classList.remove('aiwar-theme-anim'), 450);
+    setChosen(true);
+    setDark(d => !d);
+  };
 
   return { dark, toggle };
 }

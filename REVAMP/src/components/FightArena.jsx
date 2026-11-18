@@ -67,6 +67,28 @@ export default function FightArena({
 
   const [ready, setReady] = useState(false);
   const videoRef = useRef(null);
+  const boxRef = useRef(null);
+
+  /* The clip (~250 KB) is not requested until its slot is near the viewport
+     and the browser is idle, so it never competes with the page's code and
+     data for the first second; the poster covers the slot until then. */
+  const [go, setGo] = useState(false);
+  useEffect(() => {
+    const el = boxRef.current;
+    if (!el || go) return;
+    let idleId = null;
+    const ric = window.requestIdleCallback;
+    const io = new IntersectionObserver(entries => {
+      if (!entries.some(e => e.isIntersecting)) return;
+      io.disconnect();
+      idleId = ric ? ric(() => setGo(true), { timeout: 1200 }) : setTimeout(() => setGo(true), 300);
+    }, { rootMargin: '300px 0px' });
+    io.observe(el);
+    return () => {
+      io.disconnect();
+      if (idleId != null) (ric ? window.cancelIdleCallback(idleId) : clearTimeout(idleId));
+    };
+  }, [go]);
 
   /* Media events don't bubble and a cached clip can be ready before React
      ever attaches a handler, so bind natively and check readyState in the
@@ -80,7 +102,7 @@ export default function FightArena({
      back to readyState 0. */
   useEffect(() => {
     const v = videoRef.current;
-    if (!v) return;
+    if (!v || !go) return;
     const reveal = () => setReady(true);
     /* hand the slot back to the poster while the new grading loads, or the
        old clip's reveal would leave an empty box uncovered */
@@ -92,10 +114,11 @@ export default function FightArena({
       v.removeEventListener('canplay', reveal);
       v.removeEventListener('playing', reveal);
     };
-  }, [src]);
+  }, [src, go]);
 
   return (
     <div
+      ref={boxRef}
       style={{
         position: 'relative',
         aspectRatio: aspect,
@@ -117,6 +140,7 @@ export default function FightArena({
       <img
         src={poster}
         alt={alt}
+        decoding="async"
         style={{
           position: 'absolute', inset: 0,
           width: '100%', height: '100%', objectFit: 'cover',
@@ -127,7 +151,7 @@ export default function FightArena({
       />
       <video
         ref={videoRef}
-        src={src}
+        src={go ? src : undefined}
         muted
         loop
         playsInline

@@ -14,7 +14,7 @@ export default function ArticleLayout({ eyebrow, title, subtitle, meta, children
         <header style={{ marginBottom: mobile ? 32 : 44 }}>
           {eyebrow && (
             <div style={{
-              opacity: 0, animation: `aiwar-fade-up 700ms ${EASE} both`,
+              opacity: 0, animation: `aiwar-fade-up 280ms ${EASE} both`,
             }}>
               <Eyebrow>{eyebrow}</Eyebrow>
             </div>
@@ -24,7 +24,7 @@ export default function ArticleLayout({ eyebrow, title, subtitle, meta, children
             fontSize: mobile ? 'clamp(34px,8.5vw,46px)' : 'clamp(48px,5.4vw,72px)',
             fontWeight: 700, letterSpacing: '-0.05em', lineHeight: 1.0,
             color: 'var(--text)', margin: '10px 0 18px',
-            opacity: 0, animation: `aiwar-fade-up 800ms ${EASE} 80ms both`,
+            opacity: 0, animation: `aiwar-fade-up 280ms ${EASE} both`,
           }}>
             {title}
           </h1>
@@ -34,7 +34,7 @@ export default function ArticleLayout({ eyebrow, title, subtitle, meta, children
               fontSize: mobile ? 17 : 21, lineHeight: 1.45,
               color: 'var(--muted)', letterSpacing: '-0.02em',
               margin: 0,
-              opacity: 0, animation: `aiwar-fade-up 800ms ${EASE} 160ms both`,
+              opacity: 0, animation: `aiwar-fade-up 280ms ${EASE} both`,
             }}>
               {subtitle}
             </p>
@@ -44,7 +44,7 @@ export default function ArticleLayout({ eyebrow, title, subtitle, meta, children
             <div style={{
               fontSize: 13, color: 'var(--muted2)', marginTop: 22,
               letterSpacing: '-0.01em', fontFamily: MONO,
-              opacity: 0, animation: `aiwar-fade-up 800ms ${EASE} 240ms both`,
+              opacity: 0, animation: `aiwar-fade-up 280ms ${EASE} both`,
             }}>
               {meta}
             </div>

@@ -3,7 +3,7 @@
 // content (content/models.js) stays as the Overview when it exists.
 
 import { useMemo, useState, lazy, Suspense } from 'react';
-import { MODELS, ORG_CONFIG, getDescription } from '../models-data.js';
+import { MODELS, ORG_CONFIG, getDescription, useDescriptions } from '../models-data.js';
 import { MODEL_CONTENT } from '../content/models.js';
 import { ArticleSections } from '../components/ArticleLayout.jsx';
 import { useDark, useMobile } from '../hooks/useTheme.js';
@@ -48,6 +48,7 @@ const SWE_COLS = [
 ];
 
 export default function ModelPage({ slug, onNavigate, liveModels }) {
+  useDescriptions();
   const dark = useDark();
   const mobile = useMobile();
   const llms = useLLMs();
@@ -112,12 +113,12 @@ export default function ModelPage({ slug, onNavigate, liveModels }) {
       <GlobalMotion />
       {/* Header */}
       <header style={{ marginBottom: mobile ? 20 : 28 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12, opacity: 0, animation: `aiwar-fade-up 600ms ${EASE} both` }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12, opacity: 0, animation: `aiwar-fade-up 280ms ${EASE} both` }}>
           <button onClick={() => onNavigate('leaderboard')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: MONO, fontSize: 11, color: 'var(--muted)', letterSpacing: '0.06em', padding: 0 }}>← LLM RANKINGS</button>
           <span style={{ color: 'var(--muted2)' }}>·</span>
           <button onClick={() => onNavigate({ type: 'lab', slug: model.org.toLowerCase().replace(/[^a-z0-9]+/g, '-') })} style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: MONO, fontSize: 11, color: 'var(--muted)', letterSpacing: '0.06em', padding: 0 }}>{model.org.toUpperCase()}</button>
         </div>
-        <div style={{ display: 'flex', gap: mobile ? 12 : 18, alignItems: 'flex-start', flexWrap: 'wrap', opacity: 0, animation: `aiwar-fade-up 700ms ${EASE} 80ms both` }}>
+        <div style={{ display: 'flex', gap: mobile ? 12 : 18, alignItems: 'flex-start', flexWrap: 'wrap', opacity: 0, animation: `aiwar-fade-up 280ms ${EASE} both` }}>
           <div style={{ width: mobile ? 52 : 68, height: mobile ? 52 : 68, background: iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><LabLogo org={model.org} size={mobile ? 28 : 36} /></div>
           <div style={{ flex: 1, minWidth: 0 }}>
             <h1 style={{ fontSize: mobile ? 'clamp(26px,7vw,36px)' : 'clamp(34px,4vw,52px)', fontWeight: 700, letterSpacing: '-0.045em', lineHeight: 1.0, color: 'var(--text)', margin: '0 0 8px', overflowWrap: 'anywhere' }}>{model.name}</h1>
@@ -135,7 +136,7 @@ export default function ModelPage({ slug, onNavigate, liveModels }) {
             {model.or && <Btn small onClick={() => onNavigate({ type: 'providers', slug: model.id })}>Providers</Btn>}
           </div>
         </div>
-        <div style={{ marginTop: 14, opacity: 0, animation: `aiwar-fade-up 700ms ${EASE} 160ms both` }}>
+        <div style={{ marginTop: 14, opacity: 0, animation: `aiwar-fade-up 280ms ${EASE} both` }}>
           <DataStatus status={llms.status} fetchedAt={llms.data?.fetchedAt} sources={model.sources} loading={llms.loading} compact />
         </div>
       </header>

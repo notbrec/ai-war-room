@@ -7,7 +7,7 @@
 // benchmark sites people already read, drawn our way.
 
 import { useState, useMemo, useCallback } from 'react';
-import { MODELS, ORG_CONFIG, RELEASE, getDescription } from '../models-data.js';
+import { MODELS, ORG_CONFIG, RELEASE, getDescription, useDescriptions } from '../models-data.js';
 import { useDark, useMobile } from '../hooks/useTheme.js';
 import { SF, MONO, EASE, Reveal, AnimatedNumber, Eyebrow, GlobalMotion, ComparisonBar } from '../components/design.jsx';
 import ChampionBout from '../components/ChampionBout.jsx';
@@ -291,21 +291,21 @@ export default function LeaderboardPage({ liveModels, onNavigate }) {
 
         {/* ── Header ─────────────────────────────────────────────── */}
         <header style={{ marginBottom: mobile ? 28 : 36 }}>
-          <div style={{ opacity: 0, animation: `aiwar-fade-up 700ms ${EASE} both` }}>
+          <div style={{ opacity: 0, animation: `aiwar-fade-up 280ms ${EASE} both` }}>
             <Eyebrow>LLM Rankings</Eyebrow>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: mobile ? 12 : 18, margin: '10px 0 14px', opacity: 0, animation: `aiwar-fade-up 800ms ${EASE} 80ms both` }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: mobile ? 12 : 18, margin: '10px 0 14px', opacity: 0, animation: `aiwar-fade-up 280ms ${EASE} both` }}>
             <h1 style={{ fontSize: mobile ? 'clamp(34px,8.5vw,46px)' : 'clamp(48px,5.4vw,72px)', fontWeight: 700, letterSpacing: '-0.05em', lineHeight: 0.98, color: 'var(--text)', margin: 0 }}>
               The ranking.
             </h1>
             <RobotMascot variant="eared" size={mobile ? 36 : 48} color="var(--accent)" style={{ flexShrink: 0 }} />
           </div>
-          <p style={{ fontSize: mobile ? 15 : 17, lineHeight: 1.45, color: 'var(--muted)', letterSpacing: '-0.015em', margin: '0 0 14px', maxWidth: 720, opacity: 0, animation: `aiwar-fade-up 800ms ${EASE} 120ms both` }}>
+          <p style={{ fontSize: mobile ? 15 : 17, lineHeight: 1.45, color: 'var(--muted)', letterSpacing: '-0.015em', margin: '0 0 14px', maxWidth: 720, opacity: 0, animation: `aiwar-fade-up 280ms ${EASE} both` }}>
             {aa
               ? 'Every language model by Intelligence Index — independent benchmarks that rate a release within days — plus arena ELO from human votes, price, context, speed and latency.'
               : 'Every language model by arena ELO, price, context and benchmarks.'} Pick the models once at the top — every chart and the table follow.
           </p>
-          <div style={{ opacity: 0, animation: `aiwar-fade-up 800ms ${EASE} 160ms both` }}>
+          <div style={{ opacity: 0, animation: `aiwar-fade-up 280ms ${EASE} both` }}>
             <DataStatus status={status} fetchedAt={llms.data?.fetchedAt} sources={sourcesUsed} loading={llms.loading} onRefresh={llms.reload} />
           </div>
         </header>
@@ -482,6 +482,7 @@ export default function LeaderboardPage({ liveModels, onNavigate }) {
 }
 
 function ExpandedModel({ m, topElo, mobile, onNavigate }) {
+  useDescriptions();
   const description = getDescription(m.name, m.family);
   const tierColor = eloColor(m.arena?.elo);
   const cells = [

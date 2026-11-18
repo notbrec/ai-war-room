@@ -3,8 +3,9 @@
 // Fallback: real arena.ai snapshot (auto-shown while live data loads)
 // Pricing:  live from OpenRouter API (auto-refreshed every 30 min)
 
-import DESCRIPTIONS from './model-descriptions.json';
+import { useEffect, useState } from 'react';
 import { splitVariant } from '../shared/ids.js';
+import { take } from './data/api.js';
 
 export const OPENROUTER_MODELS_URL = 'https://openrouter.ai/api/v1/models';
 export const LEADERBOARD_URL       = '/api/leaderboard';
@@ -44,24 +45,58 @@ const ORG_TOKENS = [
   'inflection','stability','qwen','hunyuan','ernie','doubao','skywork',
 ];
 
+// ── Model descriptions ────────────────────────────────────────────────────
+// 170 KB of prose that only the model profile and the expanded leaderboard
+// row read, so it is its own chunk: requested when the browser is idle (or
+// when one of those views opens) instead of holding up the first paint.
+// getDescription() returns null until it is in; useDescriptions() re-renders
+// the caller when it lands.
+let DESCRIPTIONS = {};
+let DESC_INDEX_NO_PREFIX = {};
+let descReady = false;
+let descPromise = null;
+
+export function loadDescriptions() {
+  if (!descPromise) {
+    descPromise = import('./model-descriptions.json')
+      .then(mod => { DESCRIPTIONS = mod.default ?? mod; DESC_INDEX_NO_PREFIX = buildPrefixIndex(DESCRIPTIONS); descReady = true; })
+      .catch(() => { descPromise = null; });
+  }
+  return descPromise;
+}
+
+/** Re-renders the calling component once the descriptions have loaded. */
+export function useDescriptions() {
+  const [, setReady] = useState(descReady);
+  useEffect(() => {
+    if (descReady) return;
+    let alive = true;
+    loadDescriptions().then(() => { if (alive) setReady(true); });
+    return () => { alive = false; };
+  }, []);
+  return descReady;
+}
+
 // Build an auxiliary index: JSON keys also indexed with leading org prefix stripped
 // (PDF keys often contain company prefix like "tencenthunyuan…", live names don't)
-const DESC_INDEX_NO_PREFIX = {};
-for (const key of Object.keys(DESCRIPTIONS)) {
-  for (const t of ORG_TOKENS) {
-    if (key.startsWith(t) && key.length > t.length + 3) {
-      const stripped = key.slice(t.length);
-      if (!DESC_INDEX_NO_PREFIX[stripped]) DESC_INDEX_NO_PREFIX[stripped] = DESCRIPTIONS[key];
+function buildPrefixIndex(descriptions) {
+  const index = {};
+  for (const key of Object.keys(descriptions)) {
+    for (const t of ORG_TOKENS) {
+      if (key.startsWith(t) && key.length > t.length + 3) {
+        const stripped = key.slice(t.length);
+        if (!index[stripped]) index[stripped] = descriptions[key];
+      }
+    }
+    // Also index "stepfun" → "step", "bytedance" → raw model name etc.
+    for (const t of ['stepfun', 'c4ai']) {
+      if (key.includes(t)) {
+        const stripped = key.replace(t, '');
+        if (!index[stripped]) index[stripped] = descriptions[key];
+      }
     }
   }
-  // Also index "stepfun" → "step", "bytedance" → raw model name etc.
-  const extraPrefixes = ['stepfun','c4ai'];
-  for (const t of extraPrefixes) {
-    if (key.includes(t)) {
-      const stripped = key.replace(t, '');
-      if (!DESC_INDEX_NO_PREFIX[stripped]) DESC_INDEX_NO_PREFIX[stripped] = DESCRIPTIONS[key];
-    }
-  }
+  return index;
 }
 
 // Strip noise: trailing org tokens, long date digits, short date suffixes.
@@ -341,7 +376,8 @@ export function normaliseModel(m, rank) {
 /** Fetch live leaderboard from our Netlify Function.
  *  Returns { models, fetchedAt, stale } so the UI can be honest about age. */
 export async function fetchLeaderboard() {
-  const res  = await fetch(LEADERBOARD_URL);
+  // index.html starts this request before the bundle loads; take it if it did.
+  const res  = await (take('leaderboard') ?? fetch(LEADERBOARD_URL));
   if (!res.ok) throw new Error(`Leaderboard fetch failed: ${res.status}`);
   const json = await res.json();
   if (!Array.isArray(json.models) || json.models.length === 0) {
@@ -371,78 +407,78 @@ export async function fetchOpenRouterMeta() {
   }
 }
 
-// ── Fallback: real arena snapshot (top 66, published 2026-11-09) ─────────────
+// ── Fallback: real arena snapshot (top 66, published 2026-11-11) ─────────────
 // [slug, name, org, elo, votes, license, priceIn, priceOut, contextTokens]
 // Written by scripts/refresh-fallback.mjs from the same merged data the site
 // serves. It is only shown while the live fetch is in flight, so it carries no
 // estimated or hand-added rows — regenerate it, never edit entries by hand.
 const RAW_FALLBACK = [
-  ['gemini-4-carbon-high', 'Gemini 4 Carbon (High)', 'Google', 1526, 4282, 'Proprietary', 2, 10, 1048576],
-  ['gemini-4-argon-high', 'Gemini 4 Argon (High)', 'Google', 1522, 19787, 'Proprietary', 2, 10, 1048576],
-  ['muse-wonder-max', 'Muse Wonder (Max)', 'Meta', 1511, 12032, 'Proprietary', 4, 20, 1048576],
-  ['claude-opus-5.5-high', 'Claude Opus 5.5 (High)', 'Anthropic', 1506, 15249, 'Proprietary', 4, 20, 1000000],
-  ['claude-fable-5-high', 'Claude Fable 5 (High)', 'Anthropic', 1504, 45524, 'Proprietary', 10, 50, 1000000],
-  ['claude-opus-4.6-high', 'Claude Opus 4.6 (High)', 'Anthropic', 1503, 84424, 'Proprietary', 5, 25, 1000000],
-  ['claude-fable-5.1-max', 'Claude Fable 5.1 (Max)', 'Anthropic', 1503, 20087, 'Proprietary', 10, 50, 1000000],
-  ['claude-opus-4.7-high', 'Claude Opus 4.7 (High)', 'Anthropic', 1501, 64308, 'Proprietary', 5, 25, 1000000],
-  ['gemini-3.8-flash-high', 'Gemini 3.8 Flash (High)', 'Google', 1497, 61143, 'Proprietary', 0.825, 4.125, 1048576],
-  ['claude-opus-4.6', 'Claude Opus 4.6', 'Anthropic', 1496, 89228, 'Proprietary', 5, 25, 1000000],
-  ['muse-spark-1.3-max', 'Muse Spark 1.3 (Max)', 'Meta', 1496, 26111, 'Proprietary', 1.25, 4.25, 1048576],
-  ['claude-opus-4.7', 'Claude Opus 4.7', 'Anthropic', 1494, 65369, 'Proprietary', 5, 25, 1000000],
-  ['muse-spark-1.2-xhigh', 'Muse Spark 1.2 (xHigh)', 'Meta', 1493, 15004, 'Proprietary', 1.25, 4.25, 1048576],
-  ['muse-spark-1.1', 'Muse Spark 1.1', 'Meta', 1491, 45562, 'Proprietary', 1.25, 4.25, 1048576],
-  ['claude-opus-5-high', 'Claude Opus 5 (High)', 'Anthropic', 1490, 73697, 'Proprietary', 5, 25, 1000000],
-  ['gemini-3.7-flash-high', 'Gemini 3.7 Flash (High)', 'Google', 1489, 33300, 'Proprietary', 0.75, 3.75, 1048576],
-  ['muse-spark', 'Muse Spark', 'Meta', 1489, 14009, 'Proprietary', null, null, null],
-  ['claude-opus-5-max', 'Claude Opus 5 (Max)', 'Anthropic', 1489, 35710, 'Proprietary', 5, 25, 1000000],
-  ['kimi-k3-max', 'Kimi K3 (Max)', 'Moonshot', 1487, 40867, 'Kimi K3 license', 0.192, 16, 1048576],
-  ['gemini-3.1-pro-preview', 'Gemini 3.1 Pro Preview', 'Google', 1487, 132296, 'Proprietary', 2, 12, 1048576],
-  ['gemini-3-pro', 'Gemini 3 Pro', 'Google', 1486, 41829, 'Proprietary', null, null, null],
-  ['gpt-5.6-sol-xhigh', 'GPT-5.6 Sol (xHigh)', 'OpenAI', 1485, 43994, 'Proprietary', 4, 20, 1050000],
-  ['qwen3.8-max', 'Qwen3.8-Max', 'Alibaba', 1484, 36324, 'Proprietary', 2, 6, 1000000],
-  ['kimi-k3.1-pro-max', 'Kimi K3.1 Pro (Max)', 'Moonshot', 1483, 3443, 'Kimi K3.1 Pro License', 2, 10, 1048576],
-  ['gemini-3.6-flash-high', 'Gemini 3.6 Flash (High)', 'Google', 1483, 35405, 'Proprietary', 0.75, 3.75, 1048576],
-  ['glm-5.3-max', 'GLM-5.3 (Max)', 'Z.ai', 1483, 31017, 'MIT', 0.0699, 1.4, 1048576],
-  ['gpt-6.1-sol-max', 'GPT-6.1 Sol (Max)', 'OpenAI', 1482, 12952, 'Proprietary', 2, 10, 1050000],
-  ['claude-opus-4.8-high', 'Claude Opus 4.8 (High)', 'Anthropic', 1482, 63128, 'Proprietary', 5, 25, 1000000],
-  ['gpt-5.5-high', 'GPT-5.5 (High)', 'OpenAI', 1481, 68359, 'Proprietary', 5, 30, 1050000],
-  ['mimo-v2.6-pro', 'MiMo-V2.6-Pro', 'Xiaomi', 1480, 4066, 'MIT', 0.435, 0.87, 1050000],
-  ['gemini-3.5-flash-high', 'Gemini 3.5 Flash (High)', 'Google', 1478, 47642, 'Proprietary', 1.5, 9, 1048576],
-  ['gemini-3.5-flash-medium', 'Gemini 3.5 Flash (Medium)', 'Google', 1476, 46377, 'Proprietary', 1.5, 9, 1048576],
-  ['gpt-5.5', 'GPT-5.5', 'OpenAI', 1476, 69937, 'Proprietary', 5, 30, 1050000],
-  ['gpt-5.2-chat-20260210', 'GPT-5.2 Chat (20260210)', 'OpenAI', 1476, 35708, 'Proprietary', 1.75, 14, 128000],
-  ['gpt-5.4-high', 'GPT-5.4 (High)', 'OpenAI', 1475, 64103, 'Proprietary', 2.5, 15, 1050000],
-  ['glm-5.2-max', 'GLM-5.2 (Max)', 'Z.ai', 1475, 54173, 'MIT', 0.007, 6.8, 1048576],
-  ['deepseek-v4.1-flash-20260910-max', 'DeepSeek-V4.1-Flash-20260910 (Max)', 'DeepSeek', 1475, 13580, 'MIT', 0.051, 0.567, 1048576],
-  ['grok-4.20-beta-1', 'Grok 4.20 Beta 1', 'xAI', 1475, 27690, 'Proprietary', 1.25, 2.5, 2000000],
-  ['claude-opus-4.8', 'Claude Opus 4.8', 'Anthropic', 1474, 64170, 'Proprietary', 5, 25, 1000000],
-  ['glm-5.3-flash', 'GLM-5.3-Flash', 'Z.ai', 1474, 50189, 'MIT', 0.0399, 0.0784, 1048576],
-  ['gpt-6-astra-max', 'GPT-6 Astra (Max)', 'OpenAI', 1474, 18315, 'Proprietary', 10, 50, 1050000],
-  ['qwen3.7-max-preview', 'Qwen3.7-Max-Preview', 'Alibaba', 1474, 3904, 'Proprietary', 1.475, 4.425, 1000000],
-  ['claude-opus-4.5-high-32k-20251101', 'Claude Opus 4.5 (High, 32K, 20251101)', 'Anthropic', 1474, 37253, 'Proprietary', 5, 25, 200000],
-  ['gpt-5.5-instant', 'GPT-5.5 Instant', 'OpenAI', 1473, 26865, 'Proprietary', 5, 30, null],
-  ['gemini-3-flash', 'Gemini 3 Flash', 'Google', 1473, 31133, 'Proprietary', 0.5, 3, 1048576],
-  ['claude-sonnet-5.5-xhigh', 'Claude Sonnet 5.5 (xHigh)', 'Anthropic', 1472, 13821, 'Proprietary', 2, 10, 1000000],
-  ['grok-4.20-beta-reasoning-0309', 'Grok 4.20 Beta (Reasoning, 0309)', 'xAI', 1472, 65713, 'Proprietary', 1.25, 2.5, 2000000],
-  ['claude-sonnet-4.6', 'Claude Sonnet 4.6', 'Anthropic', 1472, 70017, 'Proprietary', 3, 15, 1000000],
-  ['grok-4.20-multi-agent-beta-0309', 'Grok 4.20 Multi-Agent Beta (0309)', 'xAI', 1471, 64252, 'Proprietary', 1.25, 2.5, 2000000],
-  ['claude-opus-4.5-20251101', 'Claude Opus 4.5 (20251101)', 'Anthropic', 1470, 72313, 'Proprietary', 5, 25, 200000],
-  ['gpt-5.6-terra-xhigh', 'GPT-5.6 Terra (xHigh)', 'OpenAI', 1468, 48825, 'Proprietary', 2, 12, 1050000],
-  ['ernie-5.1', 'ERNIE 5.1', 'Baidu', 1467, 39029, 'Proprietary', null, null, null],
-  ['mimo-v2.5-pro', 'MiMo-V2.5-Pro', 'Xiaomi', 1467, 76793, 'MIT', 0.48, 1.8, 1024000],
-  ['grok-4.5', 'Grok 4.5', 'xAI', 1466, 39155, 'Proprietary', 2, 6, 500000],
-  ['grok-4.1-thinking', 'Grok 4.1 (Thinking)', 'xAI', 1465, 66074, 'Proprietary', null, null, null],
-  ['glm-5.1', 'GLM-5.1', 'Z.ai', 1465, 67074, 'MIT', 1.33, 4.18, 204800],
-  ['qwen3.5-max-preview', 'Qwen3.5-Max-Preview', 'Alibaba', 1465, 22419, 'Proprietary', null, null, null],
-  ['gpt-5.4', 'GPT-5.4', 'OpenAI', 1465, 67105, 'Proprietary', 2.5, 15, 1050000],
-  ['deepseek-v4-pro-high-20260813', 'DeepSeek-V4-Pro (High, 20260813)', 'DeepSeek', 1464, 9584, 'MIT', 0.9553, 1.9105, 1048576],
-  ['claude-sonnet-5-high', 'Claude Sonnet 5 (High)', 'Anthropic', 1461, 53013, 'Proprietary', 2, 10, 1000000],
-  ['kimi-k2.6', 'Kimi K2.6', 'Moonshot', 1461, 39573, 'Modified MIT', 0.65, 3.41, 262144],
-  ['qwen3.6-max-preview', 'Qwen3.6-Max-Preview', 'Alibaba', 1460, 5386, 'Proprietary', null, null, null],
-  ['grok-4.1', 'Grok 4.1', 'xAI', 1459, 68194, 'Proprietary', null, null, null],
-  ['gemini-3-flash-minimal', 'Gemini 3 Flash (Minimal)', 'Google', 1458, 90109, 'Proprietary', 0.5, 3, 1048576],
-  ['deepseek-v4-pro', 'DeepSeek-V4-Pro', 'DeepSeek', 1458, 56906, 'MIT', 0.9553, 1.9105, 1048576],
-  ['glm-5', 'GLM-5', 'Z.ai', 1457, 29020, 'MIT', 1, 3.2, 204800],
+  ['gemini-4-carbon-high', 'Gemini 4 Carbon (High)', 'Google', 1526, 4273, 'Proprietary', 2, 10, 1048576],
+  ['gemini-4-argon-high', 'Gemini 4 Argon (High)', 'Google', 1522, 20779, 'Proprietary', 2, 10, 1048576],
+  ['muse-wonder-max', 'Muse Wonder (Max)', 'Meta', 1511, 12696, 'Proprietary', 4, 20, 1048576],
+  ['claude-opus-5.5-high', 'Claude Opus 5.5 (High)', 'Anthropic', 1507, 15793, 'Proprietary', 4, 20, 1000000],
+  ['claude-fable-5-high', 'Claude Fable 5 (High)', 'Anthropic', 1504, 45469, 'Proprietary', 10, 50, 1000000],
+  ['claude-opus-4.6-high', 'Claude Opus 4.6 (High)', 'Anthropic', 1503, 84375, 'Proprietary', 5, 25, 1000000],
+  ['claude-fable-5.1-max', 'Claude Fable 5.1 (Max)', 'Anthropic', 1502, 20511, 'Proprietary', 10, 50, 1000000],
+  ['claude-opus-4.7-high', 'Claude Opus 4.7 (High)', 'Anthropic', 1501, 64260, 'Proprietary', 5, 25, 1000000],
+  ['gemini-3.8-flash-high', 'Gemini 3.8 Flash (High)', 'Google', 1497, 62675, 'Proprietary', 0.825, 4.125, 1048576],
+  ['muse-spark-1.3-max', 'Muse Spark 1.3 (Max)', 'Meta', 1497, 26806, 'Proprietary', 1.25, 4.25, 1048576],
+  ['claude-opus-4.6', 'Claude Opus 4.6', 'Anthropic', 1496, 89177, 'Proprietary', 5, 25, 1000000],
+  ['claude-opus-4.7', 'Claude Opus 4.7', 'Anthropic', 1494, 65309, 'Proprietary', 5, 25, 1000000],
+  ['muse-spark-1.2-xhigh', 'Muse Spark 1.2 (xHigh)', 'Meta', 1493, 15563, 'Proprietary', 1.25, 4.25, 1048576],
+  ['muse-spark-1.1', 'Muse Spark 1.1', 'Meta', 1491, 45519, 'Proprietary', 1.25, 4.25, 1048576],
+  ['gemini-4-hydrogen-high', 'Gemini 4 Hydrogen (High)', 'Google', 1490, 4741, 'Proprietary', 1.5, 7.5, 1048576],
+  ['claude-opus-5-high', 'Claude Opus 5 (High)', 'Anthropic', 1490, 73632, 'Proprietary', 5, 25, 1000000],
+  ['gemini-3.7-flash-high', 'Gemini 3.7 Flash (High)', 'Google', 1489, 33251, 'Proprietary', 0.75, 3.75, 1048576],
+  ['muse-spark', 'Muse Spark', 'Meta', 1489, 13985, 'Proprietary', null, null, null],
+  ['claude-opus-5-max', 'Claude Opus 5 (Max)', 'Anthropic', 1489, 35670, 'Proprietary', 5, 25, 1000000],
+  ['kimi-k3-max', 'Kimi K3 (Max)', 'Moonshot', 1487, 41402, 'Kimi K3 license', 0.192, 16, 1048576],
+  ['gemini-3.1-pro-preview', 'Gemini 3.1 Pro Preview', 'Google', 1487, 132181, 'Proprietary', 2, 12, 1048576],
+  ['gemini-3-pro', 'Gemini 3 Pro', 'Google', 1486, 41803, 'Proprietary', null, null, null],
+  ['gpt-5.6-sol-xhigh', 'GPT-5.6 Sol (xHigh)', 'OpenAI', 1485, 43925, 'Proprietary', 4, 20, 1050000],
+  ['kimi-k3.1-pro-max', 'Kimi K3.1 Pro (Max)', 'Moonshot', 1485, 3995, 'Kimi K3.1 Pro License', 0.2403, 8.4023, 1048576],
+  ['qwen3.8-max', 'Qwen3.8-Max', 'Alibaba', 1484, 36936, 'Proprietary', 2, 6, 1000000],
+  ['gemini-3.6-flash-high', 'Gemini 3.6 Flash (High)', 'Google', 1483, 35362, 'Proprietary', 0.75, 3.75, 1048576],
+  ['claude-opus-4.8-high', 'Claude Opus 4.8 (High)', 'Anthropic', 1482, 63082, 'Proprietary', 5, 25, 1000000],
+  ['glm-5.3-max', 'GLM-5.3 (Max)', 'Z.ai', 1482, 31604, 'MIT', 0.0699, 1.4, 1048576],
+  ['gpt-5.5-high', 'GPT-5.5 (High)', 'OpenAI', 1481, 68294, 'Proprietary', 5, 30, 1050000],
+  ['gpt-6.1-sol-max', 'GPT-6.1 Sol (Max)', 'OpenAI', 1481, 13498, 'Proprietary', 2, 10, 1050000],
+  ['mimo-v2.6-pro', 'MiMo-V2.6-Pro', 'Xiaomi', 1480, 4064, 'MIT', 0.435, 0.87, 1050000],
+  ['gemini-3.5-flash-high', 'Gemini 3.5 Flash (High)', 'Google', 1478, 47588, 'Proprietary', 1.5, 9, 1048576],
+  ['gpt-5.5', 'GPT-5.5', 'OpenAI', 1476, 69859, 'Proprietary', 5, 30, 1050000],
+  ['gemini-3.5-flash-medium', 'Gemini 3.5 Flash (Medium)', 'Google', 1476, 46329, 'Proprietary', 1.5, 9, 1048576],
+  ['gpt-5.2-chat-20260210', 'GPT-5.2 Chat (20260210)', 'OpenAI', 1476, 35669, 'Proprietary', 1.75, 14, 128000],
+  ['glm-5.3-flash', 'GLM-5.3-Flash', 'Z.ai', 1475, 51019, 'MIT', 0.0399, 0.0784, 1048576],
+  ['gpt-5.4-high', 'GPT-5.4 (High)', 'OpenAI', 1475, 64067, 'Proprietary', 2.5, 15, 1050000],
+  ['deepseek-v4.1-flash-20260910-max', 'DeepSeek-V4.1-Flash-20260910 (Max)', 'DeepSeek', 1475, 13547, 'MIT', 0.051, 0.567, 1048576],
+  ['glm-5.2-max', 'GLM-5.2 (Max)', 'Z.ai', 1475, 54143, 'MIT', 0.007, 6.8, 1048576],
+  ['grok-4.20-beta-1', 'Grok 4.20 Beta 1', 'xAI', 1475, 27653, 'Proprietary', 1.25, 2.5, 2000000],
+  ['claude-opus-4.8', 'Claude Opus 4.8', 'Anthropic', 1474, 64116, 'Proprietary', 5, 25, 1000000],
+  ['gpt-6-astra-max', 'GPT-6 Astra (Max)', 'OpenAI', 1474, 18745, 'Proprietary', 10, 50, 1050000],
+  ['qwen3.7-max-preview', 'Qwen3.7-Max-Preview', 'Alibaba', 1474, 3896, 'Proprietary', 1.475, 4.425, 1000000],
+  ['claude-opus-4.5-high-32k-20251101', 'Claude Opus 4.5 (High, 32K, 20251101)', 'Anthropic', 1474, 37245, 'Proprietary', 5, 25, 200000],
+  ['gpt-5.5-instant', 'GPT-5.5 Instant', 'OpenAI', 1473, 26859, 'Proprietary', null, null, null],
+  ['gemini-3-flash', 'Gemini 3 Flash', 'Google', 1473, 31126, 'Proprietary', 0.5, 3, 1048576],
+  ['claude-sonnet-5.5-xhigh', 'Claude Sonnet 5.5 (xHigh)', 'Anthropic', 1473, 14355, 'Proprietary', 2, 10, 1000000],
+  ['claude-sonnet-4.6', 'Claude Sonnet 4.6', 'Anthropic', 1472, 69975, 'Proprietary', 3, 15, 1000000],
+  ['grok-4.20-beta-reasoning-0309', 'Grok 4.20 Beta (Reasoning, 0309)', 'xAI', 1472, 65690, 'Proprietary', 1.25, 2.5, 2000000],
+  ['grok-4.20-multi-agent-beta-0309', 'Grok 4.20 Multi-Agent Beta (0309)', 'xAI', 1471, 64196, 'Proprietary', 1.25, 2.5, 2000000],
+  ['claude-opus-4.5-20251101', 'Claude Opus 4.5 (20251101)', 'Anthropic', 1470, 72235, 'Proprietary', 5, 25, 200000],
+  ['gpt-5.6-terra-xhigh', 'GPT-5.6 Terra (xHigh)', 'OpenAI', 1468, 48778, 'Proprietary', 2, 12, 1050000],
+  ['ernie-5.1', 'ERNIE 5.1', 'Baidu', 1467, 39018, 'Proprietary', null, null, null],
+  ['mimo-v2.5-pro', 'MiMo-V2.5-Pro', 'Xiaomi', 1466, 76747, 'MIT', 0.435, 0.87, 1024000],
+  ['grok-4.5', 'Grok 4.5', 'xAI', 1466, 39122, 'Proprietary', 2, 6, 500000],
+  ['grok-4.1-thinking', 'Grok 4.1 (Thinking)', 'xAI', 1465, 66050, 'Proprietary', null, null, null],
+  ['gpt-5.4', 'GPT-5.4', 'OpenAI', 1465, 67055, 'Proprietary', 2.5, 15, 1050000],
+  ['qwen3.5-max-preview', 'Qwen3.5-Max-Preview', 'Alibaba', 1465, 22401, 'Proprietary', null, null, null],
+  ['glm-5.1', 'GLM-5.1', 'Z.ai', 1465, 67009, 'MIT', 1.4, 4.4, 204800],
+  ['deepseek-v4-pro-high-20260813', 'DeepSeek-V4-Pro (High, 20260813)', 'DeepSeek', 1464, 9573, 'MIT', 0.9, 1.5, 1048576],
+  ['kimi-k2.6', 'Kimi K2.6', 'Moonshot', 1461, 39551, 'Modified MIT', 0.65, 3.41, 262144],
+  ['claude-sonnet-5-high', 'Claude Sonnet 5 (High)', 'Anthropic', 1461, 52963, 'Proprietary', 2, 10, 1000000],
+  ['qwen3.6-max-preview', 'Qwen3.6-Max-Preview', 'Alibaba', 1460, 5380, 'Proprietary', null, null, null],
+  ['grok-4.1', 'Grok 4.1', 'xAI', 1459, 68162, 'Proprietary', null, null, null],
+  ['gemini-3-flash-minimal', 'Gemini 3 Flash (Minimal)', 'Google', 1458, 90063, 'Proprietary', 0.5, 3, 1048576],
+  ['deepseek-v4-pro', 'DeepSeek-V4-Pro', 'DeepSeek', 1458, 56857, 'MIT', 0.9, 1.5, 1048576],
 ];
 
 export const MODELS = RAW_FALLBACK.map(([slug, displayName, org, elo, votes, license, priceIn, priceOut, ctxRaw], i) => {

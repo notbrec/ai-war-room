@@ -96,7 +96,7 @@ export default function MissionPlannerPage({ onNavigate, slug }) {
             {[['primary', 'Primary pick', GREEN], ['bestValue', 'Best value', GOLD], ['budget', 'Budget pick', BLUE], ['fastest', 'Fastest pick', PURPLE]].map(([k, label, color], i) => {
               const p = result.picks[k];
               return (
-                <div key={k} className="aiwar-surface" style={{ borderTop: `2px solid ${color}`, padding: 14, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 6, animation: `aiwar-fade-up 500ms ${EASE} ${i * 70}ms both` }}>
+                <div key={k} className="aiwar-surface" style={{ borderTop: `2px solid ${color}`, padding: 14, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 6, animation: `aiwar-fade-up 280ms ${EASE} both` }}>
                   <Label color={color}>{label}</Label>
                   {p ? (
                     <>

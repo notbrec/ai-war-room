@@ -71,14 +71,14 @@ export default function MethodologyPage({ liveModels, countSnapshot }) {
 
         {/* ── Header ─────────────────────────────────────────────── */}
         <header style={{ marginBottom: mobile ? 36 : 56 }}>
-          <div style={{ opacity: 0, animation: `aiwar-fade-up 700ms ${EASE} both` }}>
+          <div style={{ opacity: 0, animation: `aiwar-fade-up 280ms ${EASE} both` }}>
             <Eyebrow>Methodology</Eyebrow>
           </div>
           <h1 style={{
             fontSize: mobile ? 'clamp(36px,9vw,48px)' : 'clamp(56px,6vw,80px)',
             fontWeight: 700, letterSpacing: '-0.052em', lineHeight: 0.98,
             color: 'var(--text)', margin: '10px 0 18px',
-            opacity: 0, animation: `aiwar-fade-up 800ms ${EASE} 80ms both`,
+            opacity: 0, animation: `aiwar-fade-up 280ms ${EASE} both`,
           }}>
             How the ranking works.
           </h1>
@@ -86,7 +86,7 @@ export default function MethodologyPage({ liveModels, countSnapshot }) {
             fontSize: mobile ? 17 : 21, lineHeight: 1.45,
             color: 'var(--muted)', letterSpacing: '-0.02em',
             margin: 0, maxWidth: 640,
-            opacity: 0, animation: `aiwar-fade-up 800ms ${EASE} 160ms both`,
+            opacity: 0, animation: `aiwar-fade-up 280ms ${EASE} both`,
           }}>
             ELO — the same system that ranks chess grandmasters. Every point earned through real human votes.
           </p>

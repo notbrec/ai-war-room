@@ -1,36 +1,80 @@
-import { useState, useEffect, lazy, Suspense } from 'react';
+import { useState, useEffect, useRef, lazy, Suspense, startTransition } from 'react';
 import { useTheme }              from './hooks/useTheme.js';
 import NavBar                    from './components/NavBar.jsx';
 import Footer                    from './components/Footer.jsx';
 import CyberBackground           from './components/CyberBackground.jsx';
 import HomePage                  from './pages/HomePage.jsx';
 import LeaderboardPage           from './pages/LeaderboardPage.jsx';
-import MethodologyPage           from './pages/MethodologyPage.jsx';
-import AboutPage                 from './pages/AboutPage.jsx';
-import PrivacyPage               from './pages/PrivacyPage.jsx';
-import TermsPage                 from './pages/TermsPage.jsx';
-import ContactPage               from './pages/ContactPage.jsx';
-import ModelPage                 from './pages/ModelPage.jsx';
-import LabPage                   from './pages/LabPage.jsx';
-import GuidePage                  from './pages/GuidePage.jsx';
-import FAQPage                    from './pages/FAQPage.jsx';
-import { BlogIndexPage, BlogPostPage } from './pages/BlogPage.jsx';
 import { ScrollProgress, GlobalMotion, ClickEffects, SmoothScroll, Skeleton } from './components/design.jsx';
-import { MODELS, fetchLeaderboard, readModelCountSnapshot, writeModelCountSnapshot } from './models-data.js';
+import { MODELS, fetchLeaderboard, readModelCountSnapshot, writeModelCountSnapshot, loadDescriptions } from './models-data.js';
 import { BattleDrawer, BattleToastHost } from './domains/comparison/BattleControls.jsx';
-import { prefetch } from './data/api.js';
+import { prefetchAll } from './data/api.js';
 
-// Command-center pages are code-split: the home + leaderboard shell stays small.
-const CodeOpsPage       = lazy(() => import('./pages/CodeOpsPage.jsx'));
-const MediaArenaPage    = lazy(() => import('./pages/MediaArenaPage.jsx'));
-const VoiceCommsPage    = lazy(() => import('./pages/VoiceCommsPage.jsx'));
-const ProviderWarPage   = lazy(() => import('./pages/ProviderWarPage.jsx'));
-const BenchmarksPage    = lazy(() => import('./pages/BenchmarksPage.jsx'));
-const BattlePage        = lazy(() => import('./pages/BattlePage.jsx'));
-const MissionPlannerPage = lazy(() => import('./pages/MissionPlannerPage.jsx'));
-const SpeedRacePage     = lazy(() => import('./pages/SpeedRacePage.jsx'));
+// Home and the leaderboard ship in the main bundle; every other page is its
+// own chunk. All of them are fetched while the browser is idle right after
+// the first paint (see warmUp), so by the time anyone clicks, nothing is left
+// to download.
+const PAGE_CHUNKS = {
+  coding:      () => import('./pages/CodeOpsPage.jsx'),
+  media:       () => import('./pages/MediaArenaPage.jsx'),
+  speech:      () => import('./pages/VoiceCommsPage.jsx'),
+  providers:   () => import('./pages/ProviderWarPage.jsx'),
+  benchmarks:  () => import('./pages/BenchmarksPage.jsx'),
+  compare:     () => import('./pages/BattlePage.jsx'),
+  planner:     () => import('./pages/MissionPlannerPage.jsx'),
+  race:        () => import('./pages/SpeedRacePage.jsx'),
+  model:       () => import('./pages/ModelPage.jsx'),
+  lab:         () => import('./pages/LabPage.jsx'),
+  guide:       () => import('./pages/GuidePage.jsx'),
+  faq:         () => import('./pages/FAQPage.jsx'),
+  blog:        () => import('./pages/BlogPage.jsx'),
+  methodology: () => import('./pages/MethodologyPage.jsx'),
+  about:       () => import('./pages/AboutPage.jsx'),
+  privacy:     () => import('./pages/PrivacyPage.jsx'),
+  terms:       () => import('./pages/TermsPage.jsx'),
+  contact:     () => import('./pages/ContactPage.jsx'),
+};
+const EXTRA_CHUNKS = [
+  () => import('./components/charts/ScatterChart.jsx'),
+  () => import('./components/charts/TrendChart.jsx'),
+  () => import('./components/charts/RaceLanes.jsx'),
+  loadDescriptions,
+];
 
-const CACHE_KEY = 'aiwar-models-v1';
+const CodeOpsPage        = lazy(PAGE_CHUNKS.coding);
+const MediaArenaPage     = lazy(PAGE_CHUNKS.media);
+const VoiceCommsPage     = lazy(PAGE_CHUNKS.speech);
+const ProviderWarPage    = lazy(PAGE_CHUNKS.providers);
+const BenchmarksPage     = lazy(PAGE_CHUNKS.benchmarks);
+const BattlePage         = lazy(PAGE_CHUNKS.compare);
+const MissionPlannerPage = lazy(PAGE_CHUNKS.planner);
+const SpeedRacePage      = lazy(PAGE_CHUNKS.race);
+const ModelPage          = lazy(PAGE_CHUNKS.model);
+const LabPage            = lazy(PAGE_CHUNKS.lab);
+const GuidePage          = lazy(PAGE_CHUNKS.guide);
+const FAQPage            = lazy(PAGE_CHUNKS.faq);
+const BlogIndexPage      = lazy(() => PAGE_CHUNKS.blog().then(m => ({ default: m.BlogIndexPage })));
+const BlogPostPage       = lazy(() => PAGE_CHUNKS.blog().then(m => ({ default: m.BlogPostPage })));
+const MethodologyPage    = lazy(PAGE_CHUNKS.methodology);
+const AboutPage          = lazy(PAGE_CHUNKS.about);
+const PrivacyPage        = lazy(PAGE_CHUNKS.privacy);
+const TermsPage          = lazy(PAGE_CHUNKS.terms);
+const ContactPage        = lazy(PAGE_CHUNKS.contact);
+
+const idle = cb => (typeof requestIdleCallback === 'function' ? requestIdleCallback(cb, { timeout: 3000 }) : setTimeout(cb, 300));
+
+/** After the first paint: every page chunk, then every dataset, one idle slice at a time. */
+function warmUp() {
+  const jobs = [...Object.values(PAGE_CHUNKS), ...EXTRA_CHUNKS];
+  let i = 0;
+  const next = () => {
+    if (i >= jobs.length) { prefetchAll(); return; }
+    Promise.resolve().then(jobs[i++]).catch(() => {}).finally(() => idle(next));
+  };
+  idle(next);
+}
+
+const CACHE_KEY = 'aiwar-models-v2';
 
 // Route shape: { type, slug? }. Types: home | warroom | leaderboard | coding | images | videos | speech |
 // providers | benchmarks | compare | planner | race | methodology | guide | faq | about | privacy | terms |
@@ -85,13 +129,23 @@ function hashForRoute(route) {
   }
 }
 
+// The last leaderboard this browser saw, kept across visits so the board is
+// filled on the first frame; the live copy replaces it a moment later.
+const CACHE_MAX_AGE = 24 * 60 * 60 * 1000;
 function readCache() {
   try {
-    const raw = sessionStorage.getItem(CACHE_KEY);
+    const raw = localStorage.getItem(CACHE_KEY);
     if (!raw) return null;
     const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) && parsed.length > 0 ? parsed : null;
+    if (!(Date.now() - parsed?.at < CACHE_MAX_AGE)) return null;
+    return Array.isArray(parsed.models) && parsed.models.length > 0 ? parsed.models : null;
   } catch { return null; }
+}
+function writeCache(models) {
+  idle(() => {
+    try { localStorage.setItem(CACHE_KEY, JSON.stringify({ at: Date.now(), models })); }
+    catch { try { localStorage.removeItem(CACHE_KEY); } catch {} }
+  });
 }
 
 function PageFallback() {
@@ -109,12 +163,16 @@ function PageFallback() {
 export default function App() {
   const { dark, toggle } = useTheme();
   const [route, setRoute] = useState(routeFromHash);
+  // The first page shows at once; only later page changes get the short fade.
+  const firstPage = useRef(`${route.type}/${route.slug ?? ''}`);
+  useEffect(() => {
+    if (firstPage.current !== `${route.type}/${route.slug ?? ''}`) firstPage.current = null;
+  }, [route]);
   const [liveModels, setLiveModels] = useState(readCache);
   // Stable count: starts from localStorage (or 280+ default), updates only on a real live load
   // so the user never sees the static 63-entry fallback flash through the UI.
   const [countSnapshot, setCountSnapshot] = useState(() => {
-    const cached = readCache();
-    if (cached?.length > 50) return { count: cached.length, exact: true };
+    if (liveModels?.length > 50) return { count: liveModels.length, exact: true };
     return readModelCountSnapshot();
   });
 
@@ -125,7 +183,7 @@ export default function App() {
           setLiveModels(models);
           setCountSnapshot({ count: models.length, exact: true });
           writeModelCountSnapshot(models.length);
-          try { sessionStorage.setItem(CACHE_KEY, JSON.stringify(models)); } catch {}
+          writeCache(models);
         } else {
           setLiveModels(prev => prev ?? MODELS);
         }
@@ -133,9 +191,8 @@ export default function App() {
       .catch(() => {
         setLiveModels(prev => prev ?? MODELS);
       });
-    // Warm the merged datasets the home board and the picks read from.
-    const t = setTimeout(() => { prefetch('llms'); prefetch('media'); prefetch('coding'); prefetch('speech'); prefetch('providers'); }, 800);
-    return () => clearTimeout(t);
+    // Every page chunk and dataset, while the browser has nothing better to do.
+    warmUp();
   }, []);
 
   /** Accepts either a string (legacy: 'home', 'leaderboard', etc.) or a route object */
@@ -143,7 +200,9 @@ export default function App() {
     const next = typeof target === 'string' ? { type: target } : target;
     if (next.type === route.type && next.slug === route.slug) return;
     window.location.hash = hashForRoute(next);
-    setRoute(next);
+    // A transition keeps the current page up while a lazy page resolves, so a
+    // page whose chunk is already here swaps in without a skeleton frame.
+    startTransition(() => setRoute(next));
     window.scrollTo({ top: 0, behavior: 'instant' });
   };
 
@@ -169,7 +228,10 @@ export default function App() {
   }, [route]);
 
   useEffect(() => {
-    const onHash = () => setRoute(routeFromHash());
+    const onHash = () => {
+      const next = routeFromHash();
+      startTransition(() => setRoute(cur => (cur.type === next.type && cur.slug === next.slug ? cur : next)));
+    };
     window.addEventListener('hashchange', onHash);
     return () => window.removeEventListener('hashchange', onHash);
   }, []);
@@ -214,9 +276,14 @@ export default function App() {
         dark={dark}
         onToggleTheme={toggle}
       />
-      <div key={`${route.type}/${route.slug ?? ''}`} className="aiwar-page-enter">
-        <Suspense fallback={<PageFallback />}>{body}</Suspense>
-      </div>
+      {/* The boundary sits outside the keyed page, so it outlives page changes:
+          inside a transition React keeps the current page up until the next
+          one can render, instead of flashing a fresh boundary's skeleton. */}
+      <Suspense fallback={<div className="aiwar-page-enter"><PageFallback /></div>}>
+        <div key={`${route.type}/${route.slug ?? ''}`} className="aiwar-page-enter" data-nav={firstPage.current === `${route.type}/${route.slug ?? ''}` ? undefined : '1'}>
+          {body}
+        </div>
+      </Suspense>
       <Footer onNavigate={navigate} />
       <BattleDrawer onNavigate={navigate} page={route.type} />
       <BattleToastHost />

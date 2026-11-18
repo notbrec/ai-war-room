@@ -21,8 +21,12 @@
 
     <title>AI WAR ROOM — 350+ AI models ranked by live arena ELO</title>
 
-    <!-- ─ Google Analytics 4 (GA4) ─ -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-K00V59DWYF"></script>
+    <meta name="google-adsense-account" content="ca-pub-3759864674720930" />
+
+    <!-- ─ Google Analytics 4 (GA4) + AdSense ─
+         Calls queue in dataLayer from the start; the two scripts (~500 KB of
+         third-party JS) are added once the page has loaded and the browser is
+         idle, so they never compete with the app for network or main thread. -->
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
@@ -31,10 +35,30 @@
         anonymize_ip: true,
         send_page_view: true,
       });
+      (function () {
+        var done = false;
+        function add(src, cors) {
+          var el = document.createElement('script');
+          el.async = true; el.src = src;
+          if (cors) el.crossOrigin = 'anonymous';
+          document.head.appendChild(el);
+        }
+        function go() {
+          if (done) return; done = true;
+          add('https://www.googletagmanager.com/gtag/js?id=G-K00V59DWYF');
+          add('https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3759864674720930', true);
+        }
+        function later() {
+          if (window.requestIdleCallback) requestIdleCallback(go, { timeout: 2000 }); else setTimeout(go, 1000);
+        }
+        if (document.readyState === 'complete') later(); else addEventListener('load', later, { once: true });
+        setTimeout(go, 5000);
+      })();
     </script>
 
     <!-- ─ Blocking theme script: dark is default, user can toggle ─ -->
     <script>
+      document.documentElement.classList.add('js');
       (function () {
         try {
           var stored = localStorage.getItem('aiwar-theme');
@@ -47,6 +71,36 @@
         } catch (e) {
           document.documentElement.classList.add('dark');
         }
+      })();
+    </script>
+
+    <!-- ─ Data first: the API requests start now, while the app bundle is still
+         downloading. src/data/api.js and models-data.js take these responses
+         (window.__aiwarBoot). A dataset this browser stored recently is not
+         requested again — the app shows the stored copy on its first frame. ─ -->
+    <script>
+      (function () {
+        try {
+          var TTL = { llms: 9e5, media: 18e5, providers: 18e5, coding: 36e5, speech: 36e5 };
+          var HOME = ['llms', 'media', 'coding', 'speech', 'providers'];
+          var BY_ROUTE = { '': HOME, warroom: HOME, leaderboard: ['llms'], benchmarks: ['llms'], models: ['llms'],
+            coding: ['coding'], images: ['media'], videos: ['media'], speech: ['speech'], providers: ['providers'] };
+          var seg = (location.hash || '').replace(/^#\/?/, '').split(/[\/?]/)[0];
+          var want = BY_ROUTE[seg] || [];
+          var boot = window.__aiwarBoot = {};
+          var get = function (key, url, low) {
+            var p = fetch(url, { headers: { Accept: 'application/json' }, priority: low ? 'low' : 'high' });
+            p.catch(function () {});
+            boot[key] = p;
+          };
+          get('leaderboard', '/api/leaderboard');
+          for (var i = 0; i < want.length; i++) {
+            var d = want[i], ts = 0;
+            try { ts = +localStorage.getItem('aiwar-ts:' + d) || 0; } catch (e) {}
+            if (Date.now() - ts < TTL[d]) continue;
+            get(d, '/api/warroom/' + d, i > 0);
+          }
+        } catch (e) {}
       })();
     </script>
 
@@ -70,7 +124,13 @@
       #seo-hero ul { padding-left: 22px; }
       #seo-hero li { font-size: 15px; line-height: 1.7; margin-bottom: 6px; opacity: 0.85; }
       #seo-hero a  { color: #007AFF; text-decoration: none; }
+      html.js #seo-hero { display: none; }
     </style>
+    <script>
+      setTimeout(function () {
+        if (document.getElementById('seo-hero')) document.documentElement.classList.remove('js');
+      }, 6000);
+    </script>
 
     <!-- Structured data: Website + organization -->
     <script type="application/ld+json">
@@ -88,9 +148,6 @@
     }
     </script>
 
-    <!-- Google AdSense -->
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3759864674720930"
-     crossorigin="anonymous"></script>
   </head>
   <body>
     <div id="root">

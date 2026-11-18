@@ -1,5 +1,5 @@
 import { MODELS, ORG_CONFIG } from '../models-data.js';
-import { MONO, EASE, AnimatedNumber, LivePulse, WordReveal } from './design.jsx';
+import { MONO, EASE, AnimatedNumber, LivePulse } from './design.jsx';
 import { LabLogo } from './LabLogo.jsx';
 import FightArena from './FightArena.jsx';
 
@@ -69,7 +69,7 @@ export default function HeroArena({ models, fighters, isLoaded, onNavigate, mobi
           display: 'inline-flex', alignItems: 'center', gap: 8,
           background: 'var(--card)', border: '0.5px solid var(--sep)', padding: '6px 12px 6px 10px',
           fontFamily: MONO, marginBottom: mobile ? 18 : 22,
-          opacity: 0, animation: `aiwar-fade-in 600ms ${EASE} both`,
+          opacity: 0, animation: `aiwar-fade-in 280ms ${EASE} both`,
         }}>
           <LivePulse color="#5E9E70" size={7} />
           <span style={{ fontSize: 10.5, fontWeight: 700, color: 'var(--text)', letterSpacing: '0.12em', textTransform: 'uppercase' }}>Live</span>
@@ -83,15 +83,15 @@ export default function HeroArena({ models, fighters, isLoaded, onNavigate, mobi
           fontWeight: 700, letterSpacing: '-0.055em', lineHeight: 0.96,
           color: 'var(--text)', margin: '0 0 16px',
         }}>
-          <WordReveal baseDelay={120} perWord={80}>Every AI model,</WordReveal>
+          Every AI model,
           <br />
-          <WordReveal baseDelay={420} perWord={80}>ranked by battle.</WordReveal>
+          ranked by battle.
         </h1>
 
         <p style={{
           fontSize: mobile ? 15.5 : 18, lineHeight: 1.5, color: 'var(--muted)', letterSpacing: '-0.015em',
           maxWidth: 620, margin: '0 auto',
-          opacity: 0, animation: `aiwar-fade-up 800ms ${EASE} 760ms both`,
+          opacity: 0, animation: `aiwar-fade-up 280ms ${EASE} both`,
         }}>
           Independent benchmarks, real arena votes, live prices — language, code, image, video and voice on one board.
           Nothing is typed in by hand.
@@ -102,7 +102,7 @@ export default function HeroArena({ models, fighters, isLoaded, onNavigate, mobi
       <div style={{
         position: 'relative',
         margin: mobile ? '10px -18px 0' : '4px 0 0',
-        opacity: 0, animation: `aiwar-fade-in 1100ms ${EASE} 520ms both`,
+        opacity: 0, animation: `aiwar-fade-in 280ms ${EASE} both`,
       }}>
         <FightArena
           clip="clash"
@@ -126,7 +126,7 @@ export default function HeroArena({ models, fighters, isLoaded, onNavigate, mobi
         gridTemplateColumns: '1fr auto 1fr',
         alignItems: 'center', gap: mobile ? 8 : 24,
         marginTop: mobile ? 6 : -4,
-        opacity: 0, animation: `aiwar-fade-up 800ms ${EASE} 900ms both`,
+        opacity: 0, animation: `aiwar-fade-up 280ms ${EASE} both`,
       }}>
         <Fighter m={isLoaded ? champ : null} side="left" role="Champion · #1" color="var(--accent)" mobile={mobile} onNavigate={onNavigate} />
         <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
@@ -144,7 +144,7 @@ export default function HeroArena({ models, fighters, isLoaded, onNavigate, mobi
       <div style={{
         display: 'flex', justifyContent: 'center', gap: mobile ? 18 : 40, flexWrap: 'wrap',
         marginTop: mobile ? 26 : 36, paddingTop: mobile ? 18 : 22, borderTop: '0.5px solid var(--sep)',
-        opacity: 0, animation: `aiwar-fade-up 800ms ${EASE} 1050ms both`,
+        opacity: 0, animation: `aiwar-fade-up 280ms ${EASE} both`,
       }}>
         {[
           { v: snap.count, fmt: v => Math.round(v).toString(), suf: snap.exact ? '' : '+', l: 'Models ranked' },

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { cached, HOURS } from '../netlify/functions/lib/cache.js';
+import { cached, cachedSWR, setBackgroundRunner, HOURS } from '../netlify/functions/lib/cache.js';
 
 // No Netlify Blobs in tests, so the memory tier is exercised; the durable
 // tier follows the same fetchedAt / failedAt contract.
@@ -56,5 +56,42 @@ describe('cached() — metered upstream cap', () => {
     await cached('t:plain', HOURS(1), loader);
     await cached('t:plain', HOURS(1), loader);
     expect(loader).toHaveBeenCalledTimes(3);
+  });
+});
+
+describe('cachedSWR() — stale-while-revalidate with a background runner', () => {
+  afterEach(() => setBackgroundRunner(null));
+
+  it('serves a copy past its TTL at once and refreshes it in the background', async () => {
+    vi.useFakeTimers({ now: new Date('2026-11-18T00:00:00Z') });
+    let n = 0;
+    const loader = vi.fn(async () => [++n]);
+    await cachedSWR('t:swr', HOURS(1), loader);
+    const bg = [];
+    setBackgroundRunner(p => bg.push(p));
+    vi.setSystemTime(new Date('2026-11-18T01:30:00Z')); // past TTL, inside 2× grace
+    const served = await cachedSWR('t:swr', HOURS(1), loader);
+    expect(served.data).toEqual([1]);
+    expect(served.cache).toBe('REVALIDATING');
+    expect(bg).toHaveLength(1);
+    await Promise.all(bg);
+    expect(loader).toHaveBeenCalledTimes(2);
+    const next = await cachedSWR('t:swr', HOURS(1), loader);
+    expect(next.data).toEqual([2]);
+    expect(next.cache).toBe('HIT');
+  });
+
+  it('refreshes inline when the copy is older than the grace window', async () => {
+    vi.useFakeTimers({ now: new Date('2026-11-18T00:00:00Z') });
+    let n = 0;
+    const loader = vi.fn(async () => [++n]);
+    await cachedSWR('t:swr-old', HOURS(1), loader);
+    const bg = [];
+    setBackgroundRunner(p => bg.push(p));
+    vi.setSystemTime(new Date('2026-11-18T03:00:00Z'));
+    const served = await cachedSWR('t:swr-old', HOURS(1), loader);
+    expect(served.data).toEqual([2]);
+    expect(served.cache).toBe('MISS');
+    expect(bg).toHaveLength(0);
   });
 });

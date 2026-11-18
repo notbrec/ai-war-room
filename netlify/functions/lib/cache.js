@@ -99,3 +99,38 @@ export async function cached(key, ttlMs, loader, { force = false, minValid = d =
 }
 
 export const HOURS = h => h * 60 * 60 * 1000;
+
+// ── Stale-while-revalidate ────────────────────────────────────────────────
+// A request handler registers `context.waitUntil` here. While it is set, an
+// entry past its TTL but younger than GRACE × TTL is served at once and the
+// upstream refresh runs after the response has gone out, so no visitor waits
+// on arena / OpenRouter / AA. Without a runner (tests, the scheduled
+// snapshot, local dev) `cached` refreshes inline exactly as before.
+const GRACE = 2;
+let runInBackground = null;
+const refreshing = new Map();
+
+export function setBackgroundRunner(fn) { runInBackground = typeof fn === 'function' ? fn : null; }
+
+/** `cached` with the background runner applied. */
+export async function cachedSWR(key, ttlMs, loader, opts = {}) {
+  const { force = false, minValid = d => d != null, retryAfterMs = 0 } = opts;
+  if (force || !runInBackground) return cached(key, ttlMs, loader, opts);
+  const ageOf = e => e?.fetchedAt ? Date.now() - new Date(e.fetchedAt).getTime() : Infinity;
+  let prior = await readBlob(key);
+  // The warm-lambda copy may lag the durable one another instance refreshed.
+  if (prior && ageOf(prior) >= ttlMs && blobs()) prior = (await readBlob(key, { fresh: true })) ?? prior;
+  const age = ageOf(prior);
+  const usable = prior && minValid(prior.data);
+  if (!usable || age < ttlMs || age >= ttlMs * GRACE) return cached(key, ttlMs, loader, opts);
+  // A failed refresh inside its back-off window stays with the stale copy.
+  if (retryAfterMs > 0 && prior.failedAt && Date.now() - new Date(prior.failedAt).getTime() < retryAfterMs) return cached(key, ttlMs, loader, opts);
+  if (!refreshing.has(key)) {
+    const p = cached(key, ttlMs, loader, opts)
+      .catch(err => console.error(`[cache] ${key} background refresh failed:`, err.message))
+      .finally(() => refreshing.delete(key));
+    refreshing.set(key, p);
+    try { runInBackground(p); } catch { /* runner gone — the promise still settles */ }
+  }
+  return { ...prior, stale: false, cacheAge: age, cache: 'REVALIDATING' };
+}

@@ -153,7 +153,7 @@ function Card({ c, i, mobile, onNavigate }) {
     <div onClick={go} className="aiwar-surface aiwar-card-hover" role="link" tabIndex={0} onKeyDown={e => e.key === 'Enter' && go()} style={{
       padding: mobile ? '14px 14px 12px' : '16px 18px 14px', cursor: 'pointer', minWidth: 0, height: '100%',
       display: 'flex', flexDirection: 'column',
-      opacity: 0, animation: `aiwar-fade-up 600ms ${EASE} ${80 + i * 35}ms both`,
+      opacity: 0, animation: `aiwar-fade-up 280ms ${EASE} both`,
     }}>
       {/* Front */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>

@@ -186,12 +186,12 @@ export function RowReveal({ index = 0, y = 18, children, style }) {
     return () => { _rowCallbacks.delete(el); obs.unobserve(el); };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-  const d = (index % 7) * 42; // stagger inside each visible batch
+  const d = (index % 7) * 12; // stagger inside each visible batch
   return (
     <div ref={ref} style={{
       opacity: on ? 1 : 0,
       transform: on ? 'translateY(0)' : `translateY(${y}px)`,
-      transition: `opacity 650ms ${EASE} ${d}ms, transform 750ms ${EASE} ${d}ms`,
+      transition: `opacity 260ms ${EASE} ${d}ms, transform 300ms ${EASE} ${d}ms`,
       ...style,
     }}>
       {children}
@@ -216,15 +216,14 @@ export function useReveal(options = { threshold: 0.12 }) {
 }
 
 /* ─── <Reveal> — fade + lift + de-blur + settle-scale on scroll ──────────── */
-export function Reveal({ children, delay = 0, y = 22, blur = 7, scale = 0.985, as: Tag = 'div', style, ...rest }) {
+export function Reveal({ children, delay = 0, y = 10, scale = 0.995, as: Tag = 'div', style, ...rest }) {
   const [ref, shown] = useReveal();
+  const d = Math.min(delay, 60);
   return (
     <Tag ref={ref} style={{
       opacity: shown ? 1 : 0,
-      transform: shown ? 'translateY(0) scale(1)' : `translateY(${y}px) scale(${scale})`,
-      filter: shown ? 'blur(0px)' : `blur(${blur}px)`,
-      transition: `opacity 850ms ${EASE} ${delay}ms, transform 1000ms ${EASE} ${delay}ms, filter 800ms ${EASE} ${delay}ms`,
-      willChange: 'opacity, transform, filter',
+      transform: shown ? 'none' : `translateY(${y}px) scale(${scale})`,
+      transition: `opacity 280ms ${EASE} ${d}ms, transform 320ms ${EASE} ${d}ms`,
       ...style,
     }} {...rest}>
       {children}
@@ -233,7 +232,7 @@ export function Reveal({ children, delay = 0, y = 22, blur = 7, scale = 0.985, a
 }
 
 /* ─── useCountUp + AnimatedNumber ───────────────────────────────────────── */
-export function useCountUp(target, duration = 1400, start = 0, shouldStart = true) {
+export function useCountUp(target, duration = 500, start = 0, shouldStart = true) {
   const [value, setValue] = useState(start);
   useEffect(() => {
     if (!shouldStart || target == null) return;
@@ -254,7 +253,7 @@ export function useCountUp(target, duration = 1400, start = 0, shouldStart = tru
 
 export function AnimatedNumber({ value, format = (v) => Math.round(v).toLocaleString(), suffix = '', placeholder = '—', style }) {
   const [ref, shown] = useReveal({ threshold: 0.3 });
-  const animated = useCountUp(typeof value === 'number' ? value : 0, 1500, 0, shown && typeof value === 'number');
+  const animated = useCountUp(typeof value === 'number' ? value : 0, 500, 0, shown && typeof value === 'number');
   return (
     <span ref={ref} style={style}>
       {typeof value === 'number' ? `${format(animated)}${suffix}` : placeholder}
@@ -295,7 +294,7 @@ export function Eyebrow({ children, color = 'var(--muted2)', line = false }) {
 }
 
 /* ─── WordReveal: stagger each word of a headline on entry ──────────────── */
-export function WordReveal({ children, baseDelay = 0, perWord = 80, style, as: Tag = 'span' }) {
+export function WordReveal({ children, baseDelay = 0, perWord = 25, style, as: Tag = 'span' }) {
   const text = typeof children === 'string' ? children : '';
   const words = text.split(/(\s+)/);
   return (
@@ -308,7 +307,7 @@ export function WordReveal({ children, baseDelay = 0, perWord = 80, style, as: T
             style={{
               display: 'inline-block',
               opacity: 0,
-              animation: `aiwar-word-up 900ms ${EASE} ${baseDelay + i * perWord}ms both`,
+              animation: `aiwar-word-up 380ms ${EASE} ${Math.min(baseDelay, 60) + i * perWord}ms both`,
               willChange: 'opacity, transform',
             }}
           >{w}</span>
@@ -976,7 +975,7 @@ export function GlobalMotion() {
       .aiwar-marquee-track { animation-play-state: running; }
       .aiwar-marquee-track:hover { animation-play-state: paused; }
       @keyframes aiwar-fade-up {
-        from { opacity: 0; transform: translateY(20px); }
+        from { opacity: 0; transform: translateY(8px); }
         to   { opacity: 1; transform: translateY(0); }
       }
       @keyframes aiwar-fade-in {
@@ -984,8 +983,8 @@ export function GlobalMotion() {
         to   { opacity: 1; }
       }
       @keyframes aiwar-word-up {
-        from { opacity: 0; transform: translateY(28px); filter: blur(6px); }
-        to   { opacity: 1; transform: translateY(0);     filter: blur(0); }
+        from { opacity: 0; transform: translateY(10px); }
+        to   { opacity: 1; transform: translateY(0); }
       }
       @keyframes aiwar-drift {
         0%   { transform: translate(0, 0); opacity: 0; }
@@ -1046,7 +1045,7 @@ export function GlobalMotion() {
         display: inline-block; vertical-align: middle;
         width: 32px; height: 1px; background: currentColor; opacity: 0.4;
         transform-origin: left; margin-left: 10px;
-        animation: aiwar-eyebrow-underline 1200ms cubic-bezier(0.16,1,0.3,1) 400ms both;
+        animation: aiwar-eyebrow-underline 400ms cubic-bezier(0.16,1,0.3,1) both;
       }
 
       /* Animated underline on nav links */
@@ -1112,8 +1111,8 @@ export function GlobalMotion() {
         0%, 100% { opacity: 0.5; }
         50%      { opacity: 1;   }
       }
-      .aiwar-page-enter {
-        animation: aiwar-fade-up 600ms cubic-bezier(0.16,1,0.3,1) both;
+      .aiwar-page-enter[data-nav="1"] {
+        animation: aiwar-fade-in 160ms ease-out both;
       }
     `}</style>
   );

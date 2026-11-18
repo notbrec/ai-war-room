@@ -1,0 +1,6 @@
+# Vite fingerprints every file in /assets (index-<hash>.js), so a given URL
+# never changes content: browsers keep them for a year and never revalidate.
+# index.html itself stays revalidated (Netlify's default), so a deploy is
+# picked up on the next visit.
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable

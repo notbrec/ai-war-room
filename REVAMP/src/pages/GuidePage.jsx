@@ -90,14 +90,14 @@ export default function GuidePage({ onNavigate, liveModels }) {
 
         {/* ── Header ─────────────────────────────────────────────── */}
         <header style={{ marginBottom: 36 }}>
-          <div style={{ opacity: 0, animation: `aiwar-fade-up 700ms ${EASE} both` }}>
+          <div style={{ opacity: 0, animation: `aiwar-fade-up 280ms ${EASE} both` }}>
             <Eyebrow>The Guide</Eyebrow>
           </div>
           <h1 style={{
             fontSize: mobile ? 'clamp(36px,9vw,48px)' : 'clamp(52px,5.8vw,76px)',
             fontWeight: 700, letterSpacing: '-0.05em', lineHeight: 0.98,
             color: 'var(--text)', margin: '10px 0 18px',
-            opacity: 0, animation: `aiwar-fade-up 800ms ${EASE} 80ms both`,
+            opacity: 0, animation: `aiwar-fade-up 280ms ${EASE} both`,
           }}>
             How to read the<br />AI leaderboard.
           </h1>
@@ -105,7 +105,7 @@ export default function GuidePage({ onNavigate, liveModels }) {
             fontSize: mobile ? 17 : 21, lineHeight: 1.45,
             color: 'var(--muted)', letterSpacing: '-0.02em',
             margin: 0,
-            opacity: 0, animation: `aiwar-fade-up 800ms ${EASE} 160ms both`,
+            opacity: 0, animation: `aiwar-fade-up 280ms ${EASE} both`,
           }}>
             An honest, plain-English walkthrough of ELO ratings, arena battles,
             and the tradeoffs that actually matter when picking a model for real work.
@@ -113,7 +113,7 @@ export default function GuidePage({ onNavigate, liveModels }) {
           <div style={{
             display: 'flex', gap: 10, marginTop: 22, flexWrap: 'wrap',
             fontSize: 12, color: 'var(--muted2)', fontFamily: MONO,
-            opacity: 0, animation: `aiwar-fade-up 800ms ${EASE} 240ms both`,
+            opacity: 0, animation: `aiwar-fade-up 280ms ${EASE} both`,
           }}>
             <span>Updated {new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</span>
             <span>·</span>
