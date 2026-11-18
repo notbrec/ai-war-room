@@ -432,7 +432,7 @@ const RAW_FALLBACK = [
   ['gemini-3.7-flash-high', 'Gemini 3.7 Flash (High)', 'Google', 1489, 33251, 'Proprietary', 0.75, 3.75, 1048576],
   ['muse-spark', 'Muse Spark', 'Meta', 1489, 13985, 'Proprietary', null, null, null],
   ['claude-opus-5-max', 'Claude Opus 5 (Max)', 'Anthropic', 1489, 35670, 'Proprietary', 5, 25, 1000000],
-  ['kimi-k3-max', 'Kimi K3 (Max)', 'Moonshot', 1487, 41402, 'Kimi K3 license', 0.192, 16, 1048576],
+  ['kimi-k3-max', 'Kimi K3 (Max)', 'Moonshot', 1487, 41402, 'Kimi K3 license', 0.2, 16, 1048576],
   ['gemini-3.1-pro-preview', 'Gemini 3.1 Pro Preview', 'Google', 1487, 132181, 'Proprietary', 2, 12, 1048576],
   ['gemini-3-pro', 'Gemini 3 Pro', 'Google', 1486, 41803, 'Proprietary', null, null, null],
   ['gpt-5.6-sol-xhigh', 'GPT-5.6 Sol (xHigh)', 'OpenAI', 1485, 43925, 'Proprietary', 4, 20, 1050000],

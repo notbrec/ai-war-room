@@ -7,7 +7,7 @@ import { cachedSWR, HOURS, readBlob, writeBlob, listBlobs, deleteBlob, hasDurabl
 import { fetchArenaBoard, ARENA_BOARDS } from './arena.js';
 import { fetchORModels, fetchOREndpoints } from '../adapters/openrouter.js';
 import { aaConfigured, fetchAALLMs, fetchAAMedia, fetchAASpeech } from '../adapters/artificialanalysis.js';
-import { aaWebEnabled, fetchAAWebLLMs, fetchAAWebMedia, fetchAAWebSpeech } from '../adapters/aaweb.js';
+import { aaWebEnabled, fetchAAWebLLMs, fetchAAWebMedia, fetchAAWebSpeech, webRowMatcher } from '../adapters/aaweb.js';
 import { fetchSWEBench } from '../adapters/swebench.js';
 import { fetchOpenASR } from '../adapters/openasr.js';
 import { fetchGenAIBench } from '../adapters/genaibench.js';
@@ -81,23 +81,26 @@ async function loadAALLMs() {
   if (aaWebEnabled()) {
     // The Free API carries indexes, prices and speed only; the pages add the
     // per-benchmark scores, context, open weights and retirement flags. Every
-    // field the API leaves empty is filled from the page row of the same slug
+    // field the API leaves empty is filled from the page row of the same model
     // (the API value wins where both exist), and a model only the page lists
     // is kept, so switching sources never shrinks the board.
     try {
       const web = await fetchAAWebLLMs();
-      const bySlug = new Map(web.map(r => [r.slug, r]));
+      const find = webRowMatcher(web);
+      const used = new Set();
       const FILL = ['speed', 'ttft', 'ttfat', 'e2e', 'context', 'priceIn', 'priceOut', 'priceBlended', 'priceCacheRead', 'priceCacheWrite', 'releaseDate', 'isOpen', 'isReasoning', 'indexTimePerTask', 'indexCostPerTask'];
       for (const r of rows) {
-        const w = bySlug.get(r.slug);
+        const w = find(r);
         if (!w) continue;
+        used.add(w);
         if (w.deprecated) r.deprecated = true;
         for (const k of FILL) if (r[k] == null && w[k] != null) r[k] = w[k];
         if (w.benchmarks) { r.benchmarks = r.benchmarks ?? {}; for (const [k, v] of Object.entries(w.benchmarks)) if (r.benchmarks[k] == null && v != null) r.benchmarks[k] = v; }
         if (r.intelligence == null && w.intelligence != null) r.intelligence = w.intelligence;
       }
-      const inApi = new Set(rows.map(r => r.slug));
-      rows.push(...web.filter(w => w.slug && !inApi.has(w.slug)));
+      // only releases the API does not list at all, so no effort level is listed twice
+      const inApi = new Set(rows.map(r => r.slug).filter(Boolean));
+      rows.push(...web.filter(w => w.slug && !used.has(w) && !inApi.has(w.release ?? w.slug)));
     } catch { /* the pages are optional here; the API rows stand on their own */ }
   }
   return rows;
@@ -108,7 +111,7 @@ async function loadAALLMs() {
 // last good copy is served instead. Visitors never trigger extra calls.
 const AA_API_WINDOW = HOURS(12);
 const aaLLMs = () => (aaConfigured() || aaWebEnabled())
-  ? cachedSWR(key('aa:llms:v5'), AA_API_WINDOW, loadAALLMs, { minValid: isList(10), retryAfterMs: AA_API_WINDOW })
+  ? cachedSWR(key('aa:llms:v6'), AA_API_WINDOW, loadAALLMs, { minValid: isList(10), retryAfterMs: AA_API_WINDOW })
   : Promise.resolve(AA_OFF);
 
 // Media, voices and transcription: the Data API returns only ELO / rank / CI
@@ -337,7 +340,7 @@ export async function loadHistory() {
 // ── Status ─────────────────────────────────────────────────────────────────
 export async function loadStatus() {
   const entries = await Promise.all([
-    readBlob(key('arena:text')), readBlob(key('openrouter:models')), readBlob(key('swebench')), readBlob(key('openasr')), readBlob(key('aa:llms:v5')),
+    readBlob(key('arena:text')), readBlob(key('openrouter:models')), readBlob(key('swebench')), readBlob(key('openasr')), readBlob(key('aa:llms:v6')),
   ]);
   const [a, o, s, r, aa] = entries;
   const st = e => e?.fetchedAt ? { status: 'cached', fetchedAt: e.fetchedAt } : { status: 'cold', fetchedAt: null };

@@ -9,7 +9,7 @@
 // precedence for the LLM board.
 
 import { fetchText, BROWSER_UA } from '../lib/http.js';
-import { canonicalOrg, canonicalModelId, bareKey } from '../../../shared/ids.js';
+import { canonicalOrg, canonicalModelId, bareKey, looseKey } from '../../../shared/ids.js';
 import { blendedPrice } from '../../../shared/metrics.js';
 
 const BASE = 'https://artificialanalysis.ai';
@@ -117,17 +117,25 @@ const SCORE_KEYS = {
   'apex-agents-aa': 'apex_agents', 'aa-analyst-agent': 'analyst_agent', 'itbench-aa': 'itbench_sre',
 };
 
+// Since Nov 2026 a row has no slug of its own: `id` is a UUID and the slug
+// sits in `release: { slug, name }`, shared by every effort level of that
+// release ("Claude Fable 5.2 (max)", "(high)", …). The row slug is rebuilt
+// from the short name so variants stay apart; `release` keeps the shared one.
+const kebab = s => String(s ?? '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+
 export function normaliseWebLLM(r, meta) {
   const org = canonicalOrg(r.modelCreatorName ?? meta?.creator?.name ?? '');
-  const name = r.shortName ?? r.name ?? r.slug;
+  const name = r.shortName ?? r.name ?? r.slug ?? r.release?.name;
+  const release = r.release?.slug ?? null;
+  const slug = r.slug ?? (kebab(name) || release);
   const benchmarks = {};
   for (const [k, out] of Object.entries(BENCH_KEYS)) { const v = num(r[k]); if (v != null) benchmarks[out] = v; }
   for (const [k, out] of Object.entries(SCORE_KEYS)) { const v = num(r.scores?.[k]); if (v != null && benchmarks[out] == null) benchmarks[out] = v; }
   if (benchmarks.aa_omniscience == null && num(r.omniscience) != null) benchmarks.aa_omniscience = r.omniscience;
   const priceIn = num(r.price1mInputTokens), priceOut = num(r.price1mOutputTokens);
   return {
-    aaId: r.slug ?? null, slug: r.slug ?? null, name, org,
-    modelId: canonicalModelId(r.slug ?? name, org),
+    aaId: r.id ?? slug ?? null, slug, release, name, fullName: r.name ?? name, org,
+    modelId: canonicalModelId(slug ?? name, org),
     releaseDate: meta?.releaseDate ?? r.releaseDate ?? null,
     intelligence: num(r.intelligenceIndex), intelligenceEstimated: r.intelligenceIndexIsEstimated === true,
     codingIndex: null, mathIndex: null, agenticIndex: null,
@@ -147,16 +155,40 @@ export function normaliseWebLLM(r, meta) {
   };
 }
 
+const rowSlug = r => r?.slug ?? r?.release?.slug ?? null;
+
 export async function fetchAAWebLLMs() {
   const text = await page(AA_WEB_PATHS.llms);
-  const data = arrayWhere(text, 'intelligenceIndex', o => 'slug' in o && 'price1mInputTokens' in o);
+  const data = arrayWhere(text, 'intelligenceIndex', o => rowSlug(o) != null && 'price1mInputTokens' in o);
   if (!data) throw new Error('aa-web llms: model rows not found');
-  const meta = arrayWhere(text, 'releaseDate', o => 'slug' in o && 'creator' in o && !('intelligenceIndex' in o)) ?? [];
+  // release metadata (release date, retirement): `releases` now, `models` with a creator before
+  const meta = arrayWhere(text, 'releaseDate', o => 'slug' in o && !('intelligenceIndex' in o) && ('creator' in o || 'modelNames' in o)) ?? [];
   const bySlug = new Map(meta.map(m => [m.slug, m]));
   // deprecated rows are kept for joining with the arena board but never appended on their own
-  const rows = data.filter(r => r && r.slug).map(r => normaliseWebLLM(r, bySlug.get(r.slug)));
+  const rows = data.filter(r => rowSlug(r)).map(r => normaliseWebLLM(r, bySlug.get(rowSlug(r))));
   if (rows.length < 10) throw new Error(`aa-web llms: only ${rows.length} rows`);
   return rows;
+}
+
+/**
+ * Finds the page row for a Data API row. The API's slug is the release slug
+ * too, so it cannot tell "(max)" from "(high)": match on the row id first,
+ * then on the name, and on the slug only when the release has a single row.
+ */
+export function webRowMatcher(web) {
+  const byId = new Map(), byName = new Map(), byRelease = new Map();
+  const put = (map, k, r) => { if (k && !map.has(k)) map.set(k, r); };
+  for (const r of web) {
+    put(byId, r.aaId, r);
+    for (const n of [r.fullName, r.name]) { put(byName, `b:${bareKey(n)}`, r); put(byName, `l:${looseKey(n ?? '')}`, r); }
+    for (const k of new Set([r.release, r.slug].filter(Boolean))) byRelease.set(k, [...(byRelease.get(k) ?? []), r]);
+  }
+  return api => {
+    const hit = byId.get(api.aaId) ?? byName.get(`b:${bareKey(api.name)}`) ?? byName.get(`l:${looseKey(api.name ?? '')}`);
+    if (hit) return hit;
+    const same = byRelease.get(api.slug);
+    return same?.length === 1 ? same[0] : null;
+  };
 }
 
 // ── Image / video / speech (host-model rows → one row per model) ───────────

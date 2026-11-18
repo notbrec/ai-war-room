@@ -4,7 +4,7 @@ import { normaliseORModel, normaliseOREndpoint } from '../netlify/functions/adap
 import { normaliseSWEEntry } from '../netlify/functions/adapters/swebench.js';
 import { normaliseASRRow, rowsFromConfig, paramsFromName } from '../netlify/functions/adapters/openasr.js';
 import { normaliseAALLM, normaliseAAMedia, aaConfigured } from '../netlify/functions/adapters/artificialanalysis.js';
-import { parseS2S, normaliseWebLLM } from '../netlify/functions/adapters/aaweb.js';
+import { parseS2S, normaliseWebLLM, webRowMatcher } from '../netlify/functions/adapters/aaweb.js';
 import { topByIntelligence, asFighters } from '../src/domains/models/ranking.js';
 import { toModel, toMediaRow, validateBoard, normaliseOrg, rowGroups, newcomersFrom, slugify, tidyName } from '../netlify/functions/lib/arena.js';
 import { mergeLLMs, mergeMedia, summariseProviders, isOpenWeights, tidyEffort } from '../netlify/functions/lib/merge.js';
@@ -276,6 +276,30 @@ describe('aa models page (late-2026 shape)', () => {
     expect(r.benchmarks.gpqa).toBe(0.91);
     expect(r.benchmarks.tau2).toBe(0.88);
     expect(r.benchmarks.aa_omniscience).toBe(40);
+  });
+});
+
+describe('aa models page (Nov 2026 shape: UUID id, slug under release)', () => {
+  const row = (effort, intel) => ({ id: `uuid-${effort}`, release: { slug: 'claude-fable-5-2', name: 'Claude Fable 5.2' },
+    name: `Claude Fable 5.2 (${effort[0].toUpperCase() + effort.slice(1)}, Default Fallback)`, shortName: `Claude Fable 5.2 (${effort})`,
+    modelCreatorName: 'Anthropic', intelligenceIndex: intel, contextWindowTokens: 1000000, isOpenWeights: false,
+    scores: { 'humanitys-last-exam': 0.74 }, price1mInputTokens: 8, price1mOutputTokens: 40 });
+  const web = [normaliseWebLLM(row('max', 64.6), { slug: 'claude-fable-5-2', releaseDate: '2026-11-09' }), normaliseWebLLM(row('high', 61.8))];
+
+  it('keeps effort levels apart and reads the release', () => {
+    expect(web.map(r => r.slug)).toEqual(['claude-fable-5-2-max', 'claude-fable-5-2-high']);
+    expect(web[0]).toMatchObject({ aaId: 'uuid-max', release: 'claude-fable-5-2', name: 'Claude Fable 5.2 (max)', releaseDate: '2026-11-09', context: 1000000, isOpen: false });
+    expect(web[0].benchmarks.hle).toBe(0.74);
+    expect(web[0].modelId).not.toBe(web[1].modelId);
+  });
+
+  it('matches a Data API row (release slug + display name) to the right effort level', () => {
+    const find = webRowMatcher(web);
+    expect(find({ aaId: 'other', slug: 'claude-fable-5-2', name: 'Claude Fable 5.2 (High)' })?.intelligence).toBe(61.8);
+    expect(find({ aaId: 'other', slug: 'claude-fable-5-2', name: 'Claude Fable 5.2 (Max)' })?.intelligence).toBe(64.6);
+    expect(find({ aaId: 'uuid-high', slug: 'x', name: 'x' })?.intelligence).toBe(61.8);
+    // two rows share the release slug, so the slug alone is not a match
+    expect(find({ aaId: 'other', slug: 'claude-fable-5-2', name: 'Claude Fable 5.2 (Low)' })).toBeNull();
   });
 });
 
