@@ -126,10 +126,11 @@ export default function MediaArenaPage({ onNavigate, kind = 'image', slug }) {
 
       {rows.length > 0 && (
         <div style={{ marginBottom: 22 }}>
-          <HighlightGrid mobile={mobile}>
+          {/* generation time only when a source measured it — no empty N/A panel */}
+          <HighlightGrid mobile={mobile} cols={rows.slice(0, 10).some(r => isNum(r.genTime)) ? 3 : 2}>
             <BarPanel mobile={mobile} title="Quality ELO" color={GREEN} subtitle={`${K.boards.find(b => b.id === board)?.label} · arena.ai`} items={rows.slice(0, 10).map(r => ({ id: r.id, name: r.name, org: r.org, value: r.elo, label: String(r.elo) }))} onSelect={it => setExpanded(expanded === it.id ? null : it.id)} />
             <BarPanel mobile={mobile} title="Price" color={GOLD} subtitle={`Top 10 · ${kind === 'image' ? '$ per image' : '$ per second'}`} higherIsBetter={false} items={rows.slice(0, 10).filter(r => isNum(r[priceKey])).sort((a, b) => a[priceKey] - b[priceKey]).map(r => ({ id: r.id, name: r.name, org: r.org, value: r[priceKey], label: fmtMetric(priceKey, r[priceKey]) }))} onSelect={it => setExpanded(expanded === it.id ? null : it.id)} />
-            <BarPanel mobile={mobile} title="Generation time" color={PURPLE} subtitle="Top 10 · seconds · Artificial Analysis" higherIsBetter={false} items={rows.slice(0, 10).filter(r => isNum(r.genTime)).sort((a, b) => a.genTime - b.genTime).map(r => ({ id: r.id, name: r.name, org: r.org, value: r.genTime, label: fmtMetric('genTime', r.genTime) }))} onSelect={it => setExpanded(expanded === it.id ? null : it.id)} />
+            {rows.slice(0, 10).some(r => isNum(r.genTime)) && <BarPanel mobile={mobile} title="Generation time" color={PURPLE} subtitle="Top 10 · seconds · Artificial Analysis" higherIsBetter={false} items={rows.slice(0, 10).filter(r => isNum(r.genTime)).sort((a, b) => a.genTime - b.genTime).map(r => ({ id: r.id, name: r.name, org: r.org, value: r.genTime, label: fmtMetric('genTime', r.genTime) }))} onSelect={it => setExpanded(expanded === it.id ? null : it.id)} />}
           </HighlightGrid>
         </div>
       )}

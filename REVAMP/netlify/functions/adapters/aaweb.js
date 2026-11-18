@@ -130,7 +130,14 @@ export function normaliseWebLLM(r, meta) {
   const slug = r.slug ?? (kebab(name) || release);
   const benchmarks = {};
   for (const [k, out] of Object.entries(BENCH_KEYS)) { const v = num(r[k]); if (v != null) benchmarks[out] = v; }
-  for (const [k, out] of Object.entries(SCORE_KEYS)) { const v = num(r.scores?.[k]); if (v != null && benchmarks[out] == null) benchmarks[out] = v; }
+  // every score the page carries: the long-standing ones under their old keys,
+  // anything newer under its own id (kebab → snake), so a new evaluation shows
+  // up without an adapter change
+  for (const [k, raw] of Object.entries(r.scores ?? {})) {
+    const v = num(raw);
+    const out = SCORE_KEYS[k] ?? k.replace(/-/g, '_');
+    if (v != null && benchmarks[out] == null) benchmarks[out] = v;
+  }
   if (benchmarks.aa_omniscience == null && num(r.omniscience) != null) benchmarks.aa_omniscience = r.omniscience;
   const priceIn = num(r.price1mInputTokens), priceOut = num(r.price1mOutputTokens);
   return {

@@ -83,6 +83,9 @@ body {
   overscroll-behavior: none;
   scrollbar-gutter: stable;
   font-feature-settings: 'ss01', 'cv11', 'liga';
+  /* nothing may widen the page sideways: on a phone that zooms the whole site
+     out. `clip` (unlike hidden) keeps position: sticky working. */
+  overflow-x: clip;
 }
 
 input, button, select, textarea { font-family: inherit; }

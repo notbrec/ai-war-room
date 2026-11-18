@@ -28,6 +28,37 @@ function fmtGap(b, d) {
   if (b.unit === 'tokens') return fmtMetric('context', d);
   return d.toFixed(1);
 }
+/* ─── Overview card: one benchmark, its top three, one click to the full board ─ */
+function BenchCard({ b, leaders, count, mobile, onOpen }) {
+  return (
+    <div role="link" tabIndex={0} onClick={onOpen} onKeyDown={e => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), onOpen())}
+      className="aiwar-surface aiwar-card-hover"
+      style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: mobile ? 14 : 16, cursor: 'pointer', minWidth: 0 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
+        <span style={{ fontSize: 14.5, fontWeight: 700, letterSpacing: '-0.025em', lineHeight: 1.25, color: 'var(--text)' }}>{b.label}</span>
+        <SourceTag id={b.source} />
+      </div>
+      <span style={{ fontSize: 12, color: 'var(--muted)', lineHeight: 1.45, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', minHeight: 35 }}>{b.desc}</span>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 7, borderTop: '0.5px solid var(--sep)', paddingTop: 10, marginTop: 'auto' }}>
+        {leaders.map((r, i) => (
+          <div key={r.m.id} style={{ display: 'grid', gridTemplateColumns: '12px 14px minmax(0, 1fr) auto', alignItems: 'center', gap: 8 }}>
+            <span style={{ fontFamily: MONO, fontSize: 10.5, color: i === 0 ? 'var(--text)' : 'var(--muted2)', fontWeight: 700 }}>{i + 1}</span>
+            <LabLogo org={r.m.org} size={13} />
+            <span style={{ fontSize: 12.5, fontWeight: i === 0 ? 650 : 500, color: i === 0 ? 'var(--text)' : 'var(--muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', letterSpacing: '-0.015em' }}>{r.m.name}</span>
+            <span style={{ fontFamily: MONO, fontSize: 12, fontWeight: 700, color: i === 0 ? GREEN : 'var(--text)', fontVariantNumeric: 'tabular-nums' }}>{fmtVal(b, r.v)}</span>
+          </div>
+        ))}
+      </div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, fontFamily: MONO, fontSize: 9.5, letterSpacing: '0.06em', color: 'var(--muted2)' }}>
+        <span style={{ color: b.higher ? GREEN : GOLD }}>{b.higher ? '▲ HIGHER WINS' : '▼ LOWER WINS'}{b.unit && b.unit !== '%' ? ` · ${b.unit.toUpperCase()}` : ''}</span>
+        <span>{count} MODELS →</span>
+      </div>
+    </div>
+  );
+}
+
+const OVERVIEW_CAP = 8; // cards per group before "show all"
+
 const shortName = b => b.label.replace(/^(Arena|Design Arena) · /, '').replace(' (best harness)', '').replace(' (spec)', '').slice(0, 20);
 const TOP_N = 15;
 
@@ -38,7 +69,9 @@ export default function BenchmarksPage({ onNavigate, slug }) {
   const speech = useSpeech();
   const [group, setGroup] = useState('preference');
   const [benchId, setBenchId] = useState(slug ?? 'aa-intel');   // the headline ranking; arena ELO is one click away
-  const [mode, setMode] = useState('single');
+  const [mode, setMode] = useState(slug ? 'single' : 'overview');
+  const [ovGroup, setOvGroup] = useState('all');
+  const [expanded, setExpanded] = useState(() => new Set());
   const [matrixIds, setMatrixIds] = useState(['aa-intel', 'arena-text', 'arena-webdev', 'gpqa']);
   const [compare, setCompare] = useState(() => new Set());
   const [query, setQuery] = useState('');
@@ -82,6 +115,18 @@ export default function BenchmarksPage({ onNavigate, slug }) {
     }));
   }, [bench, pool, q, sweBest]); // eslint-disable-line
   const counts = useMemo(() => Object.fromEntries(all.map(b => [b.id, (b.pool === 'stt' ? speech.stt : models).filter(m => isNum(valueOf(b, m))).length])), [all, models, speech.stt, sweBest]); // eslint-disable-line
+  const poolOf = b => (b.pool === 'stt' ? speech.stt : models);
+  const overview = useMemo(() => GROUPS.map(g => ({ g, benches: all.filter(b => b.group === g.id && counts[b.id] > 0) })).filter(x => x.benches.length), [all, counts]);
+  const leaders = useMemo(() => {
+    const out = {};
+    for (const { benches } of overview) for (const b of benches) {
+      const list = poolOf(b).map(m => ({ m, v: valueOf(b, m) })).filter(r => isNum(r.v));
+      list.sort((x, y) => (b.higher ? y.v - x.v : x.v - y.v));
+      out[b.id] = list.slice(0, 3);
+    }
+    return out;
+  }, [overview, models, speech.stt, sweBest]); // eslint-disable-line
+  const openBench = id => { setBenchId(id); setMode('single'); window.scrollTo({ top: 0, behavior: 'instant' }); };
   const toggleCompare = id => setCompare(s => { const n = new Set(s); if (n.has(id)) n.delete(id); else if (n.size < 8) n.add(id); return n; });
   const comparing = compare.size >= 2;
   const chartRows = comparing ? rows.filter(r => compare.has(r.id)) : rows.slice(0, TOP_N);
@@ -120,11 +165,37 @@ export default function BenchmarksPage({ onNavigate, slug }) {
         status={<DataStatus status={llms.status} fetchedAt={llms.data?.fetchedAt} sources={['arena', 'openrouter', 'swebench', 'openasr', 'designarena', ...(aa ? ['aa'] : [])]} loading={llms.loading} />} />
 
       <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap', marginBottom: 12 }}>
-        <Segmented small value={mode} onChange={setMode} options={[{ value: 'single', label: 'One benchmark' }, { value: 'matrix', label: 'Matrix' }]} />
-        <input value={query} onChange={e => setQuery(e.target.value)} placeholder="Filter models…" style={{ height: 30, paddingInline: 12, background: 'var(--card)', border: '0.5px solid var(--sep)', outline: 'none', fontSize: 13, color: 'var(--text)', fontFamily: 'inherit', minWidth: 180, flex: mobile ? '1 1 100%' : undefined }} />
+        <Segmented small value={mode} onChange={setMode} options={[{ value: 'overview', label: 'Overview' }, { value: 'single', label: 'One benchmark' }, { value: 'matrix', label: 'Matrix' }]} />
+        {mode !== 'overview' && <input value={query} onChange={e => setQuery(e.target.value)} placeholder="Filter models…" style={{ height: 30, paddingInline: 12, background: 'var(--card)', border: '0.5px solid var(--sep)', outline: 'none', fontSize: 13, color: 'var(--text)', fontFamily: 'inherit', minWidth: 180, flex: mobile ? '1 1 100%' : undefined }} />}
       </div>
 
-      {mode === 'matrix' ? (
+      {mode === 'overview' ? (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: mobile ? 28 : 36 }}>
+          <div style={{ display: 'flex', gap: 6, flexWrap: mobile ? 'nowrap' : 'wrap', overflowX: mobile ? 'auto' : undefined, margin: mobile ? '0 -16px' : 0, padding: mobile ? '2px 16px' : 0, scrollbarWidth: 'none' }}>
+            <Chip small active={ovGroup === 'all'} label={`All · ${overview.reduce((n, x) => n + x.benches.length, 0)}`} onClick={() => setOvGroup('all')} />
+            {overview.map(({ g, benches }) => <Chip key={g.id} small active={ovGroup === g.id} label={`${g.label} · ${benches.length}`} onClick={() => setOvGroup(g.id)} />)}
+          </div>
+          {llms.loading && !models.length ? <Skeleton height={420} /> : overview.filter(x => ovGroup === 'all' || x.g.id === ovGroup).map(({ g, benches }) => {
+            const open = expanded.has(g.id) || ovGroup === g.id;
+            const shown = open ? benches : benches.slice(0, OVERVIEW_CAP);
+            return (
+              <section key={g.id}>
+                <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 10, marginBottom: 12 }}>
+                  <h2 style={{ margin: 0, fontSize: mobile ? 20 : 24, fontWeight: 700, letterSpacing: '-0.04em', color: 'var(--text)' }}>{g.label}</h2>
+                  <span style={{ fontFamily: MONO, fontSize: 10.5, color: 'var(--muted2)', letterSpacing: '0.06em' }}>{benches.length} BENCHMARK{benches.length === 1 ? '' : 'S'}</span>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: mobile ? 'minmax(0, 1fr)' : 'repeat(auto-fill, minmax(270px, 1fr))', gap: 10 }}>
+                  {shown.map(b => <BenchCard key={b.id} b={b} leaders={leaders[b.id] ?? []} count={counts[b.id]} mobile={mobile} onOpen={() => openBench(b.id)} />)}
+                </div>
+                {benches.length > shown.length && (
+                  <div style={{ marginTop: 10 }}><Btn small onClick={() => setExpanded(s => new Set(s).add(g.id))}>Show all {benches.length} →</Btn></div>
+                )}
+              </section>
+            );
+          })}
+          <p style={{ margin: 0, fontSize: 12, color: 'var(--muted2)', lineHeight: 1.6, fontFamily: MONO }}>Every value exactly as its source publishes it · different benchmarks are never averaged into one score · open a card for the full ranking, how it is measured and the source</p>
+        </div>
+      ) : mode === 'matrix' ? (
         <>
           <Panel style={{ marginBottom: 12 }} title="Columns · up to 6 benchmarks">
             <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
@@ -138,13 +209,14 @@ export default function BenchmarksPage({ onNavigate, slug }) {
           )}
         </>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: mobile ? '1fr' : '280px 1fr', gap: 12, alignItems: 'start' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: mobile ? 'minmax(0, 1fr)' : '280px minmax(0, 1fr)', gap: 12, alignItems: 'start' }}>
           {/* Left: groups + benchmarks */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10, minWidth: 0 }}>
             <Panel pad={8}>
               <div style={{ display: 'flex', flexDirection: mobile ? 'row' : 'column', gap: 2, overflowX: mobile ? 'auto' : undefined }}>
                 {GROUPS.map(g => {
                   const n = all.filter(b => b.group === g.id).reduce((s, b) => s + (counts[b.id] > 0 ? 1 : 0), 0);
+                  if (!n) return null;
                   return (
                     <button key={g.id} onClick={() => { setGroup(g.id); const first = all.find(b => b.group === g.id && counts[b.id] > 0) ?? all.find(b => b.group === g.id); if (first) setBenchId(first.id); }} style={{
                       display: 'flex', justifyContent: 'space-between', gap: 8, padding: '7px 10px', background: group === g.id ? 'var(--text)' : 'transparent', color: group === g.id ? 'var(--bg)' : n ? 'var(--text)' : 'var(--muted2)',
@@ -156,8 +228,9 @@ export default function BenchmarksPage({ onNavigate, slug }) {
             </Panel>
             <Panel pad={8}>
               {groupBenches.length === 0 && <div style={{ padding: 10, fontSize: 12, color: 'var(--muted)' }}>No permitted source configured for this group yet.</div>}
-              {groupBenches.map(b => (
-                <button key={b.id} onClick={() => setBenchId(b.id)} style={{ display: 'flex', flexDirection: 'column', gap: 2, width: '100%', padding: '8px 10px', background: benchId === b.id ? 'var(--hover)' : 'transparent', border: 'none', borderLeft: `2px solid ${benchId === b.id ? 'var(--text)' : 'transparent'}`, cursor: 'pointer', textAlign: 'left', fontFamily: 'inherit' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', maxHeight: mobile ? 260 : undefined, overflowY: mobile ? 'auto' : undefined }}>
+              {groupBenches.filter(b => counts[b.id] > 0 || b.id === benchId).map(b => (
+                <button key={b.id} onClick={() => setBenchId(b.id)} style={{ display: 'flex', flexDirection: 'column', gap: 2, width: '100%', flexShrink: 0, padding: '8px 10px', background: benchId === b.id ? 'var(--hover)' : 'transparent', border: 'none', borderLeft: `2px solid ${benchId === b.id ? 'var(--text)' : 'transparent'}`, cursor: 'pointer', textAlign: 'left', fontFamily: 'inherit' }}>
                   <span style={{ fontSize: 12.5, fontWeight: 600, color: counts[b.id] ? 'var(--text)' : 'var(--muted2)', letterSpacing: '-0.015em' }}>{b.label}</span>
                   <span style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
                     <span style={{ fontFamily: MONO, fontSize: 10, color: b.higher ? GREEN : GOLD }}>{b.higher ? '▲ higher' : '▼ lower'}</span>
@@ -166,6 +239,7 @@ export default function BenchmarksPage({ onNavigate, slug }) {
                   </span>
                 </button>
               ))}
+              </div>
             </Panel>
           </div>
 

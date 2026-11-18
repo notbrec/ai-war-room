@@ -129,6 +129,7 @@ export default function LeaderboardPage({ liveModels, onNavigate }) {
   const [ctxMin, setCtxMin]               = useState(null);
   const [filterOrg, setFilterOrg]         = useState('');
   const [allLabs, setAllLabs]             = useState(false);
+  const [showFilters, setShowFilters]     = useState(false);
   const [limit, setLimit]                 = useState(mobile ? 10 : 20);
   const [expandedId, setExpandedId]       = useState(null);
   const [selected, setSelected]           = useState(() => new Set());
@@ -337,6 +338,19 @@ export default function LeaderboardPage({ liveModels, onNavigate }) {
         </Reveal>
 
         {/* ── Control bar — drives everything below ────────────────── */}
+        {/* On a phone the filters fold into one button, so the ranking is the first thing under the stats. */}
+        {mobile && (
+          <button onClick={() => setShowFilters(v => !v)} className="aiwar-press-btn" aria-expanded={showFilters} style={{
+            width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, height: 44, padding: '0 14px', marginBottom: showFilters ? 0 : 14,
+            background: 'var(--card)', border: '0.5px solid var(--sep)', borderBottom: showFilters ? 'none' : '0.5px solid var(--sep)', color: 'var(--text)', cursor: 'pointer', fontFamily: 'inherit',
+          }}>
+            <span style={{ fontSize: 13.5, fontWeight: 600, letterSpacing: '-0.02em' }}>Models &amp; filters</span>
+            <span style={{ fontFamily: MONO, fontSize: 10.5, color: 'var(--muted)', letterSpacing: '0.06em' }}>
+              {picking ? `${n} PICKED · ` : ''}{activeFilters ? `${activeFilters} ACTIVE · ` : ''}{showFilters ? 'HIDE ▴' : 'SHOW ▾'}
+            </span>
+          </button>
+        )}
+        {(!mobile || showFilters) && (
         <div style={{ background: 'var(--card)', border: '0.5px solid var(--sep)', padding: mobile ? '4px 12px 6px' : '6px 18px 8px', marginBottom: 14 }}>
           <Row label="Models">
             <ModelPicker models={models} pick={pick} mobile={mobile} />
@@ -383,6 +397,7 @@ export default function LeaderboardPage({ liveModels, onNavigate }) {
             )}
           </Row>
         </div>
+        )}
 
         <SectionNav sections={sections} mobile={mobile} />
 

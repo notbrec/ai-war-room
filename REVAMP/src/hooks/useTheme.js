@@ -27,11 +27,15 @@ export function useTheme() {
   return { dark, toggle };
 }
 
-/** Returns true when viewport width < 600px, updates on resize */
+/** Returns true when viewport width < 600px, updates on resize.
+ *  Reads the layout viewport (clientWidth), not innerWidth: on a phone a page
+ *  that overflows is zoomed out and innerWidth grows with it, which used to
+ *  flip a phone into the desktop layout and make the overflow worse. */
+const viewportWidth = () => document.documentElement.clientWidth || window.innerWidth;
 export function useMobile() {
-  const [mobile, setMobile] = useState(() => window.innerWidth < 600);
+  const [mobile, setMobile] = useState(() => viewportWidth() < 600);
   useEffect(() => {
-    const handler = () => setMobile(window.innerWidth < 600);
+    const handler = () => setMobile(viewportWidth() < 600);
     window.addEventListener('resize', handler, { passive: true });
     return () => window.removeEventListener('resize', handler);
   }, []);

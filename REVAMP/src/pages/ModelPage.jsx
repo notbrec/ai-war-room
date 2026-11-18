@@ -17,7 +17,7 @@ import { PageFrame, PageTitle, DataStatus, Panel, Label, Btn, StatTile, BadgeTag
 import { fmtMetric, fmtDate, isNum, NA, SOURCES } from '../../shared/metrics.js';
 import { series } from '../../shared/history.js';
 import { AddToBattle } from '../domains/comparison/BattleControls.jsx';
-import { DESIGN_CATEGORY_LABEL } from '../domains/benchmarks/registry.js';
+import { DESIGN_CATEGORY_LABEL, aaBenchmarkInfo } from '../domains/benchmarks/registry.js';
 import { topByIntelligence } from '../domains/models/ranking.js';
 
 const TrendChart = lazy(() => import('../components/charts/TrendChart.jsx'));
@@ -243,9 +243,34 @@ export default function ModelPage({ slug, onNavigate, liveModels }) {
           </Panel>
           {model.aa?.benchmarks && Object.keys(model.aa.benchmarks).length > 0 && (
             <Panel title="Individual evaluations" action={<SourceTag id="aa" />}>
-              <BarPanel flat wide mobile={mobile} barColor={BLUE} baseline={0} limit={99} rank={false} gap={false}
-                items={Object.entries(model.aa.benchmarks).filter(([, v]) => isNum(v)).map(([k, v]) => ({ id: k, name: k.replace(/_/g, ' '), value: v <= 1 ? v * 100 : v, label: v <= 1 ? `${(v * 100).toFixed(1)}%` : v.toFixed(1) })).sort((a, b) => b.value - a.value)}
-                note="Scores as published by Artificial Analysis; different evaluations are not comparable with each other" />
+              {(() => {
+                const all = Object.entries(model.aa.benchmarks).filter(([, v]) => isNum(v)).map(([k, v]) => ({ k, v, info: aaBenchmarkInfo(k) }));
+                const scores = all.filter(x => x.info.unit !== 'Elo' && x.info.unit !== 'index' && x.v <= 1);
+                const ratings = all.filter(x => !scores.includes(x));
+                const open = x => x.info.id && onNavigate({ type: 'benchmarks', slug: x.info.id });
+                return (
+                  <>
+                    {scores.length > 0 && (
+                      <BarPanel flat wide mobile={mobile} barColor={BLUE} baseline={0} limit={99} rank={false} gap={false}
+                        items={scores.map(x => ({ id: x.k, name: x.info.label, value: x.v * 100, label: `${(x.v * 100).toFixed(1)}%` })).sort((a, b) => b.value - a.value)}
+                        onSelect={it => open(scores.find(x => x.k === it.id))}
+                        note="Share of each evaluation solved, as published by Artificial Analysis · evaluations differ in difficulty, so compare a model across one row, not rows with each other · click one for its full ranking" />
+                    )}
+                    {ratings.length > 0 && (
+                      <div style={{ display: 'grid', gridTemplateColumns: mobile ? '1fr 1fr' : 'repeat(auto-fill, minmax(190px, 1fr))', gap: 8, marginTop: scores.length ? 14 : 0 }}>
+                        {ratings.map(x => (
+                          <button key={x.k} onClick={() => open(x)} className="aiwar-press-btn" style={{ textAlign: 'left', background: 'var(--card2)', border: '0.5px solid var(--sep)', padding: '10px 12px', cursor: x.info.id ? 'pointer' : 'default', fontFamily: 'inherit', minWidth: 0 }}>
+                            <div style={{ fontSize: 11.5, color: 'var(--muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{x.info.label}</div>
+                            <div style={{ fontFamily: MONO, fontSize: 17, fontWeight: 700, color: 'var(--text)', marginTop: 4, fontVariantNumeric: 'tabular-nums' }}>
+                              {x.info.unit === 'Elo' ? Math.round(x.v) : x.v.toFixed(1)}<span style={{ fontSize: 9.5, color: 'var(--muted2)', marginLeft: 5, letterSpacing: '0.06em' }}>{x.info.unit === 'Elo' ? 'ELO' : 'INDEX'}</span>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </>
+                );
+              })()}
             </Panel>
           )}
           {model.or?.designArena?.length > 0 && (
