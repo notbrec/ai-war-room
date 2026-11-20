@@ -28,6 +28,8 @@ const HEADERS = {
   'Cache-Control': 'public, max-age=300, stale-while-revalidate=1800',
 };
 export const CDN_CACHE = 'public, durable, s-maxage=300, stale-while-revalidate=604800';
+/* a response missing a part it normally has (e.g. history) is served, but replaced within a minute */
+export const CDN_CACHE_SHORT = 'public, durable, s-maxage=60, stale-while-revalidate=60';
 
 export default async (req, context) => {
   const domain = context?.params?.domain ?? new URL(req.url).pathname.split('/').pop();
@@ -46,7 +48,7 @@ export default async (req, context) => {
       headers: {
         ...HEADERS,
         // never pin an outage at the edge
-        'Netlify-CDN-Cache-Control': ok ? CDN_CACHE : 'no-store',
+        'Netlify-CDN-Cache-Control': !ok ? 'no-store' : data?.degraded ? CDN_CACHE_SHORT : CDN_CACHE,
         'X-Domain': domain, 'X-Build-Ms': String(Date.now() - t0), 'X-Stale': data?.stale ? '1' : '0',
       },
     });

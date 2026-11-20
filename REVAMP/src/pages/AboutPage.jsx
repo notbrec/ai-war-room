@@ -41,7 +41,7 @@ We try to be useful, not viral. Our goal is that someone trying to pick a model 
 
 export default function AboutPage({ onNavigate }) {
   return (
-    <ArticleLayout
+    <ArticleLayout current="about"
       eyebrow="About"
       title="About AI WAR ROOM"
       subtitle="An independent tracker of large language model performance — built for clarity, not hype."

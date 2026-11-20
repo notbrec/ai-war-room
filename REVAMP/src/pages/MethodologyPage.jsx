@@ -1,4 +1,5 @@
 import { MODELS, RELEASE } from '../models-data.js';
+import ReadingFrame from '../components/ReadingFrame.jsx';
 import { useMobile } from '../hooks/useTheme.js';
 import MethodologySources from '../components/MethodologySources.jsx';
 import {
@@ -67,7 +68,8 @@ export default function MethodologyPage({ liveModels, countSnapshot }) {
     <div className="page-enter" style={{ background: 'transparent', fontFamily: SF, minHeight: '100vh' }}>
       <GlobalMotion />
 
-      <div style={{ maxWidth: 1000, margin: '0 auto', padding: mobile ? '40px 18px 96px' : '72px 24px 112px' }}>
+      <ReadingFrame current="methodology" wide>
+      <div style={{ paddingTop: mobile ? 12 : 22 }}>
 
         {/* ── Header ─────────────────────────────────────────────── */}
         <header style={{ marginBottom: mobile ? 36 : 56 }}>
@@ -289,6 +291,7 @@ export default function MethodologyPage({ liveModels, countSnapshot }) {
           </p>
         </Reveal>
       </div>
+      </ReadingFrame>
     </div>
   );
 }

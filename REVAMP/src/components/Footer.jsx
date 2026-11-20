@@ -3,14 +3,18 @@ import { MODELS } from '../models-data.js';
 import { useMobile } from '../hooks/useTheme.js';
 import { RobotMascot } from './Robot.jsx';
 
-const SF = "-apple-system,'SF Pro Display','SF Pro Text',BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif";
+const SF = "'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif";
 
 // Today's top six models (one per family) from the snapshot refreshed at every deploy.
 const TOP_MODELS = (() => {
   const seen = new Set();
   return MODELS.filter(m => { const k = m.name.replace(/\s*\(.*\)$/, ''); if (seen.has(k)) return false; seen.add(k); return true; }).slice(0, 6);
 })();
-const LAB_SLUGS       = Object.keys(LAB_CONTENT);
+// the written profiles first, then the other big labs (their pages are built from the live data)
+const LABS = [
+  ...Object.keys(LAB_CONTENT).map(slug => ({ slug, name: LAB_CONTENT[slug].name })),
+  { slug: 'alibaba', name: 'Alibaba' }, { slug: 'moonshot', name: 'Moonshot' }, { slug: 'z-ai', name: 'Z.ai' }, { slug: 'mistral', name: 'Mistral' },
+];
 
 export default function Footer({ onNavigate }) {
   const mobile = useMobile();
@@ -23,32 +27,28 @@ export default function Footer({ onNavigate }) {
       marginTop: 32,
     }}>
       <div style={{
-        maxWidth: 1100, margin: '0 auto',
-        padding: mobile ? '36px 16px 28px' : '48px 24px 36px',
+        maxWidth: 'var(--page-max)', margin: '0 auto',
+        padding: mobile ? '36px 16px 28px' : '40px var(--gutter) 32px',
       }}>
-        {/* Brand strip — the two combatants sign off every page */}
-        <div style={{
-          display: 'flex', alignItems: 'center', gap: 12,
-          paddingBottom: 28, marginBottom: 32,
-          borderBottom: '0.5px solid var(--sep)',
-        }}>
-          <RobotMascot variant="classic" size={26} color="var(--accent)" />
-          <div style={{ minWidth: 0 }}>
-            <div style={{ fontSize: 15, fontWeight: 700, letterSpacing: '-0.02em', color: 'var(--text)' }}>
-              AI WAR ROOM
-            </div>
-            <div style={{ fontSize: 12, color: 'var(--muted)', letterSpacing: '-0.01em' }}>
-              Every model, ranked by battle.
-            </div>
-          </div>
-          <RobotMascot variant="eared" size={24} color="var(--muted2)" style={{ marginLeft: 'auto' }} />
-        </div>
         <div style={{
           display: 'grid',
-          gridTemplateColumns: mobile ? '1fr 1fr' : 'repeat(5, 1fr)',
+          gridTemplateColumns: mobile ? '1fr 1fr' : 'minmax(220px, 1.3fr) repeat(5, minmax(0, 1fr))',
           gap: mobile ? 24 : 32, marginBottom: 32,
         }}>
-
+          {/* Brand — the two combatants sign off every page */}
+          <div style={{ gridColumn: mobile ? '1 / -1' : undefined, minWidth: 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <RobotMascot variant="classic" size={26} color="var(--accent)" />
+              <div style={{ minWidth: 0 }}>
+                <div style={{ fontSize: 15, fontWeight: 800, letterSpacing: '-0.03em', color: 'var(--text)' }}>AI WAR ROOM</div>
+                <div style={{ fontSize: 12, color: 'var(--muted)', letterSpacing: '-0.01em' }}>Every model, ranked by battle.</div>
+              </div>
+              <RobotMascot variant="eared" size={22} color="var(--muted2)" style={{ marginLeft: mobile ? 'auto' : 14 }} />
+            </div>
+            <p style={{ fontSize: 12.5, lineHeight: 1.6, color: 'var(--muted)', margin: '16px 0 0', maxWidth: 340 }}>
+              Independent rankings for language, code, image, video and voice models — read from public benchmarks, arena votes and price lists several times a day. Nothing is typed in by hand.
+            </p>
+          </div>
           <Column title="Command">
             <FooterLink onClick={() => onNavigate('home')}>War Room</FooterLink>
             <FooterLink onClick={() => onNavigate('leaderboard')}>LLM Rankings</FooterLink>
@@ -80,9 +80,9 @@ export default function Footer({ onNavigate }) {
           </Column>
 
           <Column title="Labs">
-            {LAB_SLUGS.map(slug => (
-              <FooterLink key={slug} onClick={() => onNavigate({ type: 'lab', slug })}>
-                {LAB_CONTENT[slug].name}
+            {LABS.map(l => (
+              <FooterLink key={l.slug} onClick={() => onNavigate({ type: 'lab', slug: l.slug })}>
+                {l.name}
               </FooterLink>
             ))}
           </Column>

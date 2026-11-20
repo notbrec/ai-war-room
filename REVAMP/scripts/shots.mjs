@@ -8,7 +8,7 @@ const base = process.argv[3] ?? 'http://localhost:5199';
 fs.mkdirSync(outDir, { recursive: true });
 const CHROME = process.env.CHROME ?? 'C:/Program Files/Google/Chrome/Application/chrome.exe';
 const port = 9333;
-const chrome = spawn(CHROME, [`--remote-debugging-port=${port}`, '--headless=new', '--remote-allow-origins=*', '--disable-gpu', '--hide-scrollbars', '--window-size=1280,900', '--user-data-dir=' + path.join(outDir, '.profile'), 'about:blank'], { stdio: 'ignore' });
+const chrome = spawn(CHROME, [`--remote-debugging-port=${port}`, '--headless=new', '--remote-allow-origins=*', '--disable-gpu', '--hide-scrollbars', '--window-size=2560,1440', '--user-data-dir=' + path.join(outDir, '.profile'), 'about:blank'], { stdio: 'ignore' });
 await new Promise(r => setTimeout(r, 2500));
 
 const list = (await (await fetch(`http://localhost:${port}/json`)).json()).filter(t => t.type === 'page');
@@ -31,7 +31,11 @@ if (process.env.PAGES) PAGES.splice(0, PAGES.length, ...process.env.PAGES.split(
 const errors = [];
 for (const [name, p] of PAGES) {
   if (only && !only.includes(name)) continue;
-  for (const [tag, w, h, mobile] of (process.env.MOBILE_ONLY ? [['mobile', 390, 1600, true]] : [['desktop', 1280, 1800, false], ['mobile', 390, 1600, true]])) {
+  // SIZES=2560x1440,1280x800,390x844 picks the viewports (phone when ≤ 600 wide)
+  const SIZES = process.env.SIZES
+    ? process.env.SIZES.split(',').map(s => { const [w, h] = s.split('x').map(Number); return [`${w}`, w, h, w <= 600]; })
+    : process.env.MOBILE_ONLY ? [['mobile', 390, 1600, true]] : [['desktop', 1280, 1800, false], ['mobile', 390, 1600, true]];
+  for (const [tag, w, h, mobile] of SIZES) {
     await send('Emulation.setDeviceMetricsOverride', { width: w, height: h, deviceScaleFactor: 1, mobile });
     events.length = 0;
     await send('Page.navigate', { url: 'about:blank' }); await sleep(300);
@@ -45,10 +49,19 @@ for (const [name, p] of PAGES) {
     await sleep(1400);
     const { result } = await send('Runtime.evaluate', { expression: `JSON.stringify({h:document.body.scrollHeight, text:document.body.innerText.slice(0,120).replace(/\\n/g,' ')})`, returnByValue: true });
     const info = JSON.parse(result.result.value);
-    await send('Emulation.setDeviceMetricsOverride', { width: w, height: Math.min(info.h, process.env.MAXH ? +process.env.MAXH : 6000), deviceScaleFactor: 1, mobile });
+    // Very tall captures stall the compositor at 2560 px wide, so a long page is
+    // taken as SEG-high slices (scrolled, viewport-only): <name>-<tag>.png, -2.png, …
+    const seg = process.env.SEG ? +process.env.SEG : 3000;
+    const total = process.env.FOLD ? h : Math.min(info.h, process.env.MAXH ? +process.env.MAXH : 9000);
+    const sliceH = Math.min(total, seg);
+    await send('Emulation.setDeviceMetricsOverride', { width: w, height: sliceH, deviceScaleFactor: 1, mobile });
     await sleep(300);
-    const shot = await send('Page.captureScreenshot', { format: 'png', captureBeyondViewport: true });
-    fs.writeFileSync(path.join(outDir, `${name}-${tag}.png`), Buffer.from(shot.result.data, 'base64'));
+    for (let y = 0, k = 1; y < total; y += sliceH, k++) {
+      await send('Runtime.evaluate', { expression: `window.scrollTo(0, ${y})` });
+      await sleep(k === 1 ? 200 : 700);
+      const shot = await send('Page.captureScreenshot', { format: 'png' });
+      fs.writeFileSync(path.join(outDir, `${name}-${tag}${k > 1 ? `-${k}` : ''}.png`), Buffer.from(shot.result.data, 'base64'));
+    }
     const errs = events.filter(e => (e.method === 'Runtime.exceptionThrown') || (e.method === 'Log.entryAdded' && e.params.entry.level === 'error')).map(e => e.method === 'Runtime.exceptionThrown' ? e.params.exceptionDetails.exception?.description ?? e.params.exceptionDetails.text : e.params.entry.text);
     if (errs.length) errors.push({ page: `${name}-${tag}`, errs });
     console.log(`${name}-${tag}: ${info.h}px · ${errs.length} console errors · "${info.text.slice(0, 70)}"`);

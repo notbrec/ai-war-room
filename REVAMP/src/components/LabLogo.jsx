@@ -72,7 +72,7 @@ export function LabLogo({ org, size = 16, color, mono = false, style }) {
         display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
         border: `1px solid ${tint}`, color: tint,
         fontSize: Math.round(size * 0.6), fontWeight: 800,
-        fontFamily: "'SF Mono','JetBrains Mono',ui-monospace,monospace",
+        fontFamily: "'JetBrains Mono','SF Mono',ui-monospace,monospace",
         lineHeight: 1, ...style,
       }}
     >

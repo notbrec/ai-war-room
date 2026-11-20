@@ -1,0 +1,162 @@
+/* ═══ The frame — sidebar, top bar, tape, command palette, page container ═══
+   Desktop (≥ 1100 px) wears the sidebar + top bar; tablets and phones keep
+   NavBar. Everything reads the theme tokens in index.css. */
+
+.aw-main { margin-left: var(--side-w, 0px); min-width: 0; position: relative; }
+.aw-page { position: relative; max-width: var(--page-max); margin: 0 auto; padding: 26px var(--gutter) 96px; }
+@media (max-width: 599px) { .aw-page { padding: 24px 16px 88px; } }
+
+/* ─── Sidebar ─── */
+.aw-side {
+  position: fixed; top: 0; left: 0; bottom: 0; width: var(--side-w); z-index: 120;
+  display: flex; flex-direction: column; background: var(--side-bg); border-right: 0.5px solid var(--sep);
+}
+.aw-side-brand {
+  height: var(--top-h); flex-shrink: 0; width: 100%; display: flex; align-items: center; gap: 10px; padding: 0 20px;
+  border: none; border-bottom: 0.5px solid var(--sep); background: none; color: var(--text); cursor: pointer; font-family: inherit;
+}
+.aw-side[data-rail="1"] .aw-side-brand { justify-content: center; padding: 0; }
+.aw-side-word { font-size: 15px; font-weight: 800; letter-spacing: -0.035em; white-space: nowrap; }
+.aw-side-nav { flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; padding: 4px 10px 12px; scrollbar-width: none; }
+.aw-side-nav::-webkit-scrollbar { display: none; }
+.aw-side[data-rail="1"] .aw-side-nav { padding: 4px 10px; }
+.aw-side-label {
+  font-family: var(--mono); font-size: 10px; font-weight: 700; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--muted2); margin: 16px 10px 6px;
+}
+.aw-side-sep { height: 0.5px; background: var(--sep); margin: 10px 6px; }
+.aw-side-item {
+  position: relative; display: flex; align-items: center; gap: 11px; width: 100%; height: 34px; padding: 0 10px;
+  border: none; background: transparent; color: var(--text2); font-family: inherit; font-size: 13.5px; font-weight: 500;
+  letter-spacing: -0.01em; text-align: left; cursor: pointer; transition: background-color 120ms, color 120ms;
+}
+.aw-side-item svg { color: var(--muted); transition: color 120ms; }
+.aw-side-item:hover { background: var(--hover); color: var(--text); }
+.aw-side-item:hover svg, .aw-side-item[data-on="1"] svg { color: var(--text); }
+.aw-side-item[data-on="1"] { background: var(--pill); color: var(--text); font-weight: 600; }
+.aw-side-item[data-on="1"]::before { content: ''; position: absolute; left: -10px; top: 7px; bottom: 7px; width: 2px; background: var(--accent); }
+.aw-side-text { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.aw-side-count { font-family: var(--mono); font-size: 10.5px; color: var(--muted2); font-variant-numeric: tabular-nums; }
+.aw-side-badge { font-family: var(--mono); font-size: 10px; font-weight: 700; color: #fff; background: var(--accent); padding: 1px 6px; }
+.aw-side[data-rail="1"] .aw-side-item { justify-content: center; padding: 0; height: 40px; }
+.aw-side-tip {
+  position: fixed; transform: translateY(-50%); z-index: 130; pointer-events: none;
+  background: var(--card); color: var(--text); border: 0.5px solid var(--sep); box-shadow: var(--shadow);
+  padding: 5px 9px; font-size: 12px; font-weight: 500; white-space: nowrap; animation: aw-fade 120ms ease both;
+}
+/* short screens: a tighter rail so every icon fits without scrolling */
+@media (max-height: 820px) {
+  .aw-side[data-rail="1"] .aw-side-item { height: 34px; }
+  .aw-side[data-rail="1"] .aw-side-sep { margin: 6px 6px; }
+  .aw-side-item { height: 31px; }
+  .aw-side-label { margin: 12px 10px 4px; }
+}
+.aw-side-dot { position: absolute; top: 9px; right: 11px; width: 6px; height: 6px; background: var(--accent); border-radius: 50% !important; }
+.aw-side-foot { flex-shrink: 0; border-top: 0.5px solid var(--sep); padding: 8px 10px 10px; }
+.aw-side-sources { display: block; width: 100%; padding: 4px 10px 8px; margin-bottom: 4px; border: none; background: none; text-align: left; cursor: pointer; font-family: inherit; }
+.aw-side-sources:hover { background: var(--hover); }
+.aw-side-src { display: flex; align-items: center; gap: 8px; height: 21px; font-size: 12px; color: var(--text2); }
+.aw-side-src-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.aw-side-src-age { font-family: var(--mono); font-size: 10px; color: var(--muted2); white-space: nowrap; }
+.aw-side-toggle { color: var(--muted); }
+
+/* ─── Top bar ─── */
+.aw-top {
+  position: sticky; top: 0; z-index: 100; height: var(--top-h); display: flex; align-items: center; gap: 16px;
+  padding: 0 var(--gutter); background: var(--nav); border-bottom: 0.5px solid var(--sep);
+  backdrop-filter: saturate(180%) blur(20px); -webkit-backdrop-filter: saturate(180%) blur(20px);
+}
+.aw-top-title { display: flex; align-items: baseline; gap: 8px; min-width: 0; flex-shrink: 1; }
+.aw-top-group { font-family: var(--mono); font-size: 10.5px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted2); white-space: nowrap; }
+.aw-top-slash { color: var(--muted2); font-size: 13px; }
+.aw-top-h { font-size: 15.5px; font-weight: 700; letter-spacing: -0.02em; color: var(--text); margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 30vw; }
+.aw-top-search {
+  display: flex; align-items: center; gap: 9px; height: 34px; width: clamp(200px, 24vw, 420px); padding: 0 7px 0 11px; margin-left: 10px;
+  background: var(--search); border: 0.5px solid var(--sep); color: var(--muted2); font-family: inherit; font-size: 13px; cursor: pointer;
+  flex-shrink: 1; min-width: 0; transition: border-color 120ms, color 120ms;
+}
+.aw-top-search:hover { color: var(--muted); border-color: var(--muted2); }
+.aw-top-search-text { flex: 1; min-width: 0; text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.aw-top kbd, .aw-cmd kbd, .aw-kbd {
+  font-family: var(--mono); font-size: 10px; color: var(--muted); border: 0.5px solid var(--sep);
+  padding: 2px 6px; background: var(--bg); white-space: nowrap; line-height: 1.3;
+}
+.aw-top-right { margin-left: auto; display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+.aw-top-kpis { display: flex; align-items: center; gap: 2px; padding-right: 12px; border-right: 0.5px solid var(--sep); }
+.aw-top-kpis button { display: flex; align-items: baseline; gap: 6px; padding: 6px 8px; background: none; border: none; cursor: pointer; font-family: inherit; }
+.aw-top-kpis button:hover { background: var(--hover); }
+.aw-top-kpis b { font-family: var(--mono); font-size: 13.5px; font-weight: 600; color: var(--text); letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.aw-top-kpis span { font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted2); }
+.aw-top-live { display: flex; align-items: center; gap: 8px; padding: 6px 4px; background: none; border: none; cursor: pointer; font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.06em; color: var(--muted); white-space: nowrap; }
+.aw-top-icon { width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; background: var(--pill); border: none; color: var(--muted); cursor: pointer; }
+.aw-top-icon:hover { color: var(--text); background: var(--search); }
+.aw-top-cta {
+  height: 34px; display: inline-flex; align-items: center; gap: 8px; padding: 0 14px; background: var(--text); color: var(--bg);
+  border: none; font-family: inherit; font-size: 13px; font-weight: 600; letter-spacing: -0.01em; cursor: pointer; white-space: nowrap;
+}
+.aw-top-cta:hover { opacity: 0.9; }
+.aw-top-cta-n { font-family: var(--mono); font-size: 10.5px; background: var(--accent); color: #fff; padding: 1px 6px; }
+
+/* ─── Tape — this week's changes ─── */
+.aw-tape { height: 34px; display: flex; align-items: stretch; background: var(--side-bg); border-bottom: 0.5px solid var(--sep); overflow: hidden; position: relative; z-index: 3; }
+.aw-tape-label {
+  display: flex; align-items: center; gap: 8px; padding: 0 14px 0 var(--gutter); border-right: 0.5px solid var(--sep); flex-shrink: 0;
+  font-family: var(--mono); font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text2); white-space: nowrap;
+}
+.aw-tape-track-wrap {
+  flex: 1; min-width: 0; overflow: hidden;
+  -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 2%, #000 97%, transparent 100%);
+  mask-image: linear-gradient(90deg, transparent 0, #000 2%, #000 97%, transparent 100%);
+}
+.aw-tape-track { display: flex; width: max-content; height: 100%; animation: aw-tape-roll 60s linear infinite; }
+.aw-tape:hover .aw-tape-track { animation-play-state: paused; }
+@keyframes aw-tape-roll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+.aw-tape-item { display: inline-flex; align-items: center; gap: 7px; height: 100%; padding: 0 16px; background: none; border: none; border-right: 0.5px solid var(--sep2); cursor: pointer; white-space: nowrap; font-family: inherit; }
+.aw-tape-item:hover { background: var(--hover); }
+.aw-tape-tag { font-family: var(--mono); font-size: 9.5px; font-weight: 700; letter-spacing: 0.08em; }
+.aw-tape-name { font-size: 12px; font-weight: 600; color: var(--text); letter-spacing: -0.01em; }
+.aw-tape-val { font-family: var(--mono); font-size: 11px; font-weight: 600; font-variant-numeric: tabular-nums; }
+
+/* ─── Command palette ─── */
+.aw-cmd-veil {
+  position: fixed; inset: 0; z-index: 400; display: flex; justify-content: center; align-items: flex-start; padding: 11vh 16px 16px;
+  background: rgba(0,0,0,0.5); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); animation: aw-fade 140ms ease both;
+}
+html:not(.dark) .aw-cmd-veil { background: rgba(20,20,24,0.28); }
+@keyframes aw-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes aw-rise { from { opacity: 0; transform: translateY(8px) scale(0.99); } to { opacity: 1; transform: none; } }
+.aw-cmd {
+  width: min(780px, 100%); max-height: 76vh; display: flex; flex-direction: column; background: var(--card); border: 0.5px solid var(--sep);
+  box-shadow: 0 30px 80px rgba(0,0,0,0.5); animation: aw-rise 220ms cubic-bezier(0.16,1,0.3,1) both;
+}
+.aw-cmd-input { display: flex; align-items: center; gap: 12px; height: 56px; padding: 0 16px; border-bottom: 0.5px solid var(--sep); color: var(--muted); flex-shrink: 0; }
+.aw-cmd-input input { flex: 1; min-width: 0; background: none; border: none; outline: none; font-family: inherit; font-size: 16px; color: var(--text); letter-spacing: -0.01em; }
+.aw-cmd-input input::placeholder { color: var(--muted2); }
+.aw-cmd-list { flex: 1; min-height: 0; overflow-y: auto; padding: 6px; overscroll-behavior: contain; }
+.aw-cmd-group { font-family: var(--mono); font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted2); padding: 12px 10px 6px; }
+.aw-cmd-row { position: relative; display: flex; align-items: center; gap: 12px; height: 42px; padding: 0 10px; cursor: pointer; }
+.aw-cmd-row[data-active="1"] { background: var(--hover); }
+.aw-cmd-row[data-active="1"]::before { content: ''; position: absolute; left: 0; top: 8px; bottom: 8px; width: 2px; background: var(--accent); }
+.aw-cmd-ico { width: 26px; height: 26px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; background: var(--card2); border: 0.5px solid var(--sep2); color: var(--muted); }
+.aw-cmd-name { flex: 1; min-width: 0; display: flex; align-items: baseline; gap: 8px; font-size: 14px; font-weight: 600; color: var(--text); letter-spacing: -0.015em; }
+.aw-cmd-name > span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.aw-cmd-org { font-size: 12px; font-weight: 400; color: var(--muted2); white-space: nowrap; }
+.aw-cmd-meta { font-family: var(--mono); font-size: 11px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 46%; }
+.aw-cmd-kind { width: 42px; flex-shrink: 0; text-align: right; font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted2); }
+.aw-cmd-empty { padding: 28px 16px; text-align: center; color: var(--muted); font-size: 13px; }
+.aw-cmd-foot { display: flex; align-items: center; gap: 16px; padding: 9px 14px; border-top: 0.5px solid var(--sep); font-family: var(--mono); font-size: 10.5px; color: var(--muted2); flex-shrink: 0; }
+.aw-cmd-foot kbd { margin-right: 3px; }
+@media (max-width: 600px) {
+  .aw-cmd-veil { padding: 8px; }
+  .aw-cmd { max-height: calc(100dvh - 16px); }
+  .aw-cmd-meta, .aw-cmd-kind, .aw-cmd-foot { display: none; }
+}
+
+/* every page is a size container, so its grids follow the room it really has */
+.aw-page { container-type: inline-size; container-name: page; }
+.aw-headband { display: grid; gap: 18px; grid-template-columns: minmax(0, 1fr); margin-bottom: 22px; }
+.aw-stats { display: grid; gap: 10px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+@container page (min-width: 760px) { .aw-stats { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+@container page (min-width: 1500px) {
+  .aw-headband { grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); align-items: end; gap: 32px; }
+}

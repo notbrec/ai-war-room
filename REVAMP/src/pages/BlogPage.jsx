@@ -1,4 +1,5 @@
 import { BLOG_POSTS } from '../content/blog.js';
+import ReadingFrame from '../components/ReadingFrame.jsx';
 import ArticleLayout, { ArticleSections } from '../components/ArticleLayout.jsx';
 import { useMobile } from '../hooks/useTheme.js';
 import { SF, MONO, EASE, Reveal, Eyebrow, GlobalMotion } from '../components/design.jsx';
@@ -10,7 +11,8 @@ export function BlogIndexPage({ onNavigate }) {
     <div className="page-enter" style={{ background: 'transparent', fontFamily: SF, minHeight: '100vh' }}>
       <GlobalMotion />
 
-      <div style={{ maxWidth: 760, margin: '0 auto', padding: mobile ? '40px 18px 96px' : '72px 24px 112px' }}>
+      <ReadingFrame current="blog">
+      <div style={{ paddingTop: mobile ? 12 : 22 }}>
 
         {/* ── Header ─────────────────────────────────────────────── */}
         <header style={{ marginBottom: 48 }}>
@@ -88,6 +90,7 @@ export function BlogIndexPage({ onNavigate }) {
           ))}
         </div>
       </div>
+      </ReadingFrame>
     </div>
   );
 }
@@ -97,7 +100,7 @@ export function BlogPostPage({ slug, onNavigate }) {
 
   if (!post) {
     return (
-      <ArticleLayout
+      <ArticleLayout current="blog"
         eyebrow="Blog"
         title="Post not found"
         subtitle="This post may have been moved or removed."
@@ -109,7 +112,7 @@ export function BlogPostPage({ slug, onNavigate }) {
   }
 
   return (
-    <ArticleLayout
+    <ArticleLayout current="blog"
       eyebrow="Blog"
       title={post.title}
       subtitle={post.subtitle}

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import ReadingFrame from '../components/ReadingFrame.jsx';
 import { MODELS, RELEASE } from '../models-data.js';
 import { useMobile } from '../hooks/useTheme.js';
 import { SF, MONO, EASE, Reveal, Eyebrow, GlobalMotion } from '../components/design.jsx';
@@ -232,9 +233,9 @@ function QA({ item, isOpen, onToggle, delay }) {
           <p style={{
             fontSize: 16.5, lineHeight: 1.7, color: 'var(--text)',
             letterSpacing: '-0.012em', margin: '0 0 24px', opacity: 0.86,
-            whiteSpace: 'pre-line', paddingRight: 44,
+            paddingRight: 44,
           }}>
-            {item.a}
+            {item.a.replace(/\s+/g, ' ').trim()}
           </p>
         </div>
       </div>
@@ -262,7 +263,8 @@ export default function FAQPage({ onNavigate, liveModels }) {
     <div className="page-enter" style={{ background: 'transparent', fontFamily: SF, minHeight: '100vh' }}>
       <GlobalMotion />
 
-      <div style={{ maxWidth: 760, margin: '0 auto', padding: mobile ? '40px 18px 96px' : '72px 24px 112px' }}>
+      <ReadingFrame current="faq">
+      <div style={{ paddingTop: mobile ? 12 : 22 }}>
 
         {/* ── Header ─────────────────────────────────────────────── */}
         <header style={{ marginBottom: 36 }}>
@@ -365,6 +367,7 @@ export default function FAQPage({ onNavigate, liveModels }) {
           AI WAR ROOM · {data.length}+ models tracked · {RELEASE}
         </p>
       </div>
+      </ReadingFrame>
     </div>
   );
 }

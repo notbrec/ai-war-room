@@ -141,6 +141,8 @@ export async function loadLLMs() {
   const history = await attachHistory(models);
   return {
     ok: true,
+    // history missing while the store exists = a hiccup; the edge keeps this response only briefly
+    degraded: hasDurableStore() && !history.available,
     fetchedAt: text.fetchedAt,
     stale: text.stale,
     published: text.data.map(m => m.published).filter(Boolean).sort().pop() ?? null,
@@ -283,11 +285,20 @@ const HIST_PREFIX = key('history:');
 let snapMemo = { at: 0, snaps: null };
 async function listSnapshots({ force = false } = {}) {
   if (!force && snapMemo.snaps && Date.now() - snapMemo.at < 15 * 60 * 1000) return snapMemo.snaps;
-  const keys = await listBlobs(HIST_PREFIX);
-  // In parallel: one blob per stored day, read one by one, cost a cold lambda seconds.
-  const snaps = (await mapLimit(keys, 16, k => readBlob(k))).filter(s => s?.date);
+  // A blob listing that comes back empty (a transient Blobs error is swallowed
+  // as []) used to strip the history from every model for the next 15 minutes
+  // — and the CDN kept that response. Try twice, and never let a degenerate
+  // list replace a good one.
+  let snaps = [];
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const keys = await listBlobs(HIST_PREFIX);
+    // In parallel: one blob per stored day, read one by one, cost a cold lambda seconds.
+    snaps = (await mapLimit(keys, 16, k => readBlob(k))).filter(s => s?.date);
+    if (snaps.length > 1 || !hasDurableStore()) break;
+  }
   snaps.sort((a, b) => (a.date < b.date ? -1 : 1));
-  snapMemo = { at: Date.now(), snaps };
+  if (snaps.length > 1 || !hasDurableStore()) snapMemo = { at: Date.now(), snaps };
+  else if (snapMemo.snaps?.length > 1) return snapMemo.snaps;
   return snaps;
 }
 

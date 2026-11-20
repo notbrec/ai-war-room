@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, lazy, Suspense, startTransition } from 'react';
+import { useState, useEffect, useLayoutEffect, useRef, lazy, Suspense, startTransition } from 'react';
 import { useTheme }              from './hooks/useTheme.js';
 import NavBar                    from './components/NavBar.jsx';
 import Footer                    from './components/Footer.jsx';
@@ -9,6 +9,14 @@ import { ScrollProgress, GlobalMotion, ClickEffects, SmoothScroll, Skeleton } fr
 import { MODELS, fetchLeaderboard, readModelCountSnapshot, writeModelCountSnapshot, loadDescriptions } from './models-data.js';
 import { BattleDrawer, BattleToastHost } from './domains/comparison/BattleControls.jsx';
 import { prefetchAll } from './data/api.js';
+import { useShell, useSideVar } from './hooks/useShell.js';
+import Sidebar                   from './components/shell/Sidebar.jsx';
+import TopBar                    from './components/shell/TopBar.jsx';
+import LiveTape                  from './components/shell/LiveTape.jsx';
+import { pageMeta }              from './components/shell/nav.jsx';
+import { LAB_CONTENT }           from './content/labs.js';
+import { labSlug }               from './domains/labs.js';
+import { setNavigator }          from './hooks/navigator.js';
 
 // Home and the leaderboard ship in the main bundle; every other page is its
 // own chunk. All of them are fetched while the browser is idle right after
@@ -34,13 +42,16 @@ const PAGE_CHUNKS = {
   terms:       () => import('./pages/TermsPage.jsx'),
   contact:     () => import('./pages/ContactPage.jsx'),
 };
+const loadPalette = () => import('./components/shell/CommandPalette.jsx');
 const EXTRA_CHUNKS = [
+  loadPalette,
   () => import('./components/charts/ScatterChart.jsx'),
   () => import('./components/charts/TrendChart.jsx'),
   () => import('./components/charts/RaceLanes.jsx'),
   loadDescriptions,
 ];
 
+const CommandPalette     = lazy(loadPalette);
 const CodeOpsPage        = lazy(PAGE_CHUNKS.coding);
 const MediaArenaPage     = lazy(PAGE_CHUNKS.media);
 const VoiceCommsPage     = lazy(PAGE_CHUNKS.speech);
@@ -150,7 +161,7 @@ function writeCache(models) {
 
 function PageFallback() {
   return (
-    <div style={{ maxWidth: 1100, margin: '0 auto', padding: '64px 24px' }}>
+    <div className="aw-page">
       <Skeleton height={14} width={120} style={{ marginBottom: 18 }} />
       <Skeleton height={48} width="50%" style={{ marginBottom: 28 }} />
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 10 }}>
@@ -162,6 +173,19 @@ function PageFallback() {
 
 export default function App() {
   const { dark, toggle } = useTheme();
+  const shell = useShell();
+  useSideVar(shell.sideW);
+  const [palette, setPalette] = useState(false);
+  // Ctrl K / ⌘K anywhere, "/" when not typing
+  useEffect(() => {
+    const onKey = e => {
+      const typing = /^(INPUT|TEXTAREA|SELECT)$/.test(e.target?.tagName ?? '') || e.target?.isContentEditable;
+      if ((e.key === 'k' || e.key === 'K') && (e.ctrlKey || e.metaKey)) { e.preventDefault(); setPalette(p => !p); }
+      else if (e.key === '/' && !typing && !e.ctrlKey && !e.metaKey && !e.altKey) { e.preventDefault(); setPalette(true); }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
   const [route, setRoute] = useState(routeFromHash);
   // The first page shows at once; only later page changes get the short fade.
   const firstPage = useRef(`${route.type}/${route.slug ?? ''}`);
@@ -205,6 +229,8 @@ export default function App() {
     startTransition(() => setRoute(next));
     window.scrollTo({ top: 0, behavior: 'instant' });
   };
+
+  useLayoutEffect(() => { setNavigator(navigate); });
 
   useEffect(() => {
     if (typeof window === 'undefined' || typeof window.gtag !== 'function') return;
@@ -263,6 +289,11 @@ export default function App() {
     default:             body = <HomePage         onNavigate={navigate} liveModels={liveModels} countSnapshot={countSnapshot} />;
   }
 
+  const meta = pageMeta(route, {
+    modelName: route.type === 'model' ? liveModels?.find(m => m.slug === route.slug)?.name : undefined,
+    labName: route.type === 'lab' ? (LAB_CONTENT[route.slug]?.name ?? liveModels?.find(m => labSlug(m.org) === route.slug)?.org) : undefined,
+  });
+
   return (
     <>
       <GlobalMotion />
@@ -270,21 +301,27 @@ export default function App() {
       <ScrollProgress />
       <ClickEffects />
       <CyberBackground dark={dark} />
-      <NavBar
-        page={route.type}
-        onNavigate={navigate}
-        dark={dark}
-        onToggleTheme={toggle}
-      />
-      {/* The boundary sits outside the keyed page, so it outlives page changes:
-          inside a transition React keeps the current page up until the next
-          one can render, instead of flashing a fresh boundary's skeleton. */}
-      <Suspense fallback={<div className="aiwar-page-enter"><PageFallback /></div>}>
-        <div key={`${route.type}/${route.slug ?? ''}`} className="aiwar-page-enter" data-nav={firstPage.current === `${route.type}/${route.slug ?? ''}` ? undefined : '1'}>
-          {body}
-        </div>
-      </Suspense>
-      <Footer onNavigate={navigate} />
+      {shell.desktop && <Sidebar route={route} onNavigate={navigate} rail={shell.rail} onToggleRail={shell.toggleRail} />}
+      <div className="aw-main">
+        {shell.desktop
+          ? <TopBar meta={meta} route={route} onNavigate={navigate} dark={dark} onToggleTheme={toggle} onSearch={() => setPalette(true)} wide={shell.width >= 1640} />
+          : <NavBar page={route.type} onNavigate={navigate} dark={dark} onToggleTheme={toggle} onSearch={() => setPalette(true)} />}
+        {shell.desktop && <LiveTape onNavigate={navigate} />}
+        {/* The boundary sits outside the keyed page, so it outlives page changes:
+            inside a transition React keeps the current page up until the next
+            one can render, instead of flashing a fresh boundary's skeleton. */}
+        <Suspense fallback={<div className="aiwar-page-enter"><PageFallback /></div>}>
+          <div key={`${route.type}/${route.slug ?? ''}`} className="aiwar-page-enter" data-nav={firstPage.current === `${route.type}/${route.slug ?? ''}` ? undefined : '1'}>
+            {body}
+          </div>
+        </Suspense>
+        <Footer onNavigate={navigate} />
+      </div>
+      {palette && (
+        <Suspense fallback={null}>
+          <CommandPalette open onClose={() => setPalette(false)} onNavigate={navigate} fallbackModels={liveModels} />
+        </Suspense>
+      )}
       <BattleDrawer onNavigate={navigate} page={route.type} />
       <BattleToastHost />
     </>

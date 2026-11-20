@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 
 /* ─── Design tokens ───────────────────────────────────────────────────────── */
-export const SF   = "-apple-system,'SF Pro Display','SF Pro Text',BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif";
-export const MONO = "'SF Mono','JetBrains Mono',ui-monospace,'Menlo',monospace";
+export const SF   = "'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif";
+export const MONO = "'JetBrains Mono','SF Mono',ui-monospace,'Menlo',monospace";
 export const EASE = 'cubic-bezier(0.16,1,0.3,1)'; // Apple-style out-expo curve
 
 /* ─── Animations always run — we don't auto-respect prefers-reduced-motion

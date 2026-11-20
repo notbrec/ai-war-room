@@ -118,15 +118,14 @@ export default function CodeOpsPage({ onNavigate, slug }) {
       <GlobalMotion />
       <PageTitle mobile={mobile} eyebrow="Code Ops" title="The coding battlefield."
         subtitle="Software-engineering agents on SWE-bench, with the harness and the model kept separate — plus the coding index of every language model."
-        status={<DataStatus status={status} fetchedAt={coding.data?.fetchedAt} sources={sources} loading={coding.loading} onRefresh={coding.reload} />} />
-
-      {/* Top stats */}
-      <div style={{ display: 'grid', gridTemplateColumns: mobile ? '1fr 1fr' : 'repeat(4, 1fr)', gap: 10, marginBottom: 22 }}>
+        status={<DataStatus status={status} fetchedAt={coding.data?.fetchedAt} sources={sources} loading={coding.loading} onRefresh={coding.reload} />}
+        aside={
+      <div className="aw-stats">
         <StatTile label={`#1 · ${board}`} value={top ? fmtMetric('resolved', top.resolved) : NA} sub={top ? `${top.model} via ${top.agent}` : 'Loading…'} color={GREEN} metricKey="resolved" />
         <StatTile label="Cheapest ≥60% solved" value={cheapestGood ? fmtMetric('costPerTask', cheapestGood.costPerTask) : NA} sub={cheapestGood ? `${cheapestGood.model} via ${cheapestGood.agent} · ${fmtMetric('resolved', cheapestGood.resolved)}` : 'No cost-disclosed run ≥ 60%'} color={GOLD} metricKey="costPerTask" />
         <StatTile label="Best verified logs" value={verified ? fmtMetric('resolved', verified.resolved) : NA} sub={verified ? `${verified.model} via ${verified.agent}` : 'No checked submission'} color={BLUE} metricKey="resolved" />
         <StatTile label="Submissions" value={rows.length ? rows.length : NA} sub={`${matrix.agents.length} harnesses · ${matrix.models.length} models`} />
-      </div>
+      </div>} />
 
       {rows.length > 0 && (
         <div style={{ marginBottom: 22 }}>

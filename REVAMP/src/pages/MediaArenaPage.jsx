@@ -3,7 +3,7 @@
 // image / second); generation times and release dates come from Artificial
 // Analysis when configured, otherwise they are N/A.
 
-import { useMemo, useState, useEffect, lazy, Suspense } from 'react';
+import { useMemo, useState, useEffect, lazy, Suspense, useRef } from 'react';
 import { useMobile } from '../hooks/useTheme.js';
 import { MONO, GlobalMotion, Skeleton, SectionTitle } from '../components/design.jsx';
 import { LabLogo } from '../components/LabLogo.jsx';
@@ -59,8 +59,21 @@ export default function MediaArenaPage({ onNavigate, kind = 'image', slug }) {
   const replays = useReplays();
   const samples = useSamples();
 
-  useEffect(() => { setBoard(K.boards[0].id); setChart(CHARTS[kind][0].id); setAudio(null); }, [kind]); // eslint-disable-line
+  useEffect(() => { setChart(CHARTS[kind][0].id); setAudio(null); }, [kind]); // eslint-disable-line
   useEffect(() => { if (slug === 'replay') setView('replay'); else if (slug) setExpanded(slug); }, [slug]);
+  // The board follows the link: a model that sits on the edit / image-to-video
+  // board opens that board; anything else starts on the first one. Placed once
+  // per (kind, link), so the visitor's own board choice is never overridden.
+  const placed = useRef(null);
+  useEffect(() => {
+    const key = `${kind}|${slug ?? ''}`;
+    if (placed.current === key) return;
+    const wantsModel = !!slug && slug !== 'replay';
+    if (wantsModel && !media.data) return; // wait for the boards to know where it lives
+    const hit = wantsModel ? K.boards.find(b => (media.boards?.[b.id] ?? []).some(r => r.id === slug)) : null;
+    placed.current = key;
+    setBoard(hit?.id ?? K.boards[0].id);
+  }, [kind, slug, media.data, media.boards, K]);
 
   const rows = useMemo(() => attachSamples(media.boards?.[board] ?? [], samples.byModel, board), [media.boards, board, samples.byModel]);
   const q = query.trim().toLowerCase();
@@ -115,14 +128,14 @@ export default function MediaArenaPage({ onNavigate, kind = 'image', slug }) {
     <PageFrame mobile={mobile}>
       <GlobalMotion />
       <PageTitle mobile={mobile} eyebrow={K.eyebrow} title={<span style={{ display: 'inline-flex', alignItems: 'center', gap: 14 }}>{K.title} <RobotMascot variant="eared" size={mobile ? 32 : 44} color="var(--accent)" /></span>} subtitle={K.subtitle}
-        status={<DataStatus status={media.status} fetchedAt={media.data?.fetchedAt} sources={['arena', ...(aa ? ['aa'] : [])]} loading={media.loading} onRefresh={media.reload} />} />
-
-      <div style={{ display: 'grid', gridTemplateColumns: mobile ? '1fr 1fr' : 'repeat(4, 1fr)', gap: 10, marginBottom: 22 }}>
+        status={<DataStatus status={media.status} fetchedAt={media.data?.fetchedAt} sources={['arena', ...(aa ? ['aa'] : [])]} loading={media.loading} onRefresh={media.reload} />}
+        aside={
+      <div className="aw-stats">
         <StatTile label="#1 quality" value={top ? top.elo : NA} sub={top ? `${top.name} · ${top.org}` : 'Loading…'} color={GREEN} metricKey="elo" />
         <StatTile label="Cheapest listed" value={cheapest ? fmtMetric(priceKey, cheapest[priceKey]) : NA} sub={cheapest ? `${cheapest.name} · ELO ${cheapest.elo}` : 'No listed prices'} color={GOLD} metricKey={priceKey} />
         <StatTile label="Fastest generation" value={fastest ? fmtMetric('genTime', fastest.genTime) : NA} sub={fastest ? fastest.name : 'Needs Artificial Analysis'} color={PURPLE} metricKey="genTime" />
         <StatTile label="Best open weights" value={topOpen ? topOpen.elo : NA} sub={topOpen ? `${topOpen.name} · #${topOpen.rank}` : 'None on this board'} color={BLUE} metricKey="elo" />
-      </div>
+      </div>} />
 
       {rows.length > 0 && (
         <div style={{ marginBottom: 22 }}>

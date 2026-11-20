@@ -125,7 +125,7 @@ export function useFronts() {
   return { cards, loading };
 }
 
-function openPick(p, f, onNavigate) {
+export function openPick(p, f, onNavigate) {
   if (p.kind === 'llm' && p.slug) return onNavigate({ type: 'model', slug: p.slug });
   if (p.kind === 'image') return onNavigate({ type: 'images', slug: p.id });
   if (p.kind === 'video') return onNavigate({ type: 'videos', slug: p.id });

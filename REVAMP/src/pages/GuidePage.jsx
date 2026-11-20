@@ -1,4 +1,5 @@
 import { MODELS, RELEASE } from '../models-data.js';
+import ReadingFrame from '../components/ReadingFrame.jsx';
 import { useMobile } from '../hooks/useTheme.js';
 import { SF, MONO, EASE, Reveal, Eyebrow, GlobalMotion } from '../components/design.jsx';
 
@@ -86,7 +87,8 @@ export default function GuidePage({ onNavigate, liveModels }) {
     <div className="page-enter" style={{ background: 'transparent', fontFamily: SF, minHeight: '100vh' }}>
       <GlobalMotion />
 
-      <article style={{ maxWidth: 760, margin: '0 auto', padding: mobile ? '40px 18px 96px' : '72px 24px 112px' }}>
+      <ReadingFrame current="guide">
+      <article style={{ paddingTop: mobile ? 12 : 22 }}>
 
         {/* ── Header ─────────────────────────────────────────────── */}
         <header style={{ marginBottom: 36 }}>
@@ -402,6 +404,7 @@ export default function GuidePage({ onNavigate, liveModels }) {
           AI WAR ROOM · aiwarroom.app · {RELEASE}
         </p>
       </article>
+      </ReadingFrame>
     </div>
   );
 }

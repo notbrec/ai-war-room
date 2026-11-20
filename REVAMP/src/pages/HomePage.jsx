@@ -1,48 +1,34 @@
-// ─── HOME — the war room, all of it on one page ─────────────────────────────
-// Nothing is tucked away: the fight, every situation card, the picks for
-// every job, the top ten, the labs, the tools, a real battle, every front.
+// ─── HOME — the war room as a command center ────────────────────────────────
+// One screen on a wide monitor: the main event, the ranking (five ways), who
+// wins every front, the value map and the four arenas; under it what moved
+// this week, the labs, the tools and a real crowd-voted battle. The grid
+// re-flows by the width the page actually has (container queries in
+// styles/layout.css), from twelve columns down to one on a phone.
 
 import { useEffect, useMemo, useState } from 'react';
-import { MODELS, ORG_CONFIG } from '../models-data.js';
+import { MODELS } from '../models-data.js';
 import { useMobile } from '../hooks/useTheme.js';
-import { SF, MONO, EASE, Reveal, AnimatedNumber, LivePulse, ComparisonBar, Skeleton, TrendArrow } from '../components/design.jsx';
-import { LabLogo } from '../components/LabLogo.jsx';
+import { useShell } from '../hooks/useShell.js';
+import { MONO, EASE, Reveal } from '../components/design.jsx';
 import HeroArena from '../components/HeroArena.jsx';
-import FightArena from '../components/FightArena.jsx';
-import FrontBoard from '../components/FrontBoard.jsx';
 import Ticker from '../components/Ticker.jsx';
-import { BarPanel, HighlightGrid } from '../components/Highlights.jsx';
-import { useCoding, useMedia } from '../data/useDomain.js';
-import { fmtMetric, isNum } from '../../shared/metrics.js';
+import { BarPanel } from '../components/Highlights.jsx';
+import { useCoding, useMedia, useSpeech } from '../data/useDomain.js';
+import { fmtMetric, SOURCES, isNum } from '../../shared/metrics.js';
 import ReplayTeaser from '../components/ReplayTeaser.jsx';
 import { useWarRoomCards } from '../components/WarRoomBoard.jsx';
-import { DataStatus, Btn, eloColor, eloTier, GREEN, GOLD, RED, BLUE } from '../components/ui.jsx';
-import { SOURCES } from '../../shared/metrics.js';
+import { Board, BoardLink } from '../components/board.jsx';
+import HeroBout from '../components/home/HeroBout.jsx';
+import RankBoard from '../components/home/RankBoard.jsx';
+import PicksList from '../components/home/PicksList.jsx';
+import ValueMap from '../components/home/ValueMap.jsx';
+import MoversPanel from '../components/home/MoversPanel.jsx';
+import LabsPanel from '../components/home/LabsPanel.jsx';
+import ToolsPanel from '../components/home/ToolsPanel.jsx';
+import { GREEN, GOLD, RED, BLUE, PURPLE } from '../components/ui.jsx';
 import { topByIntelligence, asFighters } from '../domains/models/ranking.js';
 
-const TOOLS = [
-  { id: 'compare', label: 'Battle Mode',     desc: 'Up to four models head to head, metric by metric.' },
-  { id: 'race',    label: 'Speed Race',      desc: 'Real speed and latency measurements, animated as a race.' },
-  { id: 'planner', label: 'Mission Planner', desc: 'Describe the job, weight what matters, get a ranked shortlist.' },
-  { id: { type: 'videos', slug: 'replay' }, label: 'Battle Replay', desc: '800 real crowd-voted image and video duels — guess the winner.' },
-];
-
-function SectionHead({ eyebrow, title, action, mobile, sub }) {
-  return (
-    <Reveal>
-      <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: mobile ? 16 : 22, flexWrap: 'wrap', gap: 10 }}>
-        <div>
-          <p style={{ fontSize: 11, fontWeight: 600, color: 'var(--muted2)', textTransform: 'uppercase', letterSpacing: '0.10em', margin: '0 0 6px', fontFamily: MONO }}>{eyebrow}</p>
-          <h2 style={{ fontSize: mobile ? 28 : 40, fontWeight: 700, letterSpacing: '-0.045em', color: 'var(--text)', margin: 0, lineHeight: 1.02 }}>{title}</h2>
-          {sub && <p style={{ fontSize: 13.5, color: 'var(--muted)', margin: '8px 0 0', lineHeight: 1.5, maxWidth: 640 }}>{sub}</p>}
-        </div>
-        {action}
-      </div>
-    </Reveal>
-  );
-}
-
-/* ─── Sources strip ──────────────────────────────────────────────────────── */
+/* ─── Sources strip (phones and tablets; the sidebar shows it on desktop) ─── */
 function SourcesStrip({ sources, mobile, onNavigate }) {
   const rank = { live: 3, stale: 2, unavailable: 1 };
   const agg = {};
@@ -57,7 +43,7 @@ function SourcesStrip({ sources, mobile, onNavigate }) {
   const list = Object.values(agg);
   if (!list.length) return null;
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: mobile ? 10 : 16, flexWrap: 'wrap', padding: mobile ? '12px 14px' : '12px 18px', background: 'var(--card)', border: '0.5px solid var(--sep)' }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: mobile ? 10 : 16, flexWrap: 'wrap', padding: mobile ? '12px 14px' : '12px 18px', background: 'var(--card)', border: '0.5px solid var(--sep)', marginTop: 'var(--gap)' }}>
       <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--muted2)', letterSpacing: '0.10em', fontFamily: MONO, textTransform: 'uppercase' }}>Sources</span>
       {list.map(s => {
         const color = s.status === 'live' ? GREEN : s.status === 'stale' ? GOLD : RED;
@@ -74,15 +60,24 @@ function SourcesStrip({ sources, mobile, onNavigate }) {
   );
 }
 
-/* ─── Page ───────────────────────────────────────────────────────────────── */
+/* A ranked-bar panel as one tile of the grid. */
+function BarTile({ area, onMore, more, ...props }) {
+  return (
+    <div className="aw-bar-tile" style={{ gridArea: area }}>
+      <BarPanel {...props} badge={onMore ? <button type="button" className="aw-link" onClick={onMore}>{more} →</button> : undefined} />
+    </div>
+  );
+}
+
 export default function HomePage({ onNavigate, liveModels, countSnapshot }) {
   const mobile   = useMobile();
+  const shell    = useShell();
   const isLoaded = !!liveModels;
   const data     = liveModels ?? MODELS;
   const wr       = useWarRoomCards();
 
-  // The hero paints first; everything under it mounts right after that frame,
-  // so a slow phone shows the page instead of waiting on the whole board.
+  // The first row paints first; everything under it mounts right after that
+  // frame, so a slow phone shows the page instead of waiting on the whole board.
   const [below, setBelow] = useState(false);
   useEffect(() => {
     let t = null;
@@ -90,113 +85,85 @@ export default function HomePage({ onNavigate, liveModels, countSnapshot }) {
     return () => { cancelAnimationFrame(raf); clearTimeout(t); };
   }, []);
 
-  const stats = useMemo(() => ({
+  const legacyStats = useMemo(() => ({
     orgs: new Set(data.map(m => m.org)).size,
     votes: data.reduce((s, m) => s + (m.votes ?? 0), 0),
     open: data.filter(m => m.isOpen).length,
   }), [data]);
+  const stats = useMemo(() => {
+    const M = wr.models;
+    if (!M.length) return null;
+    const ranked = M.filter(m => m.inArena);
+    return { models: M.length, labs: new Set(M.map(m => m.org).filter(Boolean)).size, votes: ranked.reduce((s, m) => s + (m.arena?.votes ?? 0), 0), open: ranked.filter(m => m.isOpen).length };
+  }, [wr.models]);
   const snap = countSnapshot ?? { count: 350, exact: false };
   // Champion and challenger: the two best models by Intelligence Index.
   const fighters = useMemo(() => asFighters(topByIntelligence(wr.models, 2)), [wr.models]);
-  const gapY = mobile ? 52 : 84;
 
-  // Highlights — the same numbers the board reads, as bars
-  const coding = useCoding(), media = useMedia();
+  // The four arenas as ranked bars — the same numbers their pages read
+  const coding = useCoding(), media = useMedia(), speech = useSpeech();
   const hl = useMemo(() => {
-    const ranked = wr.models.filter(m => m.inArena);
-    const top = ranked.slice(0, 10);
-    const smart = topByIntelligence(wr.models, 10);
-    const swe = (coding.boards?.Verified ?? []).slice(0, 10);
+    const top = wr.models.filter(m => m.inArena).slice(0, 10);
+    // one row per model (its best agent), and only rows that name a model
+    const seen = new Set();
+    const swe = (coding.boards?.Verified ?? []).filter(r => {
+      const k = r.model ?? r.name;
+      if (!k || /^multiple$/i.test(k) || seen.has(k)) return false;
+      seen.add(k); return true;
+    }).slice(0, 10);
     const t2i = (media.boards?.['text-to-image'] ?? []).slice(0, 10);
     const t2v = (media.boards?.['text-to-video'] ?? []).slice(0, 10);
     return {
-      intel: smart.map(m => ({ id: m.id, name: m.name, org: m.org, slug: m.slug, value: m.aa.intelligence, label: m.aa.intelligence.toFixed(1) })),
       elo:   top.map(m => ({ id: m.id, name: m.name, org: m.org, slug: m.slug, value: m.arena.elo, label: String(m.arena.elo) })),
-      price: smart.filter(m => isNum(m.priceBlended)).sort((x, y) => x.priceBlended - y.priceBlended).map(m => ({ id: m.id, name: m.name, org: m.org, slug: m.slug, value: m.priceBlended, label: fmtMetric('priceBlended', m.priceBlended) })),
       swe:   swe.map(r => ({ id: r.id, name: r.model ?? r.name, org: r.modelOrg, value: r.resolved, label: fmtMetric('resolved', r.resolved) })),
       image: t2i.map(r => ({ id: r.id, name: r.name, org: r.org, kind: 'images', value: r.elo, label: String(r.elo) })),
       video: t2v.map(r => ({ id: r.id, name: r.name, org: r.org, kind: 'videos', value: r.elo, label: String(r.elo) })),
+      tts:   [...speech.tts].filter(r => isNum(r.elo)).sort((a, b) => b.elo - a.elo).slice(0, 10).map(r => ({ id: r.id ?? r.slug, name: r.name, org: r.org, kind: 'speech', value: r.elo, label: String(Math.round(r.elo)) })),
+      stt:   [...speech.stt].filter(r => isNum(r.wer)).sort((a, b) => a.wer - b.wer).slice(0, 10).map(r => ({ id: r.id, name: r.name, org: r.org, kind: 'speech', value: r.wer, label: fmtMetric('wer', r.wer) })),
     };
-  }, [wr.models, coding.boards, media.boards]);
-  const openBar = it => it.slug ? onNavigate({ type: 'model', slug: it.slug }) : it.kind ? onNavigate({ type: it.kind, slug: it.id }) : onNavigate('coding');
+  }, [wr.models, coding.boards, media.boards, speech.tts, speech.stt]);
+  const openBar = it => it.slug ? onNavigate({ type: 'model', slug: it.slug }) : it.kind === 'speech' ? onNavigate('speech') : it.kind ? onNavigate({ type: it.kind, slug: it.id }) : onNavigate('coding');
+  const xl = shell.width >= 2100;
+  const rowH = xl ? 36 : undefined;
 
   return (
-    <div style={{ background: 'transparent', fontFamily: SF, minHeight: '100vh', position: 'relative' }}>
-      <div style={{ position: 'relative', maxWidth: 1200, margin: '0 auto', padding: mobile ? '0 18px 80px' : '0 32px 112px' }}>
-
-        {/* names appear once the Intelligence Index is in (or has failed), so the hero never swaps champions mid-animation */}
-        <HeroArena models={liveModels} fighters={fighters} isLoaded={fighters.length >= 2 || (isLoaded && !wr.loading)} onNavigate={onNavigate} mobile={mobile} snap={snap} stats={stats} />
-
-        {/* the tape */}
-        <div style={{ margin: mobile ? '28px -18px 0' : '40px 0 0', opacity: 0, animation: `aiwar-fade-in 280ms ${EASE} both` }}>
-          <Ticker models={liveModels} onNavigate={onNavigate} mobile={mobile} />
+    <div className="aw-page aw-home">
+      {mobile && <>
+        <HeroArena models={liveModels} fighters={fighters} isLoaded={fighters.length >= 2 || (isLoaded && !wr.loading)} onNavigate={onNavigate} mobile snap={snap} stats={legacyStats} />
+        <div style={{ margin: '28px -18px 24px', opacity: 0, animation: `aiwar-fade-in 280ms ${EASE} both` }}>
+          <Ticker models={liveModels} onNavigate={onNavigate} mobile />
         </div>
+      </>}
 
-        {below ? <>
-        {/* The board — who wins what, on every front */}
-        <section style={{ marginTop: gapY }}>
-          <SectionHead mobile={mobile} eyebrow="The board" title="Who wins what."
-            sub="Every front, one winner — and the best-value alternative underneath. Scored from live sources; open a card for the model, or the planner for the arithmetic."
-            action={<DataStatus status={wr.status} fetchedAt={wr.fetchedAt} sources={['arena', 'openrouter', 'swebench', 'openasr', ...(wr.capabilities?.aa ? ['aa'] : [])]} loading={wr.loading} compact={mobile} />} />
-          <FrontBoard onNavigate={onNavigate} mobile={mobile} />
-        </section>
+      <div className="aw-home-grid">
+        {!mobile && <HeroBout area="hero" fighters={fighters.length >= 2 ? fighters : null} stats={stats} onNavigate={onNavigate} />}
+        <RankBoard area="rank" models={wr.models} loading={wr.loading} onNavigate={onNavigate} mobile={mobile} rows={shell.width >= 1900 ? 14 : 12} />
+        <PicksList area="picks" onNavigate={onNavigate} />
 
-        {/* Highlights — six charts, one glance */}
-        <section style={{ marginTop: gapY }}>
-          <SectionHead mobile={mobile} eyebrow="Highlights" title="The numbers, at a glance." action={<Btn small onClick={() => onNavigate('leaderboard')}>Full ranking →</Btn>} />
-          <HighlightGrid mobile={mobile}>
-            <Reveal><BarPanel mobile={mobile} title="Intelligence" color={BLUE} subtitle="Top 10 models · Intelligence Index · Artificial Analysis" items={hl.intel} onSelect={openBar} /></Reveal>
-            <Reveal delay={60}><BarPanel mobile={mobile} title="Arena ELO" color={GREEN} subtitle="Top 10 by human votes · arena.ai" items={hl.elo} onSelect={openBar} /></Reveal>
-            <Reveal delay={120}><BarPanel mobile={mobile} title="Price" color={GOLD} subtitle="The 10 smartest · $ per 1M blended · OpenRouter" items={hl.price} higherIsBetter={false} onSelect={openBar} /></Reveal>
-            <Reveal><BarPanel mobile={mobile} title="Coding" color={GREEN} subtitle="SWE-bench Verified · % resolved" items={hl.swe} onSelect={openBar} /></Reveal>
-            <Reveal delay={60}><BarPanel mobile={mobile} title="Image" color={GOLD} subtitle="Text-to-image ELO · arena.ai" items={hl.image} onSelect={openBar} /></Reveal>
-            <Reveal delay={120}><BarPanel mobile={mobile} title="Video" color={GOLD} subtitle="Text-to-video ELO · arena.ai" items={hl.video} onSelect={openBar} /></Reveal>
-          </HighlightGrid>
-        </section>
+        {below && <>
+          <ValueMap area="map" models={wr.models} onNavigate={onNavigate} height={mobile ? 340 : xl ? 330 : 420} />
+          <BarTile area="elo" mobile={mobile} rowHeight={rowH} title="Arena ELO" color={GREEN} subtitle="Blind human votes · arena.ai" items={hl.elo} onSelect={openBar} onMore={() => onNavigate('leaderboard')} more="LLMS" />
+          <BarTile area="code" mobile={mobile} rowHeight={rowH} title="Coding" color={GREEN} subtitle="SWE-bench Verified · % resolved" items={hl.swe} onSelect={openBar} onMore={() => onNavigate('coding')} more="CODE" />
+          <BarTile area="img" mobile={mobile} rowHeight={rowH} title="Text to image" color={GOLD} subtitle="Image arena ELO · arena.ai" items={hl.image} onSelect={openBar} onMore={() => onNavigate('images')} more="IMAGE" />
+          <BarTile area="vid" mobile={mobile} rowHeight={rowH} title="Text to video" color={BLUE} subtitle="Video arena ELO · arena.ai" items={hl.video} onSelect={openBar} onMore={() => onNavigate('videos')} more="VIDEO" />
+          <BarTile area="tts" mobile={mobile} title="Text to speech" color={PURPLE} subtitle="Voice quality ELO · Artificial Analysis" items={hl.tts} onSelect={openBar} onMore={() => onNavigate('speech')} more="VOICE" />
+          <BarTile area="stt" mobile={mobile} title="Transcription" color={PURPLE} subtitle="Word error rate · Open ASR Leaderboard" items={hl.stt} higherIsBetter={false} onSelect={openBar} onMore={() => onNavigate('speech')} more="VOICE" />
 
-        {/* Tools — the second fight clip earns its place here */}
-        <section style={{ marginTop: gapY }}>
-          <SectionHead mobile={mobile} eyebrow="Tools" title="Put them in the ring." />
-          <Reveal>
-            <div style={{ display: 'grid', gridTemplateColumns: mobile ? '1fr' : '1fr 1fr', gap: 12, alignItems: 'stretch' }}>
-              <div style={{ background: 'var(--card)', border: '0.5px solid var(--sep)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-                <FightArena clip="jab" aspect={mobile ? '16 / 9' : '16 / 10'} radius={0} border={false} surface="var(--card)" alt="Two robots sparring" style={{ flex: 1 }} />
-                <div style={{ padding: mobile ? '12px 14px' : '14px 18px', borderTop: '0.5px solid var(--sep)', display: 'flex', alignItems: 'center', gap: 10, justifyContent: 'space-between' }}>
-                  <span style={{ fontSize: 13, color: 'var(--muted)', lineHeight: 1.4 }}>Pick up to four contestants anywhere on the site, then compare them metric by metric.</span>
-                  <Btn small solid onClick={() => onNavigate('compare')}>Battle Mode →</Btn>
-                </div>
-              </div>
-              <div style={{ display: 'grid', gridTemplateRows: 'repeat(4, 1fr)', gap: 10 }}>
-                {TOOLS.map((t, i) => (
-                  <div key={t.label} onClick={() => onNavigate(t.id)} className="aiwar-card-hover" role="link" tabIndex={0} onKeyDown={e => e.key === 'Enter' && onNavigate(t.id)}
-                    style={{ background: 'var(--card)', border: '0.5px solid var(--sep)', padding: mobile ? '12px 14px' : '14px 18px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 14 }}>
-                    <span style={{ fontFamily: MONO, fontSize: 10.5, color: 'var(--muted2)', flexShrink: 0 }}>{String(i + 1).padStart(2, '0')}</span>
-                    <div style={{ minWidth: 0, flex: 1 }}>
-                      <div style={{ fontSize: 14.5, fontWeight: 600, color: 'var(--text)', letterSpacing: '-0.025em' }}>{t.label}</div>
-                      <div style={{ fontSize: 12, color: 'var(--muted)', lineHeight: 1.45, marginTop: 2 }}>{t.desc}</div>
-                    </div>
-                    <span style={{ fontFamily: MONO, fontSize: 12, color: 'var(--muted2)', flexShrink: 0 }}>→</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </Reveal>
-        </section>
+          <MoversPanel area="moves" models={wr.models} onNavigate={onNavigate} limit={mobile ? 6 : 10} />
+          <LabsPanel area="labs" models={wr.models} onNavigate={onNavigate} limit={mobile ? 8 : 10} />
 
-        {/* A real battle */}
-        <section style={{ marginTop: gapY }}>
-          <SectionHead mobile={mobile} eyebrow="Battle Replay" title="Watch a real one."
-            sub="Two models, one prompt, and the crowd already voted. Pick the better clip — the names appear after." />
-          <ReplayTeaser onNavigate={onNavigate} mobile={mobile} />
-        </section>
-
-        {/* Sources */}
-        <section style={{ marginTop: mobile ? 36 : 56 }}>
-          <Reveal><SourcesStrip sources={wr.sources} mobile={mobile} onNavigate={onNavigate} /></Reveal>
-        </section>
-        </> : <div style={{ minHeight: '100vh' }} />}
-
+          <Board area="replay" className="aw-replay" eyebrow="Battle Replay" title="Watch a real one"
+            sub="Two models, one prompt, and the crowd already voted. Pick the better clip — the names appear after."
+            right={<BoardLink onClick={() => onNavigate({ type: 'videos', slug: 'replay' })}>ALL BATTLES →</BoardLink>}>
+            <ReplayTeaser onNavigate={onNavigate} mobile={mobile} />
+          </Board>
+          <ToolsPanel area="tools" onNavigate={onNavigate} />
+        </>}
       </div>
+
+      {below && !shell.desktop && (
+        <Reveal><SourcesStrip sources={wr.sources} mobile={mobile} onNavigate={onNavigate} /></Reveal>
+      )}
     </div>
   );
 }

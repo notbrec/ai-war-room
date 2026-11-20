@@ -60,3 +60,22 @@ export function useHistory() {
   const d = useDomain('history');
   return { ...d, snapshots: d.data?.snapshots ?? [], days: d.data?.days ?? 0 };
 }
+
+/**
+ * Watch a dataset without asking for it: whatever is already cached (from
+ * this visit or the last one) and every update after that. The shell uses it
+ * for counts and source status, so opening a page never fetches extra data.
+ */
+export function usePassiveDomain(domain, { eager = false } = {}) {
+  // eager: read the cached copy now (things opened by a click, like the palette)
+  const [entry, setEntry] = useState(() => (eager ? peek(domain) : null));
+  useEffect(() => {
+    // reading a stored copy parses it — leave that until the page is up
+    const idle = typeof requestIdleCallback === 'function' ? requestIdleCallback : cb => setTimeout(cb, 400);
+    const cancel = typeof cancelIdleCallback === 'function' ? cancelIdleCallback : clearTimeout;
+    const h = idle(() => setEntry(e => e ?? peek(domain)), { timeout: 2500 });
+    const unsub = subscribe(domain, setEntry);
+    return () => { cancel(h); unsub(); };
+  }, [domain]);
+  return entry?.data ?? null;
+}

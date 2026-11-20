@@ -1,14 +1,16 @@
 import { useMobile } from '../hooks/useTheme.js';
 import { SF, MONO, EASE, Reveal, Eyebrow, GlobalMotion } from './design.jsx';
+import ReadingFrame from './ReadingFrame.jsx';
 
-export default function ArticleLayout({ eyebrow, title, subtitle, meta, children, footer }) {
+export default function ArticleLayout({ eyebrow, title, subtitle, meta, children, footer, current, wide = false }) {
   const mobile = useMobile();
 
   return (
     <div className="page-enter" style={{ background: 'transparent', fontFamily: SF, minHeight: '100vh' }}>
       <GlobalMotion />
 
-      <div style={{ maxWidth: 760, margin: '0 auto', padding: mobile ? '40px 18px 72px' : '72px 24px 112px' }}>
+      <ReadingFrame current={current} wide={wide}>
+      <div style={{ paddingTop: mobile ? 12 : 22 }}>
 
         {/* ── Header ─────────────────────────────────────────────── */}
         <header style={{ marginBottom: mobile ? 32 : 44 }}>
@@ -21,7 +23,7 @@ export default function ArticleLayout({ eyebrow, title, subtitle, meta, children
           )}
 
           <h1 style={{
-            fontSize: mobile ? 'clamp(34px,8.5vw,46px)' : 'clamp(48px,5.4vw,72px)',
+            fontSize: mobile ? 'clamp(34px,8.5vw,46px)' : 'clamp(44px,3.6vw,64px)',
             fontWeight: 700, letterSpacing: '-0.05em', lineHeight: 1.0,
             color: 'var(--text)', margin: '10px 0 18px',
             opacity: 0, animation: `aiwar-fade-up 280ms ${EASE} both`,
@@ -70,6 +72,7 @@ export default function ArticleLayout({ eyebrow, title, subtitle, meta, children
           </>
         )}
       </div>
+      </ReadingFrame>
     </div>
   );
 }

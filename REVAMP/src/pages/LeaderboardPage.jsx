@@ -64,7 +64,7 @@ const bar = (m, value, label, extra = {}) => ({ id: m.id, name: m.name, org: m.o
 /** Released this month, benchmarked by Artificial Analysis, not rated on the arena yet. */
 function FreshReleases({ rows, onOpen, mobile }) {
   return (
-    <div style={{ background: 'var(--card)', border: '0.5px solid var(--sep)', marginBottom: 24 }}>
+    <div style={{ background: 'var(--card)', border: '0.5px solid var(--sep)', height: '100%' }}>
       <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap', padding: mobile ? '12px 14px 8px' : '14px 20px 10px', borderBottom: '0.5px solid var(--sep)' }}>
         <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
           <span style={{ fontFamily: MONO, fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', color: 'var(--text)', textTransform: 'uppercase' }}>Just released</span>
@@ -282,16 +282,17 @@ export default function LeaderboardPage({ liveModels, onNavigate }) {
     ...(aa && charts.intel.length ? [{ id: 'sec-intel', label: 'Intelligence' }] : []),
     ...(aa && charts.speed.length ? [{ id: 'sec-speed', label: 'Speed' }] : []),
     ...(aa && charts.ttft.length ? [{ id: 'sec-latency', label: 'Latency' }] : []),
-    { id: 'sec-bench', label: 'Benchmarks' }, { id: 'sec-open', label: 'Openness' }, { id: 'sec-table', label: 'Table' },
+    { id: 'sec-open', label: 'Openness' }, { id: 'sec-bench', label: 'Benchmarks' }, { id: 'sec-table', label: 'Table' },
   ];
 
   return (
     <div className="page-enter" style={{ background: 'transparent', fontFamily: SF, minHeight: '100vh' }}>
       <GlobalMotion />
-      <div style={{ maxWidth: 1100, margin: '0 auto', padding: mobile ? '40px 16px 96px' : '64px 24px 112px' }}>
+      <div className="aw-page aw-lb">
 
+        <div className="aw-lb-top">
         {/* ── Header ─────────────────────────────────────────────── */}
-        <header style={{ marginBottom: mobile ? 28 : 36 }}>
+        <header className="aw-lb-head">
           <div style={{ opacity: 0, animation: `aiwar-fade-up 280ms ${EASE} both` }}>
             <Eyebrow>LLM Rankings</Eyebrow>
           </div>
@@ -313,8 +314,8 @@ export default function LeaderboardPage({ liveModels, onNavigate }) {
 
         {/* ── Live bout: the top two combatants ────────────────────── */}
         {boutModels.length >= 2 && (
-          <Reveal>
-            <div style={{ marginBottom: 24 }}>
+          <Reveal className="aw-lb-bout">
+            <div>
               <ChampionBout models={boutModels} onNavigate={onNavigate} mobile={mobile} variant="compact" caption={boutModels[0]?.unit === 'Intelligence' ? 'smartest models · Artificial Analysis' : 'top of the arena'} />
             </div>
           </Reveal>
@@ -322,20 +323,22 @@ export default function LeaderboardPage({ liveModels, onNavigate }) {
 
         {/* ── Just released: too new for an arena rating ────────────── */}
         {fresh.length > 0 && aa && (
-          <Reveal>
+          <Reveal className="aw-lb-fresh">
             <FreshReleases rows={fresh} onOpen={openModel} mobile={mobile} />
           </Reveal>
         )}
 
         {/* ── Stats row ────────────────────────────────────────────── */}
-        <Reveal>
-          <div style={{ display: 'grid', gridTemplateColumns: mobile ? '1fr 1fr' : 'repeat(4, 1fr)', gap: 10, marginBottom: 24 }}>
+        <Reveal className="aw-lb-statswrap">
+          <div className="aw-lb-stats">
             <StatTile label="Smartest model" metricKey="intelligence" value={smartest[0] ? <AnimatedNumber value={smartest[0].aa.intelligence} format={v => v.toFixed(1)} /> : NA} sub={smartest[0] ? `${smartest[0].name} · Intelligence Index` : undefined} color={BLUE} />
             <StatTile label="Arena #1" metricKey="elo" value={ranked.length > 0 ? <AnimatedNumber value={topElo} format={v => Math.round(v).toString()} /> : NA} sub={arenaTop ? `${arenaTop.name} · human votes` : undefined} color={GREEN} />
             <StatTile label="Models ranked" value={models.length > 0 ? <AnimatedNumber value={models.length} format={v => Math.round(v).toString()} /> : NA} sub={`${ranked.length} rated on the arena`} />
             <StatTile label="Open weights" value={ranked.length > 0 ? <AnimatedNumber value={openCount} format={v => Math.round(v).toString()} /> : NA} sub={ranked.length ? `${Math.round((openCount / ranked.length) * 100)}% of the board` : undefined} />
           </div>
         </Reveal>
+
+        </div>
 
         {/* ── Control bar — drives everything below ────────────────── */}
         {/* On a phone the filters fold into one button, so the ranking is the first thing under the stats. */}
@@ -412,6 +415,7 @@ export default function LeaderboardPage({ liveModels, onNavigate }) {
           )}
         </div>
 
+        <div className="aw-lb-pairs">
         {/* ── Arena ELO ────────────────────────────────────────────── */}
         <ChartSection id="sec-elo" mobile={mobile} eyebrow="Quality" title="Arena ELO." sub="Human preference from anonymous side-by-side battles on arena.ai. Two models answer the same prompt, a person picks the better answer; thousands of those votes become a rating.">
           <BarPanel wide mobile={mobile} title="Arena ELO" color={GREEN} subtitle={`${scope} · arena.ai`} items={charts.elo} limit={n} onSelect={open} note="Confidence intervals overlap near the top — models within a few points are statistically tied." />
@@ -455,16 +459,18 @@ export default function LeaderboardPage({ liveModels, onNavigate }) {
           </ChartSection>
         )}
 
-        {/* ── Benchmarks ───────────────────────────────────────────── */}
-        <ChartSection id="sec-bench" mobile={mobile} eyebrow="Benchmarks" title="The capability grid." sub="Arena ELOs, SWE-bench and the composite indexes side by side for the models in scope. Columns nobody in scope has a value for are left out."
-          action={<Btn small onClick={() => onNavigate('benchmarks')}>All benchmarks →</Btn>}>
-          <BenchMatrix rows={chartRows} benches={benches} valueOf={valueOf} mobile={mobile} onOpen={openModel} />
-        </ChartSection>
-
         {/* ── Openness ─────────────────────────────────────────────── */}
         <ChartSection id="sec-open" mobile={mobile} eyebrow="Openness" title="Open weights." sub={openness.fromScope ? `${openness.share}% of the models in scope publish their weights. Their ELO, best first.` : `Fewer than three models in scope are open, so this is the best of the open-weight board instead.`}
           action={<div style={{ display: 'flex', gap: 5, flexWrap: 'wrap', justifyContent: 'flex-end' }}>{openness.licences.slice(0, 6).map(([l, c]) => <BadgeTag key={l} color={GREEN}>{l} ×{c}</BadgeTag>)}</div>}>
           <BarPanel wide mobile={mobile} title="Open-weight models by ELO" color={GREEN} subtitle={`${openness.bars.length} models · licence per model on the model page · arena.ai`} items={openness.bars} limit={openness.bars.length} onSelect={open} />
+        </ChartSection>
+
+        </div>
+
+        {/* ── Benchmarks ───────────────────────────────────────────── */}
+        <ChartSection id="sec-bench" mobile={mobile} eyebrow="Benchmarks" title="The capability grid." sub="Arena ELOs, SWE-bench and the composite indexes side by side for the models in scope. Columns nobody in scope has a value for are left out."
+          action={<Btn small onClick={() => onNavigate('benchmarks')}>All benchmarks →</Btn>}>
+          <BenchMatrix rows={chartRows} benches={benches} valueOf={valueOf} mobile={mobile} onOpen={openModel} />
         </ChartSection>
 
         {/* ── The full board ───────────────────────────────────────── */}

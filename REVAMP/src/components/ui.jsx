@@ -293,7 +293,7 @@ export function Btn({ children, onClick, solid = false, small = false, disabled,
 export function PageFrame({ children, mobile, wide = false }) {
   return (
     <div className="page-enter" style={{ background: 'transparent', fontFamily: SF, minHeight: '100vh' }}>
-      <div style={{ maxWidth: wide ? 1200 : 1100, margin: '0 auto', padding: mobile ? '36px 16px 96px' : '56px 24px 112px' }}>
+      <div className="aw-page">
         {children}
       </div>
     </div>
@@ -301,18 +301,26 @@ export function PageFrame({ children, mobile, wide = false }) {
 }
 
 /** Page header in the leaderboard's style (eyebrow, big title, status row). */
-export function PageTitle({ eyebrow, title, subtitle, mobile, status, right }) {
-  return (
-    <header style={{ marginBottom: mobile ? 24 : 32 }}>
+export function PageTitle({ eyebrow, title, subtitle, mobile, status, right, aside }) {
+  const head = (
+    <header style={{ marginBottom: aside ? 0 : mobile ? 24 : 32, paddingTop: mobile ? 0 : 8, minWidth: 0 }}>
       <div style={{ opacity: 0, animation: `aiwar-fade-up 280ms ${EASE} both` }}>
         <Label color="var(--muted2)" style={{ fontSize: 12, fontWeight: 600 }}>{eyebrow}</Label>
       </div>
       <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap', margin: '10px 0 14px', opacity: 0, animation: `aiwar-fade-up 280ms ${EASE} both` }}>
-        <h1 style={{ fontSize: mobile ? 'clamp(32px,8vw,44px)' : 'clamp(40px,4.6vw,60px)', fontWeight: 700, letterSpacing: '-0.05em', lineHeight: 0.98, color: 'var(--text)', margin: 0 }}>{title}</h1>
+        <h1 style={{ fontSize: mobile ? 'clamp(32px,8vw,44px)' : 'clamp(40px,3.4vw,60px)', fontWeight: 700, letterSpacing: '-0.05em', lineHeight: 0.98, color: 'var(--text)', margin: 0 }}>{title}</h1>
         {right}
       </div>
       {subtitle && <p style={{ fontSize: mobile ? 15 : 17, lineHeight: 1.45, color: 'var(--muted)', letterSpacing: '-0.015em', margin: '0 0 14px', maxWidth: 720, opacity: 0, animation: `aiwar-fade-up 280ms ${EASE} both` }}>{subtitle}</p>}
       {status && <div style={{ opacity: 0, animation: `aiwar-fade-up 280ms ${EASE} both` }}>{status}</div>}
     </header>
+  );
+  if (!aside) return head;
+  // wide screens: the page's key numbers sit beside the title instead of under it
+  return (
+    <div className="aw-headband">
+      {head}
+      <div className="aw-headband-aside" style={{ opacity: 0, animation: `aiwar-fade-up 280ms ${EASE} both` }}>{aside}</div>
+    </div>
   );
 }

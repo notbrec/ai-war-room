@@ -3,8 +3,8 @@ import { RobotMascot } from './Robot.jsx';
 import { useMobile } from '../hooks/useTheme.js';
 import { prefetch } from '../data/api.js';
 
-const SF = "-apple-system,'SF Pro Display','SF Pro Text',BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif";
-const MONO = "'SF Mono','JetBrains Mono',ui-monospace,'Menlo',monospace";
+const SF = "'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif";
+const MONO = "'JetBrains Mono','SF Mono',ui-monospace,'Menlo',monospace";
 const EASE = 'cubic-bezier(0.16,1,0.3,1)';
 
 /* Two rows on desktop, nothing hidden: the reading pages up top with the
@@ -108,7 +108,7 @@ function StripLink({ item, active, onNavigate }) {
   );
 }
 
-export default function NavBar({ page, onNavigate, dark, onToggleTheme }) {
+export default function NavBar({ page, onNavigate, dark, onToggleTheme, onSearch }) {
   const scrolled = useScrolled(20);
   const mobile = useMobile();
   const [drawer, setDrawer] = useState(false);
@@ -151,7 +151,7 @@ export default function NavBar({ page, onNavigate, dark, onToggleTheme }) {
         .aiwar-strip::-webkit-scrollbar { display: none; }
       `}</style>
       <div style={{
-        maxWidth: 1200, margin: '0 auto', padding: mobile ? '0 12px' : '0 24px',
+        maxWidth: 'var(--page-max)', margin: '0 auto', padding: mobile ? '0 12px' : '0 var(--gutter)',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         // Constant height on purpose: shrinking the bar on scroll changed the
         // document height under the reader, browser scroll anchoring then nudged
@@ -174,6 +174,16 @@ export default function NavBar({ page, onNavigate, dark, onToggleTheme }) {
                 </button>
               ))}
             </nav>
+          )}
+
+          {/* Search — opens the command palette */}
+          {onSearch && (
+            <button onClick={onSearch} aria-label="Search models, labs and pages" title="Search" style={{
+              width: mobile ? 30 : 34, height: mobile ? 30 : 34, flexShrink: 0, marginRight: 6,
+              background: 'var(--pill)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--muted)',
+            }}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="6.5" /><path d="m20 20-4.2-4.2" /></svg>
+            </button>
           )}
 
           {/* Theme toggle */}
@@ -199,7 +209,7 @@ export default function NavBar({ page, onNavigate, dark, onToggleTheme }) {
       {/* Terminal strip — every arena and tool, always visible on desktop */}
       {!mobile && (
         <div style={{ borderTop: '0.5px solid var(--sep2)' }}>
-          <div className="aiwar-strip" style={{ maxWidth: 1200, margin: '0 auto', padding: '0 14px', display: 'flex', alignItems: 'center', overflowX: 'auto' }}>
+          <div className="aiwar-strip" style={{ maxWidth: 'var(--page-max)', margin: '0 auto', padding: '0 calc(var(--gutter) - 10px)', display: 'flex', alignItems: 'center', overflowX: 'auto' }}>
             {ARENAS.map(item => <StripLink key={item.id} item={item} active={isActive(item)} onNavigate={onNavigate} />)}
             <span aria-hidden style={{ width: '0.5px', height: 16, background: 'var(--sep)', marginInline: 8, flexShrink: 0 }} />
             {TOOLS.map(item => <StripLink key={item.id} item={item} active={isActive(item)} onNavigate={onNavigate} />)}

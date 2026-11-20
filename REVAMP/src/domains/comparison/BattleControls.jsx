@@ -15,7 +15,7 @@ export function BattleToastHost() {
   if (!msg) return null;
   return (
     <div role="status" style={{
-      position: 'fixed', bottom: 84, left: '50%', transform: 'translateX(-50%)', zIndex: 200,
+      position: 'fixed', bottom: 84, left: 'calc(50% + var(--side-w, 0px) / 2)', transform: 'translateX(-50%)', zIndex: 200,
       background: 'var(--card)', border: `0.5px solid ${RED}`, color: 'var(--text)', padding: '8px 14px',
       fontFamily: SF, fontSize: 12.5, boxShadow: 'var(--shadow)', animation: `aiwar-pop-in 300ms ${EASE} both`, maxWidth: 'calc(100vw - 32px)',
     }}>{msg}</div>
@@ -48,12 +48,12 @@ export function BattleDrawer({ onNavigate, page }) {
   if (!b.items.length || page === 'compare') return null;
   return (
     <div style={{
-      position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: 150, fontFamily: SF,
+      position: 'fixed', left: 'var(--side-w, 0px)', right: 0, bottom: 0, zIndex: 150, fontFamily: SF,
       background: 'var(--nav)', backdropFilter: 'saturate(180%) blur(20px)', WebkitBackdropFilter: 'saturate(180%) blur(20px)',
       borderTop: '0.5px solid var(--sep)', boxShadow: '0 -12px 32px rgba(0,0,0,0.18)',
       animation: `aiwar-fade-up 280ms ${EASE} both`,
     }}>
-      <div style={{ maxWidth: 1100, margin: '0 auto', padding: mobile ? '8px 12px' : '10px 24px', display: 'flex', alignItems: 'center', gap: 10 }}>
+      <div style={{ maxWidth: 'var(--page-max)', margin: '0 auto', padding: mobile ? '8px 12px' : '10px var(--gutter)', display: 'flex', alignItems: 'center', gap: 10 }}>
         <RobotMascot variant="classic" size={18} color="var(--accent)" />
         <Label color="var(--text)">Battle · {KIND_LABEL[b.kind] ?? b.kind}</Label>
         {!collapsed && (

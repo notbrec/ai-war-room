@@ -7,6 +7,9 @@
     <meta name="keywords" content="AI leaderboard, LLM ranking, arena ELO, GPT-5, Claude Opus, Gemini 3, Grok 4, DeepSeek, Qwen, AI model comparison, AI pricing, coding agents, SWE-bench, text-to-image ranking, text-to-video ranking, speech-to-text WER, inference providers, AI benchmarks" />
     <meta name="author" content="AI WAR ROOM" />
     <link rel="canonical" href="https://aiwarroom.app/" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="preload" href="/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/jbmono-latin.woff2" as="font" type="font/woff2" crossorigin />
 
     <!-- Open Graph -->
     <meta property="og:title" content="AI WAR ROOM — 350+ AI models, ranked by live ELO" />
@@ -59,6 +62,16 @@
     <!-- ─ Blocking theme script: dark is default, user can toggle ─ -->
     <script>
       document.documentElement.classList.add('js');
+      // the desktop sidebar's width before the app paints (see src/hooks/useShell.js)
+      (function () {
+        try {
+          var w = document.documentElement.clientWidth || window.innerWidth;
+          if (w < 1100) return;
+          var pref = null; try { pref = localStorage.getItem('aiwar-sidebar'); } catch (e) {}
+          var rail = pref ? pref === 'rail' : w < 1280;
+          document.documentElement.style.setProperty('--side-w', (rail ? 64 : 236) + 'px');
+        } catch (e) {}
+      })();
       (function () {
         try {
           var stored = localStorage.getItem('aiwar-theme');
@@ -114,7 +127,7 @@
         max-width: 760px;
         margin: 0 auto;
         padding: 48px 24px;
-        font-family: -apple-system, 'SF Pro Display', 'Segoe UI', system-ui, sans-serif;
+        font-family: 'Inter', -apple-system, 'Segoe UI', system-ui, sans-serif;
         color: #1d1d1f;
       }
       html.dark #seo-hero { color: #f5f5f7; }
